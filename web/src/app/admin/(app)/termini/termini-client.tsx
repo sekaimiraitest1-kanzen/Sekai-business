@@ -264,16 +264,32 @@ function MonthHeatmap({ monthFrom, monthBookings, weekFrom, weekTo, workingHours
     days.push({ day: d, key, count: counts[key] ?? 0, isClosed, isInWeek, isToday });
   }
 
+  // Adjacent month keys for navigation
+  const prevDate = new Date(year, monthName - 1, 1);
+  const nextDate = new Date(year, monthName + 1, 1);
+  const fmtKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  const prevKey = fmtKey(prevDate);
+  const nextKey = fmtKey(nextDate);
+  const isCurrentMonth = year === new Date().getFullYear() && monthName === new Date().getMonth();
+
   return (
     <div className="trm-cal">
       <div className="trm-cal-header">
-        <button className="trm-cal-nav" type="button" disabled aria-label="prev month">←</button>
+        <Link href={`/admin/termini?month=${prevKey}`} className="trm-cal-nav" aria-label="Prethodni mesec" scroll={false}>←</Link>
         <div className="trm-cal-month">
           <span data-sr>{SR_MONTHS[monthName]} {year}</span>
           <span data-lat>{LAT_MONTHS[monthName]} {year}</span>
         </div>
-        <button className="trm-cal-nav" type="button" disabled aria-label="next month">→</button>
+        <Link href={`/admin/termini?month=${nextKey}`} className="trm-cal-nav" aria-label="Sledeći mesec" scroll={false}>→</Link>
       </div>
+      {!isCurrentMonth && (
+        <div className="trm-cal-back-today">
+          <Link href="/admin/termini" scroll={false}>
+            ↻ <span data-sr>назад на текући месец</span>
+            <span data-lat>nazad na tekući mesec</span>
+          </Link>
+        </div>
+      )}
 
       <div className="trm-cal-weekdays">
         {SR_DAYS_SHORT.map((d, i) => (

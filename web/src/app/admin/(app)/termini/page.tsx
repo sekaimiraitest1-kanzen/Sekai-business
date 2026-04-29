@@ -17,20 +17,32 @@ function weekRange() {
   sun.setDate(mon.getDate() + 6);
   return { from: mon.toISOString().split("T")[0], to: sun.toISOString().split("T")[0] };
 }
-function monthRange() {
+function monthRangeFromKey(key?: string) {
   const today = new Date();
-  const first = new Date(today.getFullYear(), today.getMonth(), 1);
-  const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-  return { from: first.toISOString().split("T")[0], to: last.toISOString().split("T")[0] };
+  let year = today.getFullYear();
+  let mo = today.getMonth();
+  if (key && /^\d{4}-\d{2}$/.test(key)) {
+    const [y, m] = key.split("-").map(Number);
+    year = y;
+    mo = m - 1;
+  }
+  const first = new Date(year, mo, 1);
+  const last = new Date(year, mo + 1, 0);
+  return {
+    from: first.toISOString().split("T")[0],
+    to: last.toISOString().split("T")[0],
+    year,
+    month: mo,
+  };
 }
 
-export default async function TerminiPage() {
+export default async function TerminiPage({ searchParams }: { searchParams: { month?: string } }) {
   const session = await requireAdmin();
   const sb = createAdminClient();
 
   const today = todayStr();
   const week = weekRange();
-  const month = monthRange();
+  const month = monthRangeFromKey(searchParams.month);
 
   const [todayRes, weekRes, monthRes, salonRes] = await Promise.all([
     sb
