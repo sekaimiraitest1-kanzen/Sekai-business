@@ -7,27 +7,63 @@ import { computeOpenStatus } from "@/lib/working-hours";
 export default async function HomePage() {
   const supabase = createClient();
 
-  // Read salon + services + gallery in parallel
-  const [salonRes, servicesRes, galleryRes] = await Promise.all([
+  // Read salon + services + gallery + site_content in parallel
+  const [salonRes, servicesRes, galleryRes, contentRes] = await Promise.all([
     supabase.from("salons").select("name, address, phone, email, working_hours").eq("slug", process.env.NEXT_PUBLIC_DEFAULT_SALON_SLUG ?? "trisa").single(),
-    supabase.from("services").select("name_sr, name_lat, price, duration_min").eq("active", true).order("sort_order", { ascending: true }),
+    supabase.from("services").select("name_sr, name_lat, price, duration_min, featured, description_sr, description_lat, meta_sr, meta_lat").eq("active", true).order("sort_order", { ascending: true }),
     supabase.from("gallery_images").select("id, url, alt_sr, alt_lat, sort_order, size").order("sort_order", { ascending: true }),
+    supabase.from("site_content").select("key, value_sr, value_lat"),
   ]);
 
   const salon = salonRes.data;
   const services = servicesRes.data ?? [];
+  // Build a Map of site_content rows so render code can do `content.get("hero_title")?.sr ?? FALLBACK`.
+  // FALLBACK preserves the original hardcoded text if the row is missing or empty — admin /admin/sajt
+  // edits propagate within next revalidation interval (≤ 5 min).
+  const content = new Map<string, { sr: string; lat: string }>(
+    (contentRes.data ?? [])
+      .filter((r) => r.value_sr || r.value_lat)
+      .map((r) => [r.key, { sr: r.value_sr ?? "", lat: r.value_lat ?? "" }])
+  );
+  const getC = (key: string, fallbackSr: string, fallbackLat: string) => ({
+    sr: content.get(key)?.sr || fallbackSr,
+    lat: content.get(key)?.lat || fallbackLat,
+  });
+
+  // 9 site-content slots — all fallbacks are EMPTY by design. With empty DB the
+  // public site renders blank where content is wired, so the admin team can
+  // verify via /admin/sajt that everything they seed reaches the public page
+  // (and that no string is silently hardcoded). Once content is in the DB the
+  // public site never shows blank.
+  const heroEyebrow  = getC("hero_eyebrow",  "", "");
+  const heroTitle    = getC("hero_title",    "", "");
+  const heroSubtitle = getC("hero_subtitle", "", "");
+  const aboutTitle   = getC("about_title",   "", "");
+  const aboutStory   = getC("about_story",   "", "");
+  const review1      = getC("review_1",      "", "");
+  const review2      = getC("review_2",      "", "");
+  const review3      = getC("review_3",      "", "");
+
+  // Hero / about titles use a "|" line-break marker — first segment renders normally, second as <em>.
+  const splitTitle = (s: string): [string, string] => {
+    const i = s.indexOf("|");
+    return i < 0 ? [s, ""] : [s.slice(0, i), s.slice(i + 1)];
+  };
+  const [heroTitleA_sr,  heroTitleB_sr]  = splitTitle(heroTitle.sr);
+  const [heroTitleA_lat, heroTitleB_lat] = splitTitle(heroTitle.lat);
+  const [aboutTitleA_sr,  aboutTitleB_sr]  = splitTitle(aboutTitle.sr);
+  const [aboutTitleA_lat, aboutTitleB_lat] = splitTitle(aboutTitle.lat);
   // Use DB gallery if seeded; otherwise fall back to the legacy hardcoded list so
   // the section never goes empty (BUG-6 fix). DB values come from /admin/galerija.
   // CSS classes g1..g6 define the asymmetric grid spans (g1 is 2×2 large, g2/g3/g6 span 2 cols, g4/g5 span 1).
   // Map DB rows in sort_order to those classes positionally — admin's drag-reorder controls layout order.
-  const gallery = (galleryRes.data && galleryRes.data.length > 0)
-    ? galleryRes.data.slice(0, 6).map((row, i) => ({
-        cls: `g${i + 1}`,
-        src: row.url,
-        altSr: row.alt_sr ?? "",
-        altLat: row.alt_lat ?? "",
-      }))
-    : GALLERY.map((g) => ({ cls: g.cls, src: g.src, altSr: g.alt, altLat: g.alt }));
+  // Empty DB → empty section. No hardcoded fallback so the verification re-seed test is meaningful.
+  const gallery = (galleryRes.data ?? []).slice(0, 6).map((row, i) => ({
+    cls: `g${i + 1}`,
+    src: row.url,
+    altSr: row.alt_sr ?? "",
+    altLat: row.alt_lat ?? "",
+  }));
   // working_hours are stored in salon-local time (Belgrade). On Vercel the
   // process is UTC, so convert before computing today's open status — otherwise
   // a 21:00 Belgrade visit would read as 19:00/20:00 UTC and the badge could
@@ -50,24 +86,18 @@ export default async function HomePage() {
         <div className="hero-content">
           <h1 className="hero-title">
             <span data-sr>
-              Место где се рез
-              <br />
-              <em>претвара у причу</em>
+              {heroTitleA_sr}
+              {heroTitleB_sr && <><br /><em>{heroTitleB_sr}</em></>}
             </span>
             <span data-lat>
-              Mesto gde se rez
-              <br />
-              <em>pretvara u priču</em>
+              {heroTitleA_lat}
+              {heroTitleB_lat && <><br /><em>{heroTitleB_lat}</em></>}
             </span>
           </h1>
 
           <p className="hero-sub">
-            <span data-sr>
-              Берберница Триша — традиционална мушка берберница у Батајници. Шишање, брада, добра прича. Без журбе, без комплекса. Само оно што треба.
-            </span>
-            <span data-lat>
-              Berbernica Triša — tradicionalna muška berbernica u Batajnici. Šišanje, brada, dobra priča. Bez žurbe, bez kompleksa. Samo ono što treba.
-            </span>
+            <span data-sr>{heroSubtitle.sr}</span>
+            <span data-lat>{heroSubtitle.lat}</span>
           </p>
 
           <div className="hero-cta-row">
@@ -114,23 +144,17 @@ export default async function HomePage() {
             </div>
             <h2 className="section-title">
               <span data-sr>
-                Твој изглед,
-                <br />
-                наша правила.
+                {aboutTitleA_sr}
+                {aboutTitleB_sr && <><br />{aboutTitleB_sr}</>}
               </span>
               <span data-lat>
-                Tvoj izgled,
-                <br />
-                naša pravila.
+                {aboutTitleA_lat}
+                {aboutTitleB_lat && <><br />{aboutTitleB_lat}</>}
               </span>
             </h2>
             <p>
-              <span data-sr>
-                Заборави на чекање у редовима и листање старих новина. Основани 2025. године, спојили смо петогодишњи „гринд" у берберској столици са технологијом која поштује твоје време. Код нас нема филозофирања: фокус је на бруталном Fade-у, хируршки прецизној бради и здравом изгледу косе.
-              </span>
-              <span data-lat>
-                Zaboravi na čekanje u redovima i listanje starih novina. Osnovani 2025. godine, spojili smo petogodišnji „grind" u berberskoj stolici sa tehnologijom koja poštuje tvoje vreme. Kod nas nema filozofiranja: fokus je na brutalnom Fade-u, hirurški preciznoj bradi i zdravom izgledu kose.
-              </span>
+              <span data-sr>{aboutStory.sr}</span>
+              <span data-lat>{aboutStory.lat}</span>
             </p>
             <p>
               <span data-sr>
@@ -198,59 +222,38 @@ export default async function HomePage() {
           </p>
 
           <div className="services-list">
-            {services.length > 0
-              ? services.map((s, i) => {
-                  // Premium tier — flagged by name; spans both columns at the end of the grid.
-                  const isFeatured = /vip/i.test(s.name_lat);
-                  return (
-                    <div key={i} className={`service-item ${isFeatured ? "featured" : ""}`}>
-                      <div className="service-item-left">
-                        <div className="service-meta">
-                          <span data-sr>{s.duration_min} МИН{isFeatured ? " · PREMIUM" : ""}</span>
-                          <span data-lat>{s.duration_min} MIN{isFeatured ? " · PREMIUM" : ""}</span>
-                        </div>
-                        <div className="service-name">
-                          <span data-sr>{s.name_sr}</span>
-                          <span data-lat>{s.name_lat}</span>
-                        </div>
-                        {isFeatured && (
-                          <div className="service-desc">
-                            <span data-sr>
-                              Шишање · сређивање браде · топао пешкир третман · восак за нос и уши · стилизовање браде.
-                            </span>
-                            <span data-lat>
-                              Šišanje · sređivanje brade · topao peškir tretman · vosak za nos i uši · stilizovanje brade.
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="service-price">
-                        {s.price}
-                        <span className="service-currency" data-sr>РСД</span>
-                        <span className="service-currency" data-lat>RSD</span>
-                      </div>
+            {services.map((s, i) => {
+              // Premium tier is now a per-row DB flag (services.featured) — admin /admin/usluge
+              // can mark any service as featured and supply its own description / meta tag.
+              const isFeatured = !!s.featured;
+              const metaSr = s.meta_sr || `${s.duration_min} МИН`;
+              const metaLat = s.meta_lat || `${s.duration_min} MIN`;
+              return (
+                <div key={i} className={`service-item ${isFeatured ? "featured" : ""}`}>
+                  <div className="service-item-left">
+                    <div className="service-meta">
+                      <span data-sr>{metaSr}</span>
+                      <span data-lat>{metaLat}</span>
                     </div>
-                  );
-                })
-              : DEFAULT_SERVICES.map((s, i) => (
-                  <div key={i} className="service-item">
-                    <div className="service-item-left">
-                      <div className="service-meta">
-                        <span data-sr>{s.metaSr}</span>
-                        <span data-lat>{s.metaLat}</span>
-                      </div>
-                      <div className="service-name">
-                        <span data-sr>{s.nameSr}</span>
-                        <span data-lat>{s.nameLat}</span>
-                      </div>
+                    <div className="service-name">
+                      <span data-sr>{s.name_sr}</span>
+                      <span data-lat>{s.name_lat}</span>
                     </div>
-                    <div className="service-price">
-                      {s.price}
-                      <span className="service-currency" data-sr>РСД</span>
-                      <span className="service-currency" data-lat>RSD</span>
-                    </div>
+                    {isFeatured && (s.description_sr || s.description_lat) && (
+                      <div className="service-desc">
+                        <span data-sr>{s.description_sr ?? ""}</span>
+                        <span data-lat>{s.description_lat ?? ""}</span>
+                      </div>
+                    )}
                   </div>
-                ))}
+                  <div className="service-price">
+                    {s.price}
+                    <span className="service-currency" data-sr>РСД</span>
+                    <span className="service-currency" data-lat>RSD</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <div className="services-footer">
@@ -322,24 +325,30 @@ export default async function HomePage() {
           </h2>
 
           <div className="reviews-grid">
-            {REVIEWS.map((r, i) => (
-              <div key={i} className="review-card">
-                <div className="review-quote-mark">&quot;</div>
-                <div className="review-stars">★★★★★</div>
-                <p className="review-text" data-sr>{r.textSr}</p>
-                <p className="review-text" data-lat>{r.textLat}</p>
-                <div className="review-meta">
-                  <div className="review-avatar" data-sr>{r.initialsSr}</div>
-                  <div className="review-avatar" data-lat>{r.initialsLat}</div>
-                  <div>
-                    <div className="review-author" data-sr>{r.authorSr}</div>
-                    <div className="review-author" data-lat>{r.authorLat}</div>
-                    <div className="review-source" data-sr>{r.sourceSr}</div>
-                    <div className="review-source" data-lat>{r.sourceLat}</div>
+            {REVIEWS.map((r, i) => {
+              const dbText = [review1, review2, review3][i] ?? { sr: "", lat: "" };
+              // Skip cards whose text isn't seeded yet — admin /admin/sajt populates
+              // review_1 / review_2 / review_3 in site_content.
+              if (!dbText.sr && !dbText.lat) return null;
+              return (
+                <div key={i} className="review-card">
+                  <div className="review-quote-mark">&quot;</div>
+                  <div className="review-stars">★★★★★</div>
+                  <p className="review-text" data-sr>{dbText.sr}</p>
+                  <p className="review-text" data-lat>{dbText.lat}</p>
+                  <div className="review-meta">
+                    <div className="review-avatar" data-sr>{r.initialsSr}</div>
+                    <div className="review-avatar" data-lat>{r.initialsLat}</div>
+                    <div>
+                      <div className="review-author" data-sr>{r.authorSr}</div>
+                      <div className="review-author" data-lat>{r.authorLat}</div>
+                      <div className="review-source" data-sr>{r.sourceSr}</div>
+                      <div className="review-source" data-lat>{r.sourceLat}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -361,11 +370,10 @@ export default async function HomePage() {
               <div className="map-placeholder-inner">
                 <div className="map-pin"></div>
                 <div className="map-label">
-                  <span data-sr>{salon?.address ?? "Мајора Зорана Радосављевића 226b, Батајница"}</span>
-                  <span data-lat>Majora Zorana Radosavljevića 226b, Batajnica</span>
+                  {salon?.address || ""}
                 </div>
                 <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica")}`}
+                  href={`https://maps.google.com/?q=${encodeURIComponent(salon?.address ?? "")}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -388,19 +396,24 @@ export default async function HomePage() {
               <HoursCard workingHours={salon?.working_hours} />
 
               <div className="contact-info">
-                <div className="contact-row">
-                  <span>📞</span>
-                  <span>{salon?.phone ?? "065 9003 742"}</span>
-                </div>
-                <div className="contact-row">
-                  <span>✉</span>
-                  <span>{salon?.email ?? "berbernicatrisa@gmail.com"}</span>
-                </div>
-                <div className="contact-row">
-                  <span>📍</span>
-                  <span data-sr>{salon?.address ?? "Мајора Зорана Радосављевића 226b, Батајница"}</span>
-                  <span data-lat>Majora Zorana Radosavljevića 226b, Batajnica</span>
-                </div>
+                {salon?.phone && (
+                  <div className="contact-row">
+                    <span>📞</span>
+                    <span>{salon.phone}</span>
+                  </div>
+                )}
+                {salon?.email && (
+                  <div className="contact-row">
+                    <span>✉</span>
+                    <span>{salon.email}</span>
+                  </div>
+                )}
+                {salon?.address && (
+                  <div className="contact-row">
+                    <span>📍</span>
+                    <span>{salon.address}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -433,7 +446,7 @@ export default async function HomePage() {
         <p className="cta-band-note" data-lat>Rezervacija za manje od 30 sekundi. Bez naloga.</p>
       </section>
 
-      <SiteFooter phone={salon?.phone} email={salon?.email} address={salon?.address} />
+      <SiteFooter phone={salon?.phone ?? undefined} email={salon?.email ?? undefined} address={salon?.address ?? undefined} workingHours={salon?.working_hours ?? undefined} />
     </>
   );
 }
@@ -493,58 +506,13 @@ function HoursCard({ workingHours }: { workingHours?: WorkingHours | null }) {
 }
 
 // ──────────────────────────────────────────────────────────
-// Hardcoded fallbacks — used when DB tables are empty.
-// Everything here will be admin-editable (services, gallery, reviews).
+// Reviewer metadata for the testimonials section. Only initials, author name,
+// and source label live in code — the actual review text is editable via
+// /admin/sajt → review_1 / review_2 / review_3 (site_content table).
+// Cards render only for slots that have text in DB.
 // ──────────────────────────────────────────────────────────
-
-const DEFAULT_SERVICES = [
-  { metaSr: "30 МИН", metaLat: "30 MIN", nameSr: "Обично шишање", nameLat: "Obično šišanje", price: 900 },
-  { metaSr: "50 МИН · SIGNATURE", metaLat: "50 MIN · SIGNATURE", nameSr: "Fade шишање", nameLat: "Fade šišanje", price: 1200 },
-  { metaSr: "60 МИН · МАКАЗЕ", metaLat: "60 MIN · MAKAZE", nameSr: "Шишање маказама", nameLat: "Šišanje makazama", price: 1400 },
-  { metaSr: "70 МИН · КОМПЛЕТ", metaLat: "70 MIN · KOMPLET", nameSr: "Шишање + Брада", nameLat: "Šišanje + Brada", price: 1800 },
-  { metaSr: "30 МИН", metaLat: "30 MIN", nameSr: "Бријање главе", nameLat: "Brijanje glave", price: 800 },
-  { metaSr: "30 МИН · БРАДА", metaLat: "30 MIN · BRADA", nameSr: "Само брада", nameLat: "Samo brada", price: 600 },
-  { metaSr: "90 МИН · PREMIUM", metaLat: "90 MIN · PREMIUM", nameSr: "VIP Третман", nameLat: "VIP Tretman", price: 2500 },
-];
-
-const GALLERY = [
-  { cls: "g1", src: "/legacy/uploads/IMG_0025.jpeg", alt: "Salon" },
-  { cls: "g2", src: "/legacy/uploads/IMG_0026.jpeg", alt: "Fade" },
-  { cls: "g3", src: "/legacy/uploads/IMG_0585.jpeg", alt: "Šišanje" },
-  { cls: "g4", src: "/legacy/uploads/IMG_0641.jpeg", alt: "Fade" },
-  { cls: "g5", src: "/legacy/uploads/IMG_0716.jpeg", alt: "Stil" },
-  { cls: "g6", src: "/legacy/uploads/IMG_0823.jpeg", alt: "Rezultat" },
-];
-
 const REVIEWS = [
-  {
-    initialsSr: "МК",
-    initialsLat: "MK",
-    authorSr: "Марко К.",
-    authorLat: "Marko K.",
-    sourceSr: "Google · 2 нед.",
-    sourceLat: "Google · 2 ned.",
-    textSr: "Најбоља берберница у Батајници, без конкуренције. Триша ради прецизно, чисто, без журбе. Увек излазим задовољан. Препоручујем свима.",
-    textLat: "Najbolja berbernica u Batajnici, bez konkurencije. Triša radi precizno, čisto, bez žurbe. Uvek izlazim zadovoljan. Preporučujem svima.",
-  },
-  {
-    initialsSr: "НЈ",
-    initialsLat: "NJ",
-    authorSr: "Никола Ј.",
-    authorLat: "Nikola J.",
-    sourceSr: "Google · 1 мес.",
-    sourceLat: "Google · 1 mes.",
-    textSr: "Поштен мајстор, топла атмосфера. Поручио сам и производе — стигли следећи дан. Страсно препоручујем берберницу Тришу свакоме ко цени квалитет.",
-    textLat: "Pošten majstor, topla atmosfera. Poručio sam i proizvode — stigli sledeći dan. Strasno preporučujem berbernici Trišu svakome ko ceni kvalitet.",
-  },
-  {
-    initialsSr: "СП",
-    initialsLat: "SP",
-    authorSr: "Стефан П.",
-    authorLat: "Stefan P.",
-    sourceSr: "Google · 3 нед.",
-    sourceLat: "Google · 3 ned.",
-    textSr: "Долазим годинама. Систем за заказивање је сада одличан — за пет минута имаш термин. И цена је фер. Ово је права берберница.",
-    textLat: "Dolazim godinama. Sistem za zakazivanje je sada odličan — za pet minuta imaš termin. I cena je fer. Ovo je prava berbernica.",
-  },
+  { initialsSr: "МК", initialsLat: "MK", authorSr: "Марко К.", authorLat: "Marko K.", sourceSr: "Google · 2 нед.", sourceLat: "Google · 2 ned." },
+  { initialsSr: "НЈ", initialsLat: "NJ", authorSr: "Никола Ј.", authorLat: "Nikola J.", sourceSr: "Google · 1 мес.", sourceLat: "Google · 1 mes." },
+  { initialsSr: "СП", initialsLat: "SP", authorSr: "Стефан П.", authorLat: "Stefan P.", sourceSr: "Google · 3 нед.", sourceLat: "Google · 3 ned." },
 ];

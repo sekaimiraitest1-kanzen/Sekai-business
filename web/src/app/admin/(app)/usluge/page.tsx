@@ -9,7 +9,7 @@ export default async function UslugePage() {
   const sb = createAdminClient();
   const { data } = await sb
     .from("services")
-    .select("id, name_sr, name_lat, price, duration_min, active, sort_order")
+    .select("id, name_sr, name_lat, price, duration_min, active, sort_order, featured, description_sr, description_lat, meta_sr, meta_lat")
     .eq("salon_id", session.salonId)
     .order("sort_order", { ascending: true });
   return <UslugeClient services={data ?? []} />;

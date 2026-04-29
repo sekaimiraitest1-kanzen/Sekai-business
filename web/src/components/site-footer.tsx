@@ -1,6 +1,13 @@
 import Link from "next/link";
 
-export function SiteFooter({ phone, email, address }: { phone?: string; email?: string; address?: string }) {
+type WorkingHours = Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", { open: string; close: string } | null> | null;
+
+export function SiteFooter({ phone, email, address, workingHours }: { phone?: string; email?: string; address?: string; workingHours?: WorkingHours }) {
+  // Compress working hours into 3 footer rows: weekday range, Saturday, Sunday.
+  const wh = workingHours ?? null;
+  const weekdayHours = wh?.mon && wh?.fri ? `${wh.mon.open.slice(0, 5)}—${wh.fri.close.slice(0, 5)}` : null;
+  const satHours = wh?.sat ? `${wh.sat.open.slice(0, 5)}—${wh.sat.close.slice(0, 5)}` : null;
+  const sunOpen = !!wh?.sun;
   return (
     <footer>
       <div className="footer-grid">
@@ -55,27 +62,38 @@ export function SiteFooter({ phone, email, address }: { phone?: string; email?: 
           <div className="footer-col-title" data-sr>КОНТАКТ</div>
           <div className="footer-col-title" data-lat>KONTAKT</div>
           <div className="footer-info">
-            <div className="footer-info-item">{phone ?? "065 9003 742"}</div>
-            <div className="footer-info-item">{email ?? "berbernicatrisa@gmail.com"}</div>
-            <div className="footer-info-item" data-sr>{address ?? "Мајора Зорана Радосављевића 226b"}</div>
-            <div className="footer-info-item" data-lat>{address ?? "Majora Zorana Radosavljevića 226b"}</div>
-            <div className="footer-info-item" data-sr>Батајница, Земун</div>
-            <div className="footer-info-item" data-lat>Batajnica, Zemun</div>
+            {phone && <div className="footer-info-item">{phone}</div>}
+            {email && <div className="footer-info-item">{email}</div>}
+            {address && <div className="footer-info-item">{address}</div>}
           </div>
         </div>
 
-        <div>
-          <div className="footer-col-title" data-sr>РАДНО ВРЕМЕ</div>
-          <div className="footer-col-title" data-lat>RADNO VREME</div>
-          <div className="footer-info">
-            <div className="footer-info-item" data-sr>Пон—Пет: 09—20h</div>
-            <div className="footer-info-item" data-lat>Pon—Pet: 09—20h</div>
-            <div className="footer-info-item" data-sr>Субота: 09—17h</div>
-            <div className="footer-info-item" data-lat>Subota: 09—17h</div>
-            <div className="footer-info-item" data-sr>Недеља: затворено</div>
-            <div className="footer-info-item" data-lat>Nedelja: zatvoreno</div>
+        {wh && (weekdayHours || satHours) && (
+          <div>
+            <div className="footer-col-title" data-sr>РАДНО ВРЕМЕ</div>
+            <div className="footer-col-title" data-lat>RADNO VREME</div>
+            <div className="footer-info">
+              {weekdayHours && (
+                <>
+                  <div className="footer-info-item" data-sr>Пон—Пет: {weekdayHours}</div>
+                  <div className="footer-info-item" data-lat>Pon—Pet: {weekdayHours}</div>
+                </>
+              )}
+              {satHours && (
+                <>
+                  <div className="footer-info-item" data-sr>Субота: {satHours}</div>
+                  <div className="footer-info-item" data-lat>Subota: {satHours}</div>
+                </>
+              )}
+              {!sunOpen && (
+                <>
+                  <div className="footer-info-item" data-sr>Недеља: затворено</div>
+                  <div className="footer-info-item" data-lat>Nedelja: zatvoreno</div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="footer-bottom">

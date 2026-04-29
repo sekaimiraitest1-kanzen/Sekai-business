@@ -29,6 +29,11 @@ type Service = {
   duration_min: number;
   active: boolean;
   sort_order: number;
+  featured: boolean;
+  description_sr: string | null;
+  description_lat: string | null;
+  meta_sr: string | null;
+  meta_lat: string | null;
 };
 
 export function UslugeClient({ services: initialServices }: { services: Service[] }) {
@@ -179,6 +184,11 @@ function ServiceEditor({ service, onClose }: { service: Service | null; onClose:
   const [price, setPrice] = useState(service?.price.toString() ?? "");
   const [duration_min, setDuration] = useState(service?.duration_min.toString() ?? "30");
   const [active, setActive] = useState(service?.active ?? true);
+  const [featured, setFeatured] = useState(service?.featured ?? false);
+  const [descSr, setDescSr] = useState(service?.description_sr ?? "");
+  const [descLat, setDescLat] = useState(service?.description_lat ?? "");
+  const [metaSr, setMetaSr] = useState(service?.meta_sr ?? "");
+  const [metaLat, setMetaLat] = useState(service?.meta_lat ?? "");
   const [pending, start] = useTransition();
 
   function save() {
@@ -191,6 +201,11 @@ function ServiceEditor({ service, onClose }: { service: Service | null; onClose:
         duration_min: parseInt(duration_min) || 30,
         active,
         sort_order: service?.sort_order,
+        featured,
+        description_sr: descSr.trim() || undefined,
+        description_lat: descLat.trim() || undefined,
+        meta_sr: metaSr.trim() || undefined,
+        meta_lat: metaLat.trim() || undefined,
       });
       onClose();
     });
@@ -248,6 +263,35 @@ function ServiceEditor({ service, onClose }: { service: Service | null; onClose:
             <span data-sr>АКТИВНА (видљива на сајту)</span>
             <span data-lat>AKTIVNA (vidljiva na sajtu)</span>
           </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--cream)", fontFamily: "'Oswald', sans-serif", fontSize: 13, letterSpacing: ".06em" }}>
+            <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} />
+            <span data-sr>ИСТАКНУТА (премиум стил, пуна ширина, са описом)</span>
+            <span data-lat>ISTAKNUTA (premium stil, puna širina, sa opisom)</span>
+          </label>
+          {featured && (
+            <>
+              <div>
+                <label className="adm-form-label" data-sr>МЕТА ТАГ (ЋИРИЛИЦА) — опционо</label>
+                <label className="adm-form-label" data-lat>META TAG (ĆIRILICA) — opciono</label>
+                <input className="adm-input" value={metaSr} onChange={(e) => setMetaSr(e.target.value)} placeholder="90 МИН · ПРЕМИУМ" />
+              </div>
+              <div>
+                <label className="adm-form-label" data-sr>МЕТА ТАГ (ЛАТИНИЦА) — опционо</label>
+                <label className="adm-form-label" data-lat>META TAG (LATINICA) — opciono</label>
+                <input className="adm-input" value={metaLat} onChange={(e) => setMetaLat(e.target.value)} placeholder="90 MIN · PREMIUM" />
+              </div>
+              <div>
+                <label className="adm-form-label" data-sr>ОПИС (ЋИРИЛИЦА)</label>
+                <label className="adm-form-label" data-lat>OPIS (ĆIRILICA)</label>
+                <textarea className="adm-input" rows={2} value={descSr} onChange={(e) => setDescSr(e.target.value)} placeholder="Шишање · сређивање браде · топао пешкир…" />
+              </div>
+              <div>
+                <label className="adm-form-label" data-sr>ОПИС (ЛАТИНИЦА)</label>
+                <label className="adm-form-label" data-lat>OPIS (LATINICA)</label>
+                <textarea className="adm-input" rows={2} value={descLat} onChange={(e) => setDescLat(e.target.value)} placeholder="Šišanje · sređivanje brade · topao peškir…" />
+              </div>
+            </>
+          )}
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
             <button className="adm-btn adm-btn-block" disabled={pending || !name_sr || !name_lat || !price} onClick={save}>
               <span data-sr>САЧУВАЈ</span>

@@ -12,6 +12,11 @@ export type ServiceInput = {
   duration_min: number;
   active: boolean;
   sort_order?: number;
+  featured?: boolean;
+  description_sr?: string;
+  description_lat?: string;
+  meta_sr?: string;
+  meta_lat?: string;
 };
 
 export async function upsertService(input: ServiceInput) {
@@ -25,6 +30,11 @@ export async function upsertService(input: ServiceInput) {
     duration_min: input.duration_min,
     active: input.active,
     sort_order: input.sort_order ?? 999,
+    featured: input.featured ?? false,
+    description_sr: input.description_sr ?? null,
+    description_lat: input.description_lat ?? null,
+    meta_sr: input.meta_sr ?? null,
+    meta_lat: input.meta_lat ?? null,
   };
   if (input.id) {
     await sb.from("services").update(row).eq("id", input.id).eq("salon_id", session.salonId);
