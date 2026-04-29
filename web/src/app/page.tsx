@@ -15,7 +15,12 @@ export default async function HomePage() {
 
   const salon = salonRes.data;
   const services = servicesRes.data ?? [];
-  const openStatus = computeOpenStatus(salon?.working_hours, new Date());
+  // working_hours are stored in salon-local time (Belgrade). On Vercel the
+  // process is UTC, so convert before computing today's open status — otherwise
+  // a 21:00 Belgrade visit would read as 19:00/20:00 UTC and the badge could
+  // claim "ОТВОРЕНО · ДО 20H" past closing.
+  const belgradeNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Belgrade" }));
+  const openStatus = computeOpenStatus(salon?.working_hours, belgradeNow);
 
   return (
     <>
