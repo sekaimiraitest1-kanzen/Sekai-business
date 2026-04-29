@@ -5,6 +5,7 @@ import "./globals.css";
 import "@/styles/legacy.css";
 import "@/styles/legacy-booking.css";
 import "@/styles/legacy-shop.css";
+import "@/styles/product-detail.css";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin", "cyrillic"],

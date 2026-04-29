@@ -1,0 +1,326 @@
+/* Product detail page — /shop/[slug]
+   Visual aesthetic matches shop list (cream/brown/mustard, sharp 2px corners),
+   editorial layout with image left, info right.
+*/
+
+.pd-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 48px 96px;
+  background: var(--paper);
+}
+
+.pd-breadcrumbs {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(92, 58, 34, 0.55);
+  margin-bottom: 32px;
+}
+.pd-breadcrumbs a:hover {
+  color: var(--mustard);
+}
+
+.pd-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 64px;
+  align-items: start;
+}
+
+/* ── IMAGE ────────────────────────────────────── */
+.pd-image-col {
+  position: sticky;
+  top: 80px;
+}
+.pd-image {
+  background: var(--brown-900);
+  aspect-ratio: 1 / 1;
+  position: relative;
+  overflow: hidden;
+}
+.pd-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.pd-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(92, 58, 34, 0.18) 0,
+    rgba(92, 58, 34, 0.18) 1px,
+    transparent 1px,
+    transparent 16px
+  );
+}
+.pd-placeholder-brand {
+  font-family: 'Oswald', sans-serif;
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(245, 233, 208, 0.08);
+  text-transform: uppercase;
+}
+.pd-placeholder-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(245, 233, 208, 0.18);
+  text-transform: uppercase;
+}
+
+/* ── INFO ─────────────────────────────────────── */
+.pd-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.pd-brand {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mustard);
+  margin-bottom: 12px;
+}
+.pd-name {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--brown-950);
+  margin-bottom: 20px;
+}
+.pd-stock {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.pd-stock-ok    { color: var(--success); }
+.pd-stock-low   { color: var(--mustard); }
+.pd-stock-out   { color: var(--danger); font-weight: 700; }
+
+.pd-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--brown-700);
+  margin-bottom: 32px;
+  white-space: pre-line;
+}
+
+/* ── PRICE ────────────────────────────────────── */
+.pd-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(92, 58, 34, 0.12);
+}
+.pd-price {
+  font-family: 'Playfair Display', serif;
+  font-size: 56px;
+  font-weight: 900;
+  font-style: italic;
+  color: var(--mustard);
+  line-height: 1;
+}
+.pd-price span {
+  font-size: 18px;
+  font-style: normal;
+  color: rgba(212, 165, 58, 0.55);
+  font-family: 'JetBrains Mono', monospace;
+  margin-left: 6px;
+}
+.pd-unit-price {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--brown-700);
+  opacity: 0.6;
+  letter-spacing: 0.04em;
+}
+
+/* ── QUANTITY ─────────────────────────────────── */
+.pd-qty-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.pd-qty-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brown-700);
+}
+.pd-qty {
+  display: flex;
+  background: var(--cream);
+  border: 1px solid rgba(92, 58, 34, 0.15);
+}
+.pd-qty-btn {
+  width: 48px;
+  height: 48px;
+  background: transparent;
+  border: none;
+  font-family: 'Oswald', sans-serif;
+  font-size: 22px;
+  color: var(--brown-950);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.pd-qty-btn:hover:not(:disabled),
+.pd-qty-btn:active:not(:disabled) {
+  background: var(--cream-warm);
+}
+.pd-qty-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.pd-qty-input {
+  width: 64px;
+  height: 48px;
+  background: transparent;
+  border: none;
+  border-left: 1px solid rgba(92, 58, 34, 0.15);
+  border-right: 1px solid rgba(92, 58, 34, 0.15);
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 900;
+  font-style: italic;
+  color: var(--brown-950);
+  outline: none;
+  -moz-appearance: textfield;
+}
+.pd-qty-input::-webkit-outer-spin-button,
+.pd-qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.pd-qty-input:focus {
+  background: var(--cream);
+}
+
+/* ── ADD TO CART ──────────────────────────────── */
+.pd-add-btn {
+  width: 100%;
+  height: 56px;
+  background: var(--mustard);
+  color: var(--brown-950);
+  border: none;
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s, transform 0.1s;
+  margin-top: 8px;
+  margin-bottom: 32px;
+  -webkit-tap-highlight-color: transparent;
+}
+.pd-add-btn:hover:not(:disabled) {
+  background: var(--mustard-bright);
+}
+.pd-add-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.pd-add-btn:disabled {
+  background: var(--cream-warm);
+  color: var(--brown-700);
+  cursor: not-allowed;
+}
+
+/* ── META ─────────────────────────────────────── */
+.pd-meta {
+  border-top: 1px solid rgba(92, 58, 34, 0.12);
+  padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pd-meta-row {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 16px;
+  align-items: baseline;
+  font-size: 13px;
+}
+.pd-meta-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brown-700);
+  opacity: 0.7;
+}
+.pd-meta-value {
+  font-family: 'Inter', sans-serif;
+  color: var(--brown-950);
+  line-height: 1.5;
+}
+
+/* ── RELATED ──────────────────────────────────── */
+.pd-related {
+  margin-top: 96px;
+  padding-top: 48px;
+  border-top: 1px solid rgba(92, 58, 34, 0.12);
+}
+.pd-related .section-divider {
+  margin-bottom: 32px;
+}
+
+/* ── RESPONSIVE ───────────────────────────────── */
+@media (max-width: 900px) {
+  .pd-page {
+    padding: 24px 24px 64px;
+  }
+  .pd-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .pd-image-col {
+    position: static;
+  }
+  .pd-name {
+    font-size: clamp(24px, 6vw, 32px);
+  }
+  .pd-price {
+    font-size: 40px;
+  }
+  .pd-qty-btn {
+    width: 56px;
+    height: 56px;
+  }
+  .pd-qty-input {
+    width: 72px;
+    height: 56px;
+  }
+  .pd-meta-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
