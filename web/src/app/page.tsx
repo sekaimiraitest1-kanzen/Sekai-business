@@ -1,6 +1,8 @@
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
+import { SiteBanner } from "@/components/site-banner";
 import { createClient } from "@/lib/supabase/server";
+import { computeOpenStatus } from "@/lib/working-hours";
 
 export default async function HomePage() {
   const supabase = createClient();
@@ -13,17 +15,19 @@ export default async function HomePage() {
 
   const salon = salonRes.data;
   const services = servicesRes.data ?? [];
+  const openStatus = computeOpenStatus(salon?.working_hours, new Date());
 
   return (
     <>
+      <SiteBanner />
       <SiteNav />
 
       {/* ── HERO ────────────────────────────────────────── */}
       <section className="hero" id="hero">
-        <div className="hero-open-tag">
+        <div className={`hero-open-tag${openStatus.isOpen ? "" : " closed"}`}>
           <div className="hero-open-dot"></div>
-          <span data-sr>ДАНАС ОТВОРЕНО · ДО 20H</span>
-          <span data-lat>DANAS OTVORENO · DO 20H</span>
+          <span data-sr>{openStatus.textSr}</span>
+          <span data-lat>{openStatus.textLat}</span>
         </div>
         <div className="hero-content">
           <h1 className="hero-title">
