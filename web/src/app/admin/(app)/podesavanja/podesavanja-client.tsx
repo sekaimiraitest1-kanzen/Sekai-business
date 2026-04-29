@@ -14,7 +14,7 @@ type Ann = {
   ends_at: string | null;
 };
 
-export function PodesavanjaClient({ announcements, email }: { announcements: Ann[]; email: string }) {
+export function PodesavanjaClient({ announcements, email, icalUrl }: { announcements: Ann[]; email: string; icalUrl: string }) {
   const [tab, setTab] = useState<"pin" | "banner" | "info">("pin");
   return (
     <>
@@ -36,12 +36,17 @@ export function PodesavanjaClient({ announcements, email }: { announcements: Ann
       {tab === "pin" && <PinChange />}
       {tab === "banner" && <Announcements list={announcements} />}
       {tab === "info" && (
-        <div className="adm-card" style={{ flexDirection: "column", alignItems: "stretch" }}>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "var(--mustard)", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 8 }}>SISTEM</div>
-          <div className="adm-row"><span style={{ color: "rgba(245,233,208,.5)" }}>Email</span><span style={{ color: "var(--cream)" }}>{email}</span></div>
-          <div className="adm-row"><span style={{ color: "rgba(245,233,208,.5)" }}>Auto-lock</span><span style={{ color: "var(--cream)" }}>24h</span></div>
-          <div className="adm-row"><span style={{ color: "rgba(245,233,208,.5)" }}>Max PIN attempts</span><span style={{ color: "var(--cream)" }}>5 → lockout 10min</span></div>
-        </div>
+        <>
+          <div className="adm-card" style={{ flexDirection: "column", alignItems: "stretch" }}>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "var(--mustard)", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 8 }}>SISTEM</div>
+            <div className="adm-row"><span style={{ color: "rgba(245,233,208,.5)" }}>Email</span><span style={{ color: "var(--cream)" }}>{email}</span></div>
+            <div className="adm-row"><span style={{ color: "rgba(245,233,208,.5)" }}>Auto-lock</span><span style={{ color: "var(--cream)" }}>24h</span></div>
+            <div className="adm-row"><span style={{ color: "rgba(245,233,208,.5)" }}>Max PIN attempts</span><span style={{ color: "var(--cream)" }}>5 → lockout 10min</span></div>
+          </div>
+
+          {/* G6 — iCal feed */}
+          <IcalCard icalUrl={icalUrl} />
+        </>
       )}
     </>
   );
@@ -209,4 +214,50 @@ function toLocalInput(iso: string): string {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function IcalCard({ icalUrl }: { icalUrl: string }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(icalUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+  return (
+    <div className="adm-card" style={{ flexDirection: "column", alignItems: "stretch", marginTop: 12 }}>
+      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "var(--mustard)", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 8 }}>
+        📅 KALENDAR (iCal)
+      </div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(245,233,208,.7)", lineHeight: 1.5, marginBottom: 8 }}>
+        <span data-sr>
+          Залепи овај линк у Google Calendar (Add → From URL) или у iPhone Settings → Mail → Accounts → Add → Other → Subscribed Calendar.
+          Телефон ће се аутоматски освежавати на сваких ~сат времена.
+        </span>
+        <span data-lat>
+          Zalepi ovaj link u Google Calendar (Add → From URL) ili u iPhone Settings → Mail → Accounts → Add → Other → Subscribed Calendar.
+          Telefon će se automatski osvežavati na svakih ~sat vremena.
+        </span>
+      </div>
+      <input
+        className="adm-input"
+        readOnly
+        value={icalUrl}
+        onClick={(e) => (e.target as HTMLInputElement).select()}
+        style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11 }}
+      />
+      <button className="adm-btn adm-btn-secondary" onClick={copy} style={{ marginTop: 8 }}>
+        {copied ? "✓ KOPIRAN" : (
+          <>
+            <span data-sr>📋 КОПИРАЈ ЛИНК</span>
+            <span data-lat>📋 KOPIRAJ LINK</span>
+          </>
+        )}
+      </button>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.4)", marginTop: 6 }}>
+        ⚠ <span data-sr>Свако са линком може видети термине. Не дели.</span>
+        <span data-lat>Svako sa linkom može videti termine. Ne deli.</span>
+      </div>
+    </div>
+  );
 }
