@@ -366,7 +366,7 @@ body {
   gap: 64px;
   max-width: 1200px;
   margin: 0 auto;
-  align-items: start;
+  align-items: center;
 }
 
 .onama-text p {
