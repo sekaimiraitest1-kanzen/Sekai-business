@@ -102,16 +102,24 @@ function ProductEditor({ product, categories, onClose }: { product: Product | nu
   async function uploadImg(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (!product?.id) {
+    const productId = product?.id;
+    if (!productId) {
       alert("Sačuvaj prvo proizvod, pa onda dodaj sliku.");
       return;
     }
     setUploading(true);
     try {
       const { blob, filename } = await compressToWebP(f);
-      const buf = await blob.arrayBuffer();
-      const res = await uploadProductImage(product.id, buf, filename, "image/webp");
+      const fd = new FormData();
+      fd.append("productId", productId);
+      fd.append("filename", filename);
+      fd.append("file", blob, filename);
+      const res = await uploadProductImage(fd);
       if (res.ok) setImageUrl(res.url);
+      else alert(`Upload nije uspeo: ${res.error}`);
+    } catch (err) {
+      console.error("[upload] failed:", err);
+      alert(`Greška: ${err instanceof Error ? err.message : "unknown"}`);
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";

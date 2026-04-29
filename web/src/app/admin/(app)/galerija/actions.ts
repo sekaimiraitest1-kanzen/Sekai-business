@@ -6,16 +6,18 @@ import { requireAdmin } from "@/lib/auth/with-admin";
 import { uploadImage, deleteFromStorage } from "@/lib/storage/upload";
 import { pathFromUrl } from "@/lib/storage/url";
 
-export async function createGalleryImage(input: {
-  fileBuf: ArrayBuffer;
-  filename: string;
-  mimeType: string;
-  altSr?: string;
-  altLat?: string;
-  size?: "normal" | "large";
-}) {
+export async function createGalleryImage(formData: FormData) {
   const session = await requireAdmin();
-  const upload = await uploadImage("gallery", input.fileBuf, input.filename, input.mimeType);
+  const file = formData.get("file");
+  const filename = formData.get("filename");
+  const altSr = (formData.get("altSr") as string | null) ?? null;
+  const altLat = (formData.get("altLat") as string | null) ?? null;
+  const size = (formData.get("size") as string | null) === "large" ? "large" : "normal";
+
+  if (!(file instanceof Blob)) return { ok: false as const, error: "MISSING_FILE" };
+  if (typeof filename !== "string" || !filename) return { ok: false as const, error: "MISSING_FILENAME" };
+
+  const upload = await uploadImage("gallery", file, filename);
   if (!upload.ok) return { ok: false as const, error: upload.error };
 
   const sb = createAdminClient();
@@ -32,9 +34,9 @@ export async function createGalleryImage(input: {
   const { error } = await sb.from("gallery_images").insert({
     salon_id: session.salonId,
     url: upload.url,
-    alt_sr: input.altSr ?? null,
-    alt_lat: input.altLat ?? null,
-    size: input.size ?? "normal",
+    alt_sr: altSr,
+    alt_lat: altLat,
+    size,
     sort_order: nextOrder,
   });
   if (error) return { ok: false as const, error: error.message };

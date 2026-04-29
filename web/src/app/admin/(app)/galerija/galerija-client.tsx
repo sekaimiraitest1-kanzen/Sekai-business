@@ -23,8 +23,10 @@ export function GalerijaClient({ images }: { images: Image[] }) {
       const f = files[i];
       try {
         const { blob, filename } = await compressToWebP(f);
-        const buf = await blob.arrayBuffer();
-        await createGalleryImage({ fileBuf: buf, filename, mimeType: "image/webp" });
+        const fd = new FormData();
+        fd.append("filename", filename);
+        fd.append("file", blob, filename);
+        await createGalleryImage(fd);
         setProgress({ done: i + 1, total: files.length });
       } catch (err) {
         console.error("upload failed", f.name, err);

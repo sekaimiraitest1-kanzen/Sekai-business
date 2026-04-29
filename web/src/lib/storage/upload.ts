@@ -5,6 +5,9 @@ import { requireAdmin } from "@/lib/auth/with-admin";
 
 /**
  * Upload an image to a public Supabase Storage bucket and return the public URL.
+ * Accepts a Blob/File (FormData payload) — Server Actions handle these natively
+ * via the multipart RSC protocol; ArrayBuffer crosses the boundary unreliably.
+ *
  * Buckets: 'gallery' | 'products' | 'avatars'
  *
  * Compression / WebP conversion is applied client-side before this call
@@ -12,9 +15,8 @@ import { requireAdmin } from "@/lib/auth/with-admin";
  */
 export async function uploadImage(
   bucket: "gallery" | "products" | "avatars",
-  file: ArrayBuffer,
-  filename: string,
-  mimeType: string
+  file: Blob,
+  filename: string
 ): Promise<{ ok: true; url: string; path: string } | { ok: false; error: string }> {
   await requireAdmin();
   const sb = createAdminClient();
@@ -23,8 +25,9 @@ export async function uploadImage(
   const safe = filename.toLowerCase().replace(/[^a-z0-9.-]/g, "-");
   const path = `${Date.now()}-${safe}`;
 
-  const { error } = await sb.storage.from(bucket).upload(path, file, {
-    contentType: mimeType,
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const { error } = await sb.storage.from(bucket).upload(path, buffer, {
+    contentType: file.type || "application/octet-stream",
     upsert: false,
     cacheControl: "31536000", // 1 year
   });

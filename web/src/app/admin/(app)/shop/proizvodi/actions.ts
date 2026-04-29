@@ -60,9 +60,17 @@ export async function deleteProduct(id: string) {
   return { ok: true as const };
 }
 
-export async function uploadProductImage(productId: string, fileBuf: ArrayBuffer, filename: string, mimeType: string) {
+export async function uploadProductImage(formData: FormData) {
   const session = await requireAdmin();
-  const upload = await uploadImage("products", fileBuf, filename, mimeType);
+  const productId = formData.get("productId");
+  const file = formData.get("file");
+  const filename = formData.get("filename");
+
+  if (typeof productId !== "string" || !productId) return { ok: false as const, error: "MISSING_PRODUCT_ID" };
+  if (typeof filename !== "string" || !filename) return { ok: false as const, error: "MISSING_FILENAME" };
+  if (!(file instanceof Blob)) return { ok: false as const, error: "MISSING_FILE" };
+
+  const upload = await uploadImage("products", file, filename);
   if (!upload.ok) return { ok: false as const, error: upload.error };
 
   const sb = createAdminClient();
