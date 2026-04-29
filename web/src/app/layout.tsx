@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { Cormorant_Garamond, Playfair_Display, Oswald, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import "@/styles/legacy.css";
+import "@/styles/legacy-booking.css";
+import "@/styles/legacy-shop.css";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin", "cyrillic"],
@@ -45,6 +47,13 @@ export const metadata: Metadata = {
   title: "Берберница Триша · Батајница",
   description: "Твоје место за стил, традицију и добру причу.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3050"),
+  manifest: "/manifest.json",
+  themeColor: "#1A0F05",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Триша",
+  },
 };
 
 export default function RootLayout({

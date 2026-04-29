@@ -1,0 +1,42 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/with-admin";
+
+export async function upsertCategory(input: {
+  id?: string;
+  slug: string;
+  name_sr: string;
+  name_lat: string;
+  active: boolean;
+}) {
+  const session = await requireAdmin();
+  const sb = createAdminClient();
+  const row = {
+    salon_id: session.salonId,
+    slug: input.slug,
+    name_sr: input.name_sr,
+    name_lat: input.name_lat,
+    active: input.active,
+  };
+  if (input.id) {
+    await sb.from("product_categories").update(row).eq("id", input.id).eq("salon_id", session.salonId);
+  } else {
+    await sb.from("product_categories").insert(row);
+  }
+  revalidatePath("/admin/shop/kategorije");
+  revalidatePath("/admin/shop/proizvodi");
+  revalidatePath("/shop");
+  return { ok: true as const };
+}
+
+export async function deleteCategory(id: string) {
+  const session = await requireAdmin();
+  const sb = createAdminClient();
+  await sb.from("product_categories").delete().eq("id", id).eq("salon_id", session.salonId);
+  revalidatePath("/admin/shop/kategorije");
+  revalidatePath("/admin/shop/proizvodi");
+  revalidatePath("/shop");
+  return { ok: true as const };
+}
