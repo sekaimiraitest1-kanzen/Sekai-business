@@ -12,7 +12,8 @@ export function SiteNav() {
         <div className="nav-logo-text">
           <span data-sr>Берберница</span>
           <span data-lat>Berbernica</span>
-          <span>Батајница · EST 2025</span>
+          <span data-sr>Батајница · EST 2025</span>
+          <span data-lat>Batajnica · EST 2025</span>
         </div>
       </Link>
 

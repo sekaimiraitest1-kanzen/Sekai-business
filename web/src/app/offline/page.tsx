@@ -103,7 +103,8 @@ export default function OfflinePage() {
           color: "rgba(26, 15, 5, 0.4)",
         }}
       >
-        Берберница Триша · Батајница
+        <span data-sr>Берберница Триша · Батајница</span>
+        <span data-lat>Berbernica Triša · Batajnica</span>
       </p>
     </main>
   );

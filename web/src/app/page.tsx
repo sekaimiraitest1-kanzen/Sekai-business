@@ -316,11 +316,13 @@ export default async function HomePage() {
                 <p className="review-text" data-sr>{r.textSr}</p>
                 <p className="review-text" data-lat>{r.textLat}</p>
                 <div className="review-meta">
-                  <div className="review-avatar">{r.initialsSr}</div>
+                  <div className="review-avatar" data-sr>{r.initialsSr}</div>
+                  <div className="review-avatar" data-lat>{r.initialsLat}</div>
                   <div>
                     <div className="review-author" data-sr>{r.authorSr}</div>
                     <div className="review-author" data-lat>{r.authorLat}</div>
-                    <div className="review-source">{r.source}</div>
+                    <div className="review-source" data-sr>{r.sourceSr}</div>
+                    <div className="review-source" data-lat>{r.sourceLat}</div>
                   </div>
                 </div>
               </div>
@@ -504,25 +506,31 @@ const GALLERY = [
 const REVIEWS = [
   {
     initialsSr: "МК",
+    initialsLat: "MK",
     authorSr: "Марко К.",
     authorLat: "Marko K.",
-    source: "Google · 2 нед.",
+    sourceSr: "Google · 2 нед.",
+    sourceLat: "Google · 2 ned.",
     textSr: "Најбоља берберница у Батајници, без конкуренције. Триша ради прецизно, чисто, без журбе. Увек излазим задовољан. Препоручујем свима.",
     textLat: "Najbolja berbernica u Batajnici, bez konkurencije. Triša radi precizno, čisto, bez žurbe. Uvek izlazim zadovoljan. Preporučujem svima.",
   },
   {
     initialsSr: "НЈ",
+    initialsLat: "NJ",
     authorSr: "Никола Ј.",
     authorLat: "Nikola J.",
-    source: "Google · 1 мес.",
+    sourceSr: "Google · 1 мес.",
+    sourceLat: "Google · 1 mes.",
     textSr: "Поштен мајстор, топла атмосфера. Поручио сам и производе — стигли следећи дан. Страсно препоручујем берберницу Тришу свакоме ко цени квалитет.",
     textLat: "Pošten majstor, topla atmosfera. Poručio sam i proizvode — stigli sledeći dan. Strasno preporučujem berbernici Trišu svakome ko ceni kvalitet.",
   },
   {
     initialsSr: "СП",
+    initialsLat: "SP",
     authorSr: "Стефан П.",
     authorLat: "Stefan P.",
-    source: "Google · 3 нед.",
+    sourceSr: "Google · 3 нед.",
+    sourceLat: "Google · 3 ned.",
     textSr: "Долазим годинама. Систем за заказивање је сада одличан — за пет минута имаш термин. И цена је фер. Ово је права берберница.",
     textLat: "Dolazim godinama. Sistem za zakazivanje je sada odličan — za pet minuta imaš termin. I cena je fer. Ovo je prava berbernica.",
   },

@@ -67,6 +67,11 @@ export const metadata: Metadata = {
   // Hint to Android browsers that this is meant to be installed.
   applicationName: "Триша",
   formatDetection: { telephone: false, email: false, address: false },
+  // Cross-vendor counterpart to apple-mobile-web-app-capable; prevents the Chrome
+  // deprecation warning on every page load (BUG-9 from QA report).
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({

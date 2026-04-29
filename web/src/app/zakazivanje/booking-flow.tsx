@@ -291,7 +291,7 @@ export function BookingFlow({
             <div className="form-group">
               <label className="form-label" data-sr>ИМЕ И ПРЕЗИМЕ</label>
               <label className="form-label" data-lat>IME I PREZIME</label>
-              <input className="form-input" type="text" placeholder="Марко Јовановић" value={name} onChange={(e) => setName(e.target.value)} />
+              <input className="form-input" type="text" placeholder={lang === "lat" ? "Marko Jovanović" : "Марко Јовановић"} value={name} onChange={(e) => setName(e.target.value)} />
             </div>
 
             <div className="form-group">
