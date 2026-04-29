@@ -5,13 +5,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBookingConfirmation } from "@/lib/email/templates";
 
 const bookingSchema = z.object({
-  salonId: z.string().uuid(),
-  serviceId: z.string().uuid(),
+  salonId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID format"),
+  serviceId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID format"),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   timeSlot: z.string().regex(/^\d{2}:\d{2}$/),
-  name: z.string().min(2).max(80),
-  phone: z.string().min(6).max(20),
-  email: z.string().email().optional().or(z.literal("")),
+  name: z.string().trim().min(2).max(80),
+  phone: z.string().trim().min(6).max(30),
+  // Empty string OK; otherwise must look like a real email. We don't reject
+  // weird-but-passing inputs — booking shouldn't fail because of email format.
+  email: z.string().trim().optional().transform((v) => v ?? ""),
   utmSource: z.string().optional(),
 });
 
@@ -20,18 +22,23 @@ export type BookingInput = z.infer<typeof bookingSchema>;
 export async function submitBooking(input: BookingInput) {
   const parsed = bookingSchema.safeParse(input);
   if (!parsed.success) {
+    console.error("[submitBooking] validation failed:", parsed.error.flatten());
     return { ok: false as const, error: "INVALID_INPUT" };
   }
   const data = parsed.data;
   const sb = createAdminClient();
 
   // 1. Upsert customer by (salon_id, phone)
-  const { data: existingCustomer } = await sb
+  const { data: existingCustomer, error: lookupErr } = await sb
     .from("customers")
     .select("id, no_show_flag")
     .eq("salon_id", data.salonId)
     .eq("phone", data.phone)
     .maybeSingle();
+
+  if (lookupErr) {
+    console.error("[submitBooking] customer lookup failed:", lookupErr);
+  }
 
   let customerId = existingCustomer?.id as string | undefined;
   if (!customerId) {
@@ -46,7 +53,10 @@ export async function submitBooking(input: BookingInput) {
       })
       .select("id")
       .single();
-    if (cErr || !created) return { ok: false as const, error: "CUSTOMER_CREATE_FAILED" };
+    if (cErr || !created) {
+      console.error("[submitBooking] customer create failed:", cErr);
+      return { ok: false as const, error: "CUSTOMER_CREATE_FAILED" };
+    }
     customerId = created.id;
   } else {
     // update name/email if previously empty
@@ -83,7 +93,10 @@ export async function submitBooking(input: BookingInput) {
     .select("id")
     .single();
 
-  if (bErr || !booking) return { ok: false as const, error: "BOOKING_CREATE_FAILED" };
+  if (bErr || !booking) {
+    console.error("[submitBooking] booking insert failed:", bErr);
+    return { ok: false as const, error: "BOOKING_CREATE_FAILED" };
+  }
 
   // Send confirmation email (best-effort, don't block on failure)
   if (data.email) {

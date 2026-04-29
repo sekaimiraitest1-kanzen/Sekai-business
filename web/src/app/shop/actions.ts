@@ -9,7 +9,7 @@ const orderSchema = z.object({
   customerPhone: z.string().min(6).max(20),
   customerEmail: z.string().email().optional().or(z.literal("")),
   items: z.array(z.object({
-    productId: z.string().uuid(),
+    productId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID format"),
     name: z.string(),
     quantity: z.number().int().min(1).max(10),
     price: z.number().int().min(0),
