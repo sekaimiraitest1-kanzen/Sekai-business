@@ -160,12 +160,25 @@ body {
 .hero {
   overflow: visible;
   min-height: 100vh;
-  background: url('/legacy/uploads/Gemini_Generated_Image_e3wgw5e3wgw5e3wg.png') center top / cover no-repeat, var(--brown-950);
+  /* `100% 100%` stretches the decorative image to exactly fill the viewport in
+     both axes — no aspect-ratio cropping, so the gold ornament pattern at the
+     image edges always reaches the screen edges (the user-reported "tamne pruge"
+     issue at fullscreen). The image is decorative + symmetric, so the slight
+     aspect distortion at extreme viewports is imperceptible.
+     On narrow/mobile viewports we want `cover` instead — at tall portrait
+     ratios, 100% 100% would over-stretch vertically. The media query below
+     restores `cover` under 900px width. */
+  background: url('/legacy/uploads/Gemini_Generated_Image_e3wgw5e3wgw5e3wg.png') center top / 100% 100% no-repeat, var(--brown-950);
   display: flex;
   align-items: center;
   justify-content: center;
   padding-top: 64px;
   position: relative;
+}
+@media (max-width: 900px) {
+  .hero {
+    background-size: cover;
+  }
 }
 
 
