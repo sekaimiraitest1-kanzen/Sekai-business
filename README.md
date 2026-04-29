@@ -5,48 +5,47 @@ PWA web-sajt + booking sistem + shop + mobile admin za tradicionalnu berbernicu 
 ## Stack
 
 - **Framework:** Next.js 14 (App Router) + TypeScript
-- **Styling:** Tailwind CSS
+- **Styling:** Tailwind + custom CSS in `web/src/styles/`
 - **DB + Auth:** Supabase (PostgreSQL + RLS)
 - **Email:** Resend
+- **PWA:** hand-rolled service worker (`web/public/sw.js`)
 - **Hosting:** Vercel (production), localhost:3050 (dev)
-- **PWA:** next-pwa
 
 ## Folder structure
 
 ```
 Berbernica/
-├── README.md                ← ovaj fajl
+├── README.md
 ├── .gitignore
-├── .env.local.example       ← template, popuni i sačuvaj kao .env.local
 │
-├── docs/                    ← projektna dokumentacija
-│   ├── TRISHA_CONTEXT.md    ← potpun kontekst projekta (design + spec)
-│   └── DESIGN_BRIEF.md      ← original brief od claude.ai/design
+├── web/                     ← Next.js application (canonical source)
+│   ├── public/              ← static assets, manifest.json, sw.js, icons
+│   ├── src/                 ← app/ (routes), components/, lib/, styles/
+│   ├── scripts/             ← seed-admin.mjs (one-time bootstrap)
+│   └── package.json
 │
-├── design/                  ← handoff bundle iz claude.ai/design
-│   ├── README.md            ← claude.ai uputstvo coding agentu
-│   ├── prototypes/          ← HTML prototipi (4 stranice)
-│   ├── screenshots/         ← hero varijante
-│   ├── photos/              ← Trišine prave fotografije
-│   ├── refs/                ← design reference (Gemini, pasted)
-│   └── full-design.pdf      ← kompletna design dokumentacija (3.2MB)
-│
-├── web/                     ← Next.js aplikacija (TBD)
-├── supabase/                ← migracije + seed skripte
+├── supabase/                ← database migrations
 │   └── migrations/
-└── scripts/                 ← utility skripte
+│
+└── docs/                    ← project documentation
+    ├── TRISHA_CONTEXT.md    ← full project context (design + spec)
+    └── DESIGN_BRIEF.md      ← original brief from claude.ai/design
 ```
+
+Reference assets (design prototypes, photos, audit reports from earlier
+sessions) are preserved outside the repo at
+`../deprecated/Berbernica-cleanup-2026-04-29/` — out of GitHub but on disk.
 
 ## Setup (lokalno)
 
-1. Kopiraj env template:
+1. Kopiraj env template iz `web/`:
    ```bash
+   cd web
    cp .env.local.example .env.local
    ```
 2. Popuni `.env.local` realnim ključevima (Supabase, Resend).
 3. Install i pokreni:
    ```bash
-   cd web
    npm install
    npm run dev
    ```

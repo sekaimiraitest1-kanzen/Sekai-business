@@ -42,3 +42,6 @@ Trisha-handoff.zip
 
 # ship-safe cache (do not commit)
 .ship-safe/
+
+# code-review-graph cache (auto-regenerated, do not commit)
+.code-review-graph/
