@@ -32,11 +32,19 @@ export function PorudzbineClient({ orders }: { orders: Order[] }) {
           <div className="adm-page-title">
             <span data-sr>ПОРУЏБИНЕ</span><span data-lat>PORUDŽBINE</span>
           </div>
-          <div className="adm-page-subtitle">{pending} čeka · {orders.length} ukupno</div>
+          <div className="adm-page-subtitle">
+            <span data-sr>{pending} чека · {orders.length} укупно</span>
+            <span data-lat>{pending} čeka · {orders.length} ukupno</span>
+          </div>
         </div>
       </div>
 
-      {orders.length === 0 && <div className="adm-empty">Nema porudžbina.</div>}
+      {orders.length === 0 && (
+        <div className="adm-empty">
+          <span data-sr>Нема поруџбина.</span>
+          <span data-lat>Nema porudžbina.</span>
+        </div>
+      )}
 
       {orders.map((o) => {
         const status = STATUSES.find((s) => s.value === o.status);
@@ -71,7 +79,10 @@ function OrderDetail({ order, onClose }: { order: Order; onClose: () => void }) 
     <div className="adm-sheet-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="adm-sheet">
         <div className="adm-sheet-handle" />
-        <div className="adm-sheet-title">PORUDŽBINA</div>
+        <div className="adm-sheet-title">
+          <span data-sr>ПОРУЏБИНА</span>
+          <span data-lat>PORUDŽBINA</span>
+        </div>
         <div style={{ padding: "0 20px 16px" }}>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, fontStyle: "italic", color: "var(--cream)", marginBottom: 4 }}>
             {order.customers?.name ?? "—"}
@@ -88,13 +99,15 @@ function OrderDetail({ order, onClose }: { order: Order; onClose: () => void }) 
           ))}
 
           <div className="adm-row">
-            <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "var(--cream)", letterSpacing: ".08em" }}>UKUPNO</span>
+            <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "var(--cream)", letterSpacing: ".08em" }}>
+              <span data-sr>УКУПНО</span><span data-lat>UKUPNO</span>
+            </span>
             <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontStyle: "italic", color: "var(--mustard)" }}>{order.total} RSD</span>
           </div>
 
           {order.pickup_note && (
             <div className="adm-banner info" style={{ marginTop: 12 }}>
-              <strong>Napomena:</strong> {order.pickup_note}
+              <strong><span data-sr>Напомена:</span><span data-lat>Napomena:</span></strong> {order.pickup_note}
             </div>
           )}
 

@@ -8,10 +8,10 @@ type WH = Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", { open: 
 type ContentRow = { key: string; value_sr: string | null; value_lat: string | null };
 
 const CONTENT_KEYS = [
-  { key: "hero_eyebrow", labelSr: "Hero · Etikecija изнад наслова", labelLat: "Hero · Etiketa iznad naslova" },
+  { key: "hero_eyebrow", labelSr: "Hero · Етикета изнад наслова", labelLat: "Hero · Etiketa iznad naslova" },
   { key: "hero_title", labelSr: "Hero · Главни наслов", labelLat: "Hero · Glavni naslov" },
   { key: "hero_subtitle", labelSr: "Hero · Поднаслов", labelLat: "Hero · Podnaslov" },
-  { key: "hero_tagline", labelSr: "Hero · Slogan испод", labelLat: "Hero · Slogan ispod" },
+  { key: "hero_tagline", labelSr: "Hero · Слоган испод", labelLat: "Hero · Slogan ispod" },
   { key: "about_title", labelSr: "О нама · Наслов", labelLat: "O nama · Naslov" },
   { key: "about_story", labelSr: "О нама · Прича", labelLat: "O nama · Priča" },
   { key: "review_1", labelSr: "Утисак 1", labelLat: "Utisak 1" },
@@ -142,13 +142,17 @@ function KontaktEditor({ salon }: { salon: NonNullable<Salon> }) {
 
   return (
     <div className="adm-card" style={{ flexDirection: "column", alignItems: "stretch", gap: 12 }}>
-      <label className="adm-form-label">NAZIV SALONA</label>
+      <label className="adm-form-label" data-sr>НАЗИВ САЛОНА</label>
+      <label className="adm-form-label" data-lat>NAZIV SALONA</label>
       <input className="adm-input" value={name} onChange={(e) => setName(e.target.value)} />
-      <label className="adm-form-label">ADRESA</label>
+      <label className="adm-form-label" data-sr>АДРЕСА</label>
+      <label className="adm-form-label" data-lat>ADRESA</label>
       <input className="adm-input" value={address} onChange={(e) => setAddress(e.target.value)} />
-      <label className="adm-form-label">TELEFON</label>
+      <label className="adm-form-label" data-sr>ТЕЛЕФОН</label>
+      <label className="adm-form-label" data-lat>TELEFON</label>
       <input className="adm-input" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
-      <label className="adm-form-label">EMAIL</label>
+      <label className="adm-form-label" data-sr>ИМEJЛ</label>
+      <label className="adm-form-label" data-lat>EMAIL</label>
       <input className="adm-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       <button className="adm-btn" disabled={pending} onClick={() => start(async () => {
         await updateSalon({ name, address, phone, email });

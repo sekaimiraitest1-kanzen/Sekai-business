@@ -22,6 +22,20 @@ export type ServiceInput = {
 export async function upsertService(input: ServiceInput) {
   const session = await requireAdmin();
   const sb = createAdminClient();
+  // L11: append-at-end for new rows. Old code used 999 as a sentinel which
+  // meant every new service collided with previous "new" services and the
+  // resulting order was insertion-time dependent.
+  let sortOrder = input.sort_order;
+  if (sortOrder === undefined && !input.id) {
+    const { data: maxRow } = await sb
+      .from("services")
+      .select("sort_order")
+      .eq("salon_id", session.salonId)
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    sortOrder = (maxRow?.sort_order ?? -1) + 1;
+  }
   const row = {
     salon_id: session.salonId,
     name_sr: input.name_sr,
@@ -29,7 +43,7 @@ export async function upsertService(input: ServiceInput) {
     price: input.price,
     duration_min: input.duration_min,
     active: input.active,
-    sort_order: input.sort_order ?? 999,
+    sort_order: sortOrder ?? 0,
     featured: input.featured ?? false,
     description_sr: input.description_sr ?? null,
     description_lat: input.description_lat ?? null,

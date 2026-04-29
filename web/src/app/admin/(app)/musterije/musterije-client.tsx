@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -19,11 +19,19 @@ export function MusterijeClient({ customers, initialSearch }: { customers: Custo
   const [q, setQ] = useState(initialSearch);
   const router = useRouter();
 
+  // L9: 250ms debounce so fast typers don't hammer the RSC fetch on every keystroke.
+  useEffect(() => {
+    if (q === initialSearch) return; // initial render — already on the URL
+    const t = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (q.trim()) params.set("q", q.trim());
+      router.push(`/admin/musterije?${params.toString()}`);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [q, initialSearch, router]);
+
   function search(value: string) {
     setQ(value);
-    const params = new URLSearchParams();
-    if (value.trim()) params.set("q", value.trim());
-    router.push(`/admin/musterije?${params.toString()}`);
   }
 
   return (
@@ -34,13 +42,16 @@ export function MusterijeClient({ customers, initialSearch }: { customers: Custo
             <span data-sr>МУШТЕРИЈЕ</span>
             <span data-lat>MUŠTERIJE</span>
           </div>
-          <div className="adm-page-subtitle">{customers.length} ukupno</div>
+          <div className="adm-page-subtitle">
+            <span data-sr>{customers.length} укупно</span>
+            <span data-lat>{customers.length} ukupno</span>
+          </div>
         </div>
       </div>
 
       <input
         className="adm-input"
-        placeholder="Search by phone or name…"
+        placeholder="Pretraga po telefonu ili imenu…"
         value={q}
         onChange={(e) => search(e.target.value)}
         type="search"
@@ -49,7 +60,17 @@ export function MusterijeClient({ customers, initialSearch }: { customers: Custo
 
       {customers.length === 0 && (
         <div className="adm-empty">
-          {q ? `Nema rezultata za "${q}"` : "Još nema mušterija."}
+          {q ? (
+            <>
+              <span data-sr>Нема резултата за &ldquo;{q}&rdquo;</span>
+              <span data-lat>Nema rezultata za &ldquo;{q}&rdquo;</span>
+            </>
+          ) : (
+            <>
+              <span data-sr>Још нема муштерија.</span>
+              <span data-lat>Još nema mušterija.</span>
+            </>
+          )}
         </div>
       )}
 

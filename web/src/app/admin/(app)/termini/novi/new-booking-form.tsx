@@ -305,7 +305,19 @@ export function NewBookingForm({ services, workingHours, recentCustomers }: {
 
       {err && (
         <div className="adm-banner warn" style={{ marginTop: 12 }}>
-          {err === "BOOKING_FAILED" ? "Greška pri kreiranju — slot možda zauzet." : `Greška: ${err}`}
+          {err === "SLOT_TAKEN" ? (
+            <>
+              <span data-sr>⚠ Слот је управо заузет — изабери други.</span>
+              <span data-lat>⚠ Slot je upravo zauzet — izaberi drugi.</span>
+            </>
+          ) : err === "BOOKING_FAILED" ? (
+            <>
+              <span data-sr>Грешка при креирању термина.</span>
+              <span data-lat>Greška pri kreiranju termina.</span>
+            </>
+          ) : (
+            `${err}`
+          )}
         </div>
       )}
 

@@ -20,7 +20,6 @@ export function StatistikeClient(props: {
   topServices: TopService[];
   retention: Retention;
   ordersCount: number;
-  labelsLat: string[];
 }) {
   const { period, totalRevenue, change, doneCount, cancelledCount, cancelledPct, avgPerBooking, newCustomers, series, topServices, retention, ordersCount } = props;
   const max = Math.max(1, ...series.map((s) => s.value));
@@ -144,11 +143,11 @@ export function StatistikeClient(props: {
         )}
       </div>
 
-      {/* Retention block */}
+      {/* Retention block — global across all customers (period toggle does NOT change this). */}
       <div className="stat-card-block">
         <div className="stat-card-title">
-          <span data-sr>RETENTION</span>
-          <span data-lat>RETENTION</span>
+          <span data-sr>RETENTION · сви купци</span>
+          <span data-lat>RETENTION · svi kupci</span>
         </div>
         <div className="retention-row">
           <div className="retention-cell">

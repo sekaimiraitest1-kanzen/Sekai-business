@@ -75,7 +75,6 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
   // build bar chart series — array of { label, value, key, isToday }
   const series: { label: string; value: number; key: string; isToday: boolean }[] = [];
   const labelsSr = ["ПОН", "УТО", "СРЕ", "ЧЕТ", "ПЕТ", "СУБ", "НЕД"];
-  const labelsLat = ["PON", "UTO", "SRE", "ČET", "PET", "SUB", "NED"];
   const todayKeyStr = todayKey();
 
   if (period === "day") {
@@ -153,7 +152,6 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
       topServices={topServices}
       retention={{ active, atRisk, churned }}
       ordersCount={ordersData.length}
-      labelsLat={labelsLat}
     />
   );
 }
