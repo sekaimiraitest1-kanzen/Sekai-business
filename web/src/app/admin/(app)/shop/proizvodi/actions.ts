@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/with-admin";
-import { uploadImage, deleteFromStorage, pathFromUrl } from "@/lib/storage/upload";
+import { uploadImage, deleteFromStorage } from "@/lib/storage/upload";
+import { pathFromUrl } from "@/lib/storage/url";
 
 export type ProductInput = {
   id?: string;
