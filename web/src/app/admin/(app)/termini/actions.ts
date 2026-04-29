@@ -4,6 +4,19 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/with-admin";
 
+export async function getMyTakenSlots(date: string): Promise<string[]> {
+  if (!date) return [];
+  const session = await requireAdmin();
+  const sb = createAdminClient();
+  const { data } = await sb
+    .from("bookings")
+    .select("time_slot")
+    .eq("salon_id", session.salonId)
+    .eq("date", date)
+    .in("status", ["pending", "confirmed"]);
+  return (data ?? []).map((r: { time_slot: string }) => r.time_slot.slice(0, 5));
+}
+
 type Status = "confirmed" | "done" | "no_show" | "cancelled" | "pending";
 
 export async function updateBookingStatus(bookingId: string, status: Status) {
