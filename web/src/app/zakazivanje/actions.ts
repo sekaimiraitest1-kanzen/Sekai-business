@@ -125,11 +125,31 @@ export async function submitBooking(input: BookingInput) {
 export async function getTakenSlots(salonId: string, date: string): Promise<string[]> {
   if (!salonId || !date) return [];
   const sb = createAdminClient();
-  const { data } = await sb
-    .from("bookings")
-    .select("time_slot")
-    .eq("salon_id", salonId)
-    .eq("date", date)
-    .in("status", ["pending", "confirmed"]);
-  return (data ?? []).map((r: { time_slot: string }) => r.time_slot.slice(0, 5));
+  const [bookingsRes, blocksRes] = await Promise.all([
+    sb
+      .from("bookings")
+      .select("time_slot")
+      .eq("salon_id", salonId)
+      .eq("date", date)
+      .in("status", ["pending", "confirmed"]),
+    // G5: also exclude admin-blocked slots from public booking picker.
+    sb
+      .from("blocked_slots")
+      .select("time_slot")
+      .eq("salon_id", salonId)
+      .eq("date", date),
+  ]);
+  const taken = new Set<string>();
+  for (const r of bookingsRes.data ?? []) taken.add((r.time_slot as string).slice(0, 5));
+  const wholeDayBlocked = (blocksRes.data ?? []).some((r) => r.time_slot === null);
+  if (wholeDayBlocked) {
+    for (let h = 0; h < 24; h++) {
+      for (const m of ["00", "30"]) taken.add(`${String(h).padStart(2, "0")}:${m}`);
+    }
+  } else {
+    for (const r of blocksRes.data ?? []) {
+      if (r.time_slot) taken.add((r.time_slot as string).slice(0, 5));
+    }
+  }
+  return Array.from(taken);
 }

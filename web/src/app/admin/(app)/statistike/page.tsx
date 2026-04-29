@@ -1,53 +1,13 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/with-admin";
+import { periodRange, previousRange, formatDateKey, todayKey, nowBelgrade } from "@/lib/datetime";
 import { StatistikeClient } from "./statistike-client";
 
 export const dynamic = "force-dynamic";
 
 type Period = "day" | "week" | "month";
 
-function periodRange(period: Period, now = new Date()): { from: Date; to: Date } {
-  const today = new Date(now);
-  today.setHours(0, 0, 0, 0);
-  if (period === "day") {
-    return { from: today, to: today };
-  }
-  if (period === "week") {
-    // Monday → Sunday of current week
-    const monOffset = (today.getDay() + 6) % 7;
-    const mon = new Date(today);
-    mon.setDate(today.getDate() - monOffset);
-    const sun = new Date(mon);
-    sun.setDate(mon.getDate() + 6);
-    return { from: mon, to: sun };
-  }
-  // month: 1st → last day
-  const first = new Date(today.getFullYear(), today.getMonth(), 1);
-  const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-  return { from: first, to: last };
-}
-
-function previousRange(period: Period, current: { from: Date; to: Date }) {
-  if (period === "day") {
-    const d = new Date(current.from);
-    d.setDate(d.getDate() - 1);
-    return { from: d, to: d };
-  }
-  if (period === "week") {
-    const from = new Date(current.from);
-    from.setDate(from.getDate() - 7);
-    const to = new Date(current.to);
-    to.setDate(to.getDate() - 7);
-    return { from, to };
-  }
-  const first = new Date(current.from.getFullYear(), current.from.getMonth() - 1, 1);
-  const last = new Date(current.from.getFullYear(), current.from.getMonth(), 0);
-  return { from: first, to: last };
-}
-
-function fmt(d: Date): string {
-  return d.toISOString().split("T")[0];
-}
+const fmt = formatDateKey;
 
 export default async function StatistikePage({ searchParams }: { searchParams: { period?: string } }) {
   const session = await requireAdmin();
@@ -116,7 +76,7 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
   const series: { label: string; value: number; key: string; isToday: boolean }[] = [];
   const labelsSr = ["ПОН", "УТО", "СРЕ", "ЧЕТ", "ПЕТ", "СУБ", "НЕД"];
   const labelsLat = ["PON", "UTO", "SRE", "ČET", "PET", "SUB", "NED"];
-  const todayKey = fmt(new Date());
+  const todayKeyStr = todayKey();
 
   if (period === "day") {
     // hourly buckets 09–20
@@ -132,7 +92,7 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
       const d = new Date(cur.from);
       d.setDate(cur.from.getDate() + i);
       const k = fmt(d);
-      series.push({ label: labelsSr[i], value: dailyRevenue[k] ?? 0, key: k, isToday: k === todayKey });
+      series.push({ label: labelsSr[i], value: dailyRevenue[k] ?? 0, key: k, isToday: k === todayKeyStr });
     }
   } else {
     const days = (cur.to.getDate() - cur.from.getDate()) + 1;
@@ -140,7 +100,7 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
       const d = new Date(cur.from);
       d.setDate(cur.from.getDate() + i);
       const k = fmt(d);
-      series.push({ label: String(d.getDate()), value: dailyRevenue[k] ?? 0, key: k, isToday: k === todayKey });
+      series.push({ label: String(d.getDate()), value: dailyRevenue[k] ?? 0, key: k, isToday: k === todayKeyStr });
     }
   }
 
@@ -161,7 +121,7 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
   const topServices = Array.from(serviceMap.values()).sort((a, b) => b.count - a.count).slice(0, 5);
 
   // retention (across all customers, not period-bound)
-  const today = new Date();
+  const today = nowBelgrade();
   const atRisk = allCust.filter((c) => {
     if (!c.last_visit_date) return false;
     const days = (today.getTime() - new Date(c.last_visit_date).getTime()) / 86400000;

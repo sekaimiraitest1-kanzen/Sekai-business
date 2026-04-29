@@ -16,6 +16,7 @@ const TABS = [
 const MORE_LINKS = [
   { href: "/admin/galerija", icon: "🖼", label_sr: "ГАЛЕРИЈА", label_lat: "GALERIJA" },
   { href: "/admin/sajt", icon: "📝", label_sr: "САЈТ", label_lat: "SAJT" },
+  { href: "/admin/blokirano", icon: "🚫", label_sr: "БЛОКИРАНО", label_lat: "BLOKIRANO" },
   { href: "/admin/statistike", icon: "📊", label_sr: "СТАТИСТИКА", label_lat: "STATISTIKA" },
   { href: "/admin/podesavanja", icon: "⚙", label_sr: "ПОДЕШАВАЊА", label_lat: "PODEŠAVANJA" },
 ] as const;
@@ -32,6 +33,7 @@ export function AdminShell({ session, children }: { session: AdminSession; child
     "/admin/musterije": { sr: "МУШТЕРИЈЕ", lat: "MUŠTERIJE" },
     "/admin/galerija": { sr: "ГАЛЕРИЈА", lat: "GALERIJA" },
     "/admin/sajt": { sr: "САЈТ САДРЖАЈ", lat: "SAJT SADRŽAJ" },
+    "/admin/blokirano": { sr: "БЛОКИРАНО", lat: "BLOKIRANO" },
     "/admin/statistike": { sr: "СТАТИСТИКА", lat: "STATISTIKA" },
     "/admin/podesavanja": { sr: "ПОДЕШАВАЊА", lat: "PODEŠAVANJA" },
   };

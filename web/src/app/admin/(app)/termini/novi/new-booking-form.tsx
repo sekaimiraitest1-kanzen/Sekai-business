@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createWalkInBooking, getMyTakenSlots } from "../actions";
+import { todayKey, formatDateKey, nowBelgrade } from "@/lib/datetime";
 
 type Service = { id: string; name_sr: string; name_lat: string; duration_min: number; price: number };
 type Customer = { id: string; name: string | null; phone: string };
@@ -14,14 +15,11 @@ const LAT_DAYS_SHORT = ["ND", "PN", "UT", "SR", "ČT", "PT", "SU"];
 const SR_MONTHS_SHORT = ["јан", "феб", "мар", "апр", "мај", "јун", "јул", "авг", "сеп", "окт", "нов", "дец"];
 const LAT_MONTHS_SHORT = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "avg", "sep", "okt", "nov", "dec"];
 
-function fmtDate(d: Date): string {
-  return d.toISOString().split("T")[0];
-}
 function dayKey(d: Date): keyof WH {
   return (["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const)[d.getDay()];
 }
 function todayStr() {
-  return fmtDate(new Date());
+  return todayKey();
 }
 
 /**
@@ -94,10 +92,11 @@ export function NewBookingForm({ services, workingHours, recentCustomers }: {
 
   const dateOptions = useMemo(() => {
     const opts: { date: string; dow: number; isClosed: boolean }[] = [];
+    const base = nowBelgrade();
     for (let i = 0; i < 14; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      const k = fmtDate(d);
+      const d = new Date(base);
+      d.setDate(base.getDate() + i);
+      const k = formatDateKey(d);
       const isClosed = workingHours ? workingHours[dayKey(d)] === null : false;
       opts.push({ date: k, dow: d.getDay(), isClosed });
     }
@@ -174,7 +173,7 @@ export function NewBookingForm({ services, workingHours, recentCustomers }: {
         />
         {matchedCustomer && (
           <div className="nb-match">
-            ✓ <span data-sr>{matchedCustomer.name} — постојећа мушterija</span>
+            ✓ <span data-sr>{matchedCustomer.name} — постојећа муштерија</span>
             <span data-lat>{matchedCustomer.name} — postojeća mušterija</span>
           </div>
         )}

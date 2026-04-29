@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { updateBookingStatus } from "./actions";
+import { todayKey } from "@/lib/datetime";
 
 type Customer = {
   id?: string | null;
@@ -50,6 +51,7 @@ export function TerminiClient({
   weekTo,
   monthFrom,
   workingHours,
+  visitCounts,
 }: {
   todayBookings: Booking[];
   weekBookings: WeekBooking[];
@@ -59,6 +61,7 @@ export function TerminiClient({
   weekTo: string;
   monthFrom: string;
   workingHours: WH | null;
+  visitCounts: Record<string, number>;
 }) {
   const [view, setView] = useState<"today" | "week">("today");
   const [selected, setSelected] = useState<Booking | null>(null);
@@ -171,6 +174,10 @@ export function TerminiClient({
           booking={selected}
           isNext={selected.id === nextId}
           pending={pending}
+          visitCount={(() => {
+            const c = unwrap(selected.customers);
+            return c?.id ? (visitCounts[c.id] ?? 0) : 0;
+          })()}
           onClose={() => setSelected(null)}
           onAction={(status) =>
             startTransition(async () => {
@@ -252,7 +259,7 @@ function MonthHeatmap({ monthFrom, monthBookings, weekFrom, weekTo, workingHours
   const max = Math.max(1, ...Object.values(counts));
 
   const days: { day: number; key: string; count: number; isClosed: boolean; isInWeek: boolean; isToday: boolean }[] = [];
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = todayKey();
   for (let d = 1; d <= daysInMonth; d++) {
     const dt = new Date(year, monthName, d);
     const key = dt.toISOString().split("T")[0];
@@ -330,10 +337,11 @@ function MonthHeatmap({ monthFrom, monthBookings, weekFrom, weekTo, workingHours
 }
 
 // ── DETAIL SHEET ──────────────────────────────────
-function BookingDetailSheet({ booking, isNext, pending, onClose, onAction }: {
+function BookingDetailSheet({ booking, isNext, pending, visitCount, onClose, onAction }: {
   booking: Booking;
   isNext: boolean;
   pending: boolean;
+  visitCount: number;
   onClose: () => void;
   onAction: (s: "done" | "no_show" | "cancelled" | "confirmed") => void;
 }) {
@@ -347,13 +355,25 @@ function BookingDetailSheet({ booking, isNext, pending, onClose, onAction }: {
   slotDate.setHours(hh, mm, 0, 0);
   const minsUntil = Math.round((slotDate.getTime() - now.getTime()) / 60000);
 
-  // First-visit string from customer.created_at
+  // First-visit string from customer.created_at — approximate (could pre-date the
+  // first DONE booking by a few days when admin creates customer up-front).
   const firstVisit = customer?.created_at ? new Date(customer.created_at) : null;
-  const visitsCount = (customer?.no_show_count ?? 0); // approximate — we don't track total visits in customer table directly
 
   const isUpcoming = booking.status === "confirmed" || booking.status === "pending";
   const canCall = !!customer?.phone;
   const isClosable = isUpcoming;
+
+  // Bilingual labels for status / time-until — fixed M1 + M2 from audit.
+  const visitOrdinalSr = `${visitCount + 1}. пут`;
+  const visitOrdinalLat = `${visitCount + 1}. put`;
+  const timeHintSr = isUpcoming
+    ? minsUntil > 0 ? `за ${minsUntil} min` : minsUntil > -10 ? "сада" : "у прошлости"
+    : booking.status === "done" ? "обављено" : booking.status === "no_show" ? "no-show" : "отказано";
+  const timeHintLat = isUpcoming
+    ? minsUntil > 0 ? `za ${minsUntil} min` : minsUntil > -10 ? "sada" : "u prošlosti"
+    : booking.status === "done" ? "obavljeno" : booking.status === "no_show" ? "no-show" : "otkazano";
+  const closedBannerSr = booking.status === "done" ? "✓ Обављено" : booking.status === "no_show" ? "⚠ No-show" : "✕ Отказано";
+  const closedBannerLat = booking.status === "done" ? "✓ Obavljeno" : booking.status === "no_show" ? "⚠ No-show" : "✕ Otkazano";
 
   return (
     <div className="adm-sheet-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -373,7 +393,7 @@ function BookingDetailSheet({ booking, isNext, pending, onClose, onAction }: {
 
         {customer?.no_show_flag && (
           <div className="adm-banner warn" style={{ margin: "0 20px 12px" }}>
-            <span data-sr>⚠ Ова мушterija није дошла прошли пут.</span>
+            <span data-sr>⚠ Ова муштерија није дошла прошли пут.</span>
             <span data-lat>⚠ Ova mušterija nije došla prošli put.</span>
           </div>
         )}
@@ -385,31 +405,29 @@ function BookingDetailSheet({ booking, isNext, pending, onClose, onAction }: {
           </div>
 
           <div className="trm-detail-rows">
-            <DetailRow labelSr="ДАТУМ" labelLat="DATUM" value={formatShortDate(new Date().toISOString().split("T")[0])} hint="DANAS" hintColor="success" />
+            <DetailRow labelSr="ДАТУМ" labelLat="DATUM" value={formatShortDate(todayKey())} hint="DANAS" hintColor="success" />
             <DetailRow
               labelSr="ВРЕМЕ"
               labelLat="VREME"
               value={booking.time_slot.slice(0, 5)}
-              hint={
-                isUpcoming
-                  ? minsUntil > 0
-                    ? `за ${minsUntil} min`
-                    : minsUntil > -10 ? "сада" : "у прошлости"
-                  : booking.status === "done" ? "обављено" : booking.status === "no_show" ? "no-show" : "отказано"
-              }
+              hintSr={timeHintSr}
+              hintLat={timeHintLat}
             />
             <DetailRow
               labelSr="УСЛУГА"
               labelLat="USLUGA"
               value={service?.name_lat ?? "—"}
-              hint={`${service?.duration_min ?? 30} min`}
+              hintSr={`${service?.duration_min ?? 30} min`}
+              hintLat={`${service?.duration_min ?? 30} min`}
             />
-            <DetailRow labelSr="ЦЕНА" labelLat="CENA" value={String(service?.price ?? 0)} hint="RSD" big />
+            <DetailRow labelSr="ЦЕНА" labelLat="CENA" value={String(service?.price ?? 0)} hintSr="РСД" hintLat="RSD" big />
             <DetailRow
               labelSr="ДОЛАЗИ"
               labelLat="DOLAZI"
-              value={visitsCount > 0 ? `${visitsCount + 1}. пут` : "1. пут"}
-              hint={firstVisit ? `од ${firstVisit.getDate()}.${firstVisit.getMonth() + 1}.${firstVisit.getFullYear()}` : ""}
+              valueSr={visitOrdinalSr}
+              valueLat={visitOrdinalLat}
+              hintSr={firstVisit ? `од ${firstVisit.getDate()}.${firstVisit.getMonth() + 1}.${firstVisit.getFullYear()}` : ""}
+              hintLat={firstVisit ? `od ${firstVisit.getDate()}.${firstVisit.getMonth() + 1}.${firstVisit.getFullYear()}` : ""}
             />
           </div>
 
@@ -441,7 +459,8 @@ function BookingDetailSheet({ booking, isNext, pending, onClose, onAction }: {
           {!isUpcoming && (
             <div className="adm-banner info" style={{ marginTop: 16 }}>
               <span style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase" }}>
-                {booking.status === "done" ? "✓ Obavljeno" : booking.status === "no_show" ? "⚠ No-show" : "✕ Otkazano"}
+                <span data-sr>{closedBannerSr}</span>
+                <span data-lat>{closedBannerLat}</span>
               </span>
             </div>
           )}
@@ -451,14 +470,23 @@ function BookingDetailSheet({ booking, isNext, pending, onClose, onAction }: {
   );
 }
 
-function DetailRow({ labelSr, labelLat, value, hint, hintColor, big }: {
+function DetailRow({ labelSr, labelLat, value, valueSr, valueLat, hint, hintSr, hintLat, hintColor, big }: {
   labelSr: string;
   labelLat: string;
-  value: string;
+  /** Single value rendered identically in both scripts (e.g. price digits, time). */
+  value?: string;
+  /** Or split SR / LAT values when text differs by script. */
+  valueSr?: string;
+  valueLat?: string;
   hint?: string;
+  hintSr?: string;
+  hintLat?: string;
   hintColor?: "success" | "danger";
   big?: boolean;
 }) {
+  const hasDualValue = valueSr !== undefined || valueLat !== undefined;
+  const hasDualHint = hintSr !== undefined || hintLat !== undefined;
+  const hintCls = `trm-detail-row-hint ${hintColor === "success" ? "success" : ""} ${hintColor === "danger" ? "danger" : ""}`.trim();
   return (
     <div className="trm-detail-row">
       <div className="trm-detail-row-label">
@@ -466,12 +494,22 @@ function DetailRow({ labelSr, labelLat, value, hint, hintColor, big }: {
         <span data-lat>{labelLat}</span>
       </div>
       <div className="trm-detail-row-vals">
-        <div className={`trm-detail-row-value ${big ? "big" : ""}`}>{value}</div>
-        {hint && (
-          <div className={`trm-detail-row-hint ${hintColor === "success" ? "success" : ""} ${hintColor === "danger" ? "danger" : ""}`}>
-            {hint}
-          </div>
+        {hasDualValue ? (
+          <>
+            <div className={`trm-detail-row-value ${big ? "big" : ""}`} data-sr>{valueSr}</div>
+            <div className={`trm-detail-row-value ${big ? "big" : ""}`} data-lat>{valueLat}</div>
+          </>
+        ) : (
+          <div className={`trm-detail-row-value ${big ? "big" : ""}`}>{value}</div>
         )}
+        {hasDualHint ? (
+          <>
+            <div className={hintCls} data-sr>{hintSr}</div>
+            <div className={hintCls} data-lat>{hintLat}</div>
+          </>
+        ) : hint ? (
+          <div className={hintCls}>{hint}</div>
+        ) : null}
       </div>
     </div>
   );

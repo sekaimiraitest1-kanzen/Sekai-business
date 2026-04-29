@@ -75,7 +75,7 @@ export function StatistikeClient(props: {
       {/* 2×2 grid of stat boxes */}
       <div className="stat-grid">
         <StatBox labelSr="ТЕРМИНИ" labelLat="TERMINI" value={String(doneCount)} subSr="обављено" subLat="obavljeno" />
-        <StatBox labelSr="НОВИ" labelLat="NOVI" value={String(newCustomers)} subSr="мушterije" subLat="mušterije" />
+        <StatBox labelSr="НОВИ" labelLat="NOVI" value={String(newCustomers)} subSr="муштерије" subLat="mušterije" />
         <StatBox labelSr="ПРОСЕЧНО" labelLat="PROSEČNO" value={avgPerBooking.toLocaleString("sr-RS")} unit="RSD" subSr="по термину" subLat="po terminu" />
         <StatBox labelSr="ОТКАЗАНО" labelLat="OTKAZANO" value={String(cancelledCount)} unit={`${cancelledPct}%`} tone={cancelledPct > 10 ? "danger" : undefined} />
       </div>

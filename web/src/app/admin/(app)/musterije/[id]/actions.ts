@@ -11,3 +11,22 @@ export async function saveCustomerNote(id: string, note: string) {
   revalidatePath(`/admin/musterije/${id}`);
   return { ok: true as const };
 }
+
+/**
+ * G1 — Redeem loyalty reward. Inserts a `redeem` event with points = the
+ * configured threshold (6 by default). Net visit-redeem balance drops back
+ * below the threshold so the UI no longer shows the "ready to redeem" state.
+ */
+export async function redeemLoyalty(customerId: string, pointsCost: number) {
+  const session = await requireAdmin();
+  const sb = createAdminClient();
+  const { error } = await sb.from("loyalty_events").insert({
+    salon_id: session.salonId,
+    customer_id: customerId,
+    event_type: "redeem",
+    points: pointsCost,
+  });
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath(`/admin/musterije/${customerId}`);
+  return { ok: true as const };
+}

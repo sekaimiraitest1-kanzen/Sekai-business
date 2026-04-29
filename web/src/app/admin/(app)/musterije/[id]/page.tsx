@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/with-admin";
 import { CustomerProfile } from "./customer-profile";
 
+const LOYALTY_VISITS_FOR_REWARD = 6;
+
 // Supabase types (without codegen) infer the embedded `services` FK as an array,
 // but the runtime returns a single object because services↔bookings is many-to-one.
 // Until we run `supabase gen types typescript` (deferred to a session with CLI auth),
@@ -21,7 +23,7 @@ export default async function MusterijaDetail({ params }: { params: { id: string
   const session = await requireAdmin();
   const sb = createAdminClient();
 
-  const [custRes, bookingsRes] = await Promise.all([
+  const [custRes, bookingsRes, loyaltyRes] = await Promise.all([
     sb.from("customers").select("*").eq("id", params.id).eq("salon_id", session.salonId).single(),
     sb
       .from("bookings")
@@ -29,6 +31,11 @@ export default async function MusterijaDetail({ params }: { params: { id: string
       .eq("customer_id", params.id)
       .order("date", { ascending: false })
       .limit(50),
+    sb
+      .from("loyalty_events")
+      .select("event_type, points")
+      .eq("customer_id", params.id)
+      .eq("salon_id", session.salonId),
   ]);
 
   if (custRes.error || !custRes.data) {
@@ -40,5 +47,22 @@ export default async function MusterijaDetail({ params }: { params: { id: string
     );
   }
 
-  return <CustomerProfile customer={custRes.data} bookings={(bookingsRes.data ?? []) as unknown as BookingRow[]} />;
+  // Loyalty: net unredeemed visit points = sum(visit) - sum(redeem)*VISITS_FOR_REWARD.
+  // When net >= LOYALTY_VISITS_FOR_REWARD, customer has earned a free service.
+  let visitPoints = 0;
+  let redeemedPoints = 0;
+  for (const ev of loyaltyRes.data ?? []) {
+    if (ev.event_type === "visit") visitPoints += ev.points ?? 0;
+    if (ev.event_type === "redeem") redeemedPoints += ev.points ?? 0;
+  }
+  const loyaltyProgress = Math.max(0, visitPoints - redeemedPoints);
+
+  return (
+    <CustomerProfile
+      customer={custRes.data}
+      bookings={(bookingsRes.data ?? []) as unknown as BookingRow[]}
+      loyaltyProgress={loyaltyProgress}
+      loyaltyTarget={LOYALTY_VISITS_FOR_REWARD}
+    />
+  );
 }

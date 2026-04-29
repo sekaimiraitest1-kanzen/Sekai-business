@@ -1,46 +1,15 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/with-admin";
+import { todayKey, weekRange, monthRangeFromKey } from "@/lib/datetime";
 import { TerminiClient } from "./termini-client";
 
 export const dynamic = "force-dynamic";
-
-function todayStr() {
-  return new Date().toISOString().split("T")[0];
-}
-function weekRange() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const monOffset = (today.getDay() + 6) % 7;
-  const mon = new Date(today);
-  mon.setDate(today.getDate() - monOffset);
-  const sun = new Date(mon);
-  sun.setDate(mon.getDate() + 6);
-  return { from: mon.toISOString().split("T")[0], to: sun.toISOString().split("T")[0] };
-}
-function monthRangeFromKey(key?: string) {
-  const today = new Date();
-  let year = today.getFullYear();
-  let mo = today.getMonth();
-  if (key && /^\d{4}-\d{2}$/.test(key)) {
-    const [y, m] = key.split("-").map(Number);
-    year = y;
-    mo = m - 1;
-  }
-  const first = new Date(year, mo, 1);
-  const last = new Date(year, mo + 1, 0);
-  return {
-    from: first.toISOString().split("T")[0],
-    to: last.toISOString().split("T")[0],
-    year,
-    month: mo,
-  };
-}
 
 export default async function TerminiPage({ searchParams }: { searchParams: { month?: string } }) {
   const session = await requireAdmin();
   const sb = createAdminClient();
 
-  const today = todayStr();
+  const today = todayKey();
   const week = weekRange();
   const month = monthRangeFromKey(searchParams.month);
 
@@ -70,6 +39,39 @@ export default async function TerminiPage({ searchParams }: { searchParams: { mo
     sb.from("salons").select("working_hours").eq("id", session.salonId).single(),
   ]);
 
+  // H3: real visit count per customer who has a booking today. We query
+  // historical `done` bookings for these customers and count per id, then
+  // pass the map to the client so the detail sheet can render an accurate
+  // "1. пут / 2. пут" hint instead of leaning on no_show_count as a proxy.
+  type TodayBookingShape = {
+    customers?: { id?: string | null } | { id?: string | null }[] | null;
+  };
+  const customerIds = Array.from(
+    new Set(
+      ((todayRes.data ?? []) as TodayBookingShape[])
+        .map((b) => {
+          const c = b.customers;
+          if (!c) return null;
+          const single = Array.isArray(c) ? c[0] : c;
+          return single?.id ?? null;
+        })
+        .filter((id): id is string => !!id)
+    )
+  );
+  const visitCounts: Record<string, number> = {};
+  if (customerIds.length > 0) {
+    const { data: history } = await sb
+      .from("bookings")
+      .select("customer_id, status")
+      .eq("salon_id", session.salonId)
+      .in("customer_id", customerIds)
+      .eq("status", "done");
+    for (const row of history ?? []) {
+      const id = row.customer_id as string;
+      visitCounts[id] = (visitCounts[id] ?? 0) + 1;
+    }
+  }
+
   return (
     <TerminiClient
       todayBookings={todayRes.data ?? []}
@@ -80,6 +82,7 @@ export default async function TerminiPage({ searchParams }: { searchParams: { mo
       weekTo={week.to}
       monthFrom={month.from}
       workingHours={salonRes.data?.working_hours ?? null}
+      visitCounts={visitCounts}
     />
   );
 }
