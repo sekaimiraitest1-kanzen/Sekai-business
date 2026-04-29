@@ -81,8 +81,29 @@
 .product-footer{display:flex;align-items:center;justify-content:space-between}
 .product-price{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;font-style:italic;color:var(--mustard);line-height:1}
 .product-price span{font-size:11px;font-style:normal;color:rgba(212,165,58,.5);font-family:'JetBrains Mono',monospace}
-.product-cta{background:var(--mustard);border:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;opacity:0;transition:opacity .2s}
+.product-cta{background:var(--mustard);color:var(--brown-950);border:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;font-weight:600;opacity:0;transition:opacity .2s, background .15s;-webkit-tap-highlight-color:transparent;flex-shrink:0}
+.product-cta:hover{background:var(--mustard-bright)}
+.product-cta:active{transform:scale(.94)}
 .product-card.out-of-stock .product-cta{opacity:.3;cursor:not-allowed;pointer-events:none}
+
+/* Touch devices: CTA must always be visible (no hover) */
+@media (hover: none) {
+  .product-cta { opacity: 1; }
+  .product-card.out-of-stock .product-cta { opacity: 0.3; }
+}
+
+/* Footer row needs to accommodate the 44px tap target */
+.product-footer{align-items:center;min-height:44px}
+
+/* Out-of-stock label typography (was missing the type styles) */
+.product-out-overlay{font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--brown-700)}
+
+/* Below 480px → keep 2-col but tighten typography so cards don't compress */
+@media (max-width: 480px) {
+  .product-name { font-size: 15px; }
+  .product-price { font-size: 18px; }
+  .product-body { padding: 12px 14px 16px; }
+}
 
 /* DETAIL MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(26,15,5,.75);z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s}

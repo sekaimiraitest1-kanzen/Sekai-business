@@ -111,14 +111,25 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
         ))}
       </div>
 
-      <div className="products-grid">
-        {filtered.length === 0 && (
-          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: 64, fontFamily: "'JetBrains Mono', monospace", color: "var(--brown-700)" }}>
-            <span data-sr>Нема производа у овој категорији.</span>
-            <span data-lat>Nema proizvoda u ovoj kategoriji.</span>
+      <div className="products-section">
+        <div className="section-divider">
+          <div className="section-divider-label" data-sr>СВИ ПРОИЗВОДИ</div>
+          <div className="section-divider-label" data-lat>SVI PROIZVODI</div>
+          <div className="section-divider-line"></div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "var(--brown-700)", letterSpacing: ".06em" }}>
+            <span data-sr>{filtered.length} НА СТОКУ</span>
+            <span data-lat>{filtered.length} NA STOKU</span>
           </div>
-        )}
-        {filtered.map((p) => {
+        </div>
+
+        <div className="products-grid">
+          {filtered.length === 0 && (
+            <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: 64, fontFamily: "'JetBrains Mono', monospace", color: "var(--brown-700)" }}>
+              <span data-sr>Нема производа у овој категорији.</span>
+              <span data-lat>Nema proizvoda u ovoj kategoriji.</span>
+            </div>
+          )}
+          {filtered.map((p) => {
           const out = p.stock <= 0;
           return (
             <div key={p.id} className={`product-card ${out ? "out-of-stock" : ""}`}>
@@ -133,19 +144,23 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
                 )}
                 {p.badge && <div className={`product-badge badge-${p.badge}`}>{p.badge.toUpperCase()}</div>}
                 {out && (
-                  <div className="product-out-overlay" data-sr>NEMA NA STANJU</div>
+                  <div className="product-out-overlay">
+                    <span data-sr>РАСПРОДАТО</span>
+                    <span data-lat>RASPRODATO</span>
+                  </div>
                 )}
               </div>
-              <div className="product-info">
-                <div className="product-brand">{p.brand}</div>
+              <div className="product-body">
+                {p.brand && <div className="product-brand-tag">{p.brand}</div>}
                 <div className="product-name">{p.name}</div>
-                <div className="product-row">
+                <div className="product-footer">
                   <div className="product-price">{p.price}<span>RSD</span></div>
                   <button
-                    className="product-add-btn"
+                    className="product-cta"
                     type="button"
+                    aria-label={`Dodaj ${p.name} u korpu`}
                     disabled={out}
-                    onClick={() => addToCart(p)}
+                    onClick={(e) => { e.stopPropagation(); addToCart(p); }}
                   >
                     +
                   </button>
@@ -154,6 +169,7 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
             </div>
           );
         })}
+        </div>
       </div>
 
       {cartOpen && (
