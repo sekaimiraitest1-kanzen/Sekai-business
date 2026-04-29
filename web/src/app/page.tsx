@@ -7,14 +7,27 @@ import { computeOpenStatus } from "@/lib/working-hours";
 export default async function HomePage() {
   const supabase = createClient();
 
-  // Read salon + services in parallel — used in Lokacija + Usluge sections
-  const [salonRes, servicesRes] = await Promise.all([
+  // Read salon + services + gallery in parallel
+  const [salonRes, servicesRes, galleryRes] = await Promise.all([
     supabase.from("salons").select("name, address, phone, email, working_hours").eq("slug", process.env.NEXT_PUBLIC_DEFAULT_SALON_SLUG ?? "trisa").single(),
     supabase.from("services").select("name_sr, name_lat, price, duration_min").eq("active", true).order("sort_order", { ascending: true }),
+    supabase.from("gallery_images").select("id, url, alt_sr, alt_lat, sort_order, size").order("sort_order", { ascending: true }),
   ]);
 
   const salon = salonRes.data;
   const services = servicesRes.data ?? [];
+  // Use DB gallery if seeded; otherwise fall back to the legacy hardcoded list so
+  // the section never goes empty (BUG-6 fix). DB values come from /admin/galerija.
+  // CSS classes g1..g6 define the asymmetric grid spans (g1 is 2×2 large, g2/g3/g6 span 2 cols, g4/g5 span 1).
+  // Map DB rows in sort_order to those classes positionally — admin's drag-reorder controls layout order.
+  const gallery = (galleryRes.data && galleryRes.data.length > 0)
+    ? galleryRes.data.slice(0, 6).map((row, i) => ({
+        cls: `g${i + 1}`,
+        src: row.url,
+        altSr: row.alt_sr ?? "",
+        altLat: row.alt_lat ?? "",
+      }))
+    : GALLERY.map((g) => ({ cls: g.cls, src: g.src, altSr: g.alt, altLat: g.alt }));
   // working_hours are stored in salon-local time (Belgrade). On Vercel the
   // process is UTC, so convert before computing today's open status — otherwise
   // a 21:00 Belgrade visit would read as 19:00/20:00 UTC and the badge could
@@ -287,10 +300,10 @@ export default async function HomePage() {
         </div>
 
         <div className="gallery-grid">
-          {GALLERY.map((g, i) => (
+          {gallery.map((g, i) => (
             <div key={i} className={`gallery-item ${g.cls}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={g.src} alt={g.alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <img src={g.src} alt={g.altLat} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
             </div>
           ))}
         </div>
