@@ -54,8 +54,8 @@ export function SiteFooter({ phone, email, address }: { phone?: string; email?: 
           <div className="footer-info">
             <div className="footer-info-item">{phone ?? "065 9003 742"}</div>
             <div className="footer-info-item">{email ?? "berbernicatrisa@gmail.com"}</div>
-            <div className="footer-info-item" data-sr>{address ?? "Пуковника Миленка 12"}</div>
-            <div className="footer-info-item" data-lat>{address ?? "Pukovnika Milenka 12"}</div>
+            <div className="footer-info-item" data-sr>{address ?? "Мајора Зорана Радосављевића 226b"}</div>
+            <div className="footer-info-item" data-lat>{address ?? "Majora Zorana Radosavljevića 226b"}</div>
             <div className="footer-info-item" data-sr>Батајница, Земун</div>
             <div className="footer-info-item" data-lat>Batajnica, Zemun</div>
           </div>

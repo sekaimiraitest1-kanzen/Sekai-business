@@ -323,11 +323,11 @@ export default async function HomePage() {
               <div className="map-placeholder-inner">
                 <div className="map-pin"></div>
                 <div className="map-label">
-                  <span data-sr>{salon?.address ?? "Пуковника Миленка 12, Батајница"}</span>
-                  <span data-lat>Pukovnika Milenka 12, Batajnica</span>
+                  <span data-sr>{salon?.address ?? "Мајора Зорана Радосављевића 226b, Батајница"}</span>
+                  <span data-lat>Majora Zorana Radosavljevića 226b, Batajnica</span>
                 </div>
                 <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(salon?.address ?? "Pukovnika Milenka 12, Batajnica")}`}
+                  href={`https://maps.google.com/?q=${encodeURIComponent(salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica")}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -360,8 +360,8 @@ export default async function HomePage() {
                 </div>
                 <div className="contact-row">
                   <span>📍</span>
-                  <span data-sr>{salon?.address ?? "Пуковника Миленка 12, Батајница"}</span>
-                  <span data-lat>Pukovnika Milenka 12, Batajnica</span>
+                  <span data-sr>{salon?.address ?? "Мајора Зорана Радосављевића 226b, Батајница"}</span>
+                  <span data-lat>Majora Zorana Radosavljevića 226b, Batajnica</span>
                 </div>
               </div>
             </div>
