@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/with-admin";
 import { todayKey } from "@/lib/datetime";
+import { sendBookingConfirmation } from "@/lib/email/templates";
 
 export async function getMyTakenSlots(date: string): Promise<string[]> {
   if (!date) return [];
@@ -98,6 +99,7 @@ export async function clearNoShowFlag(customerId: string) {
 export async function createWalkInBooking(input: {
   customerName: string;
   customerPhone: string;
+  customerEmail?: string;
   serviceId: string;
   date: string;
   timeSlot: string;
@@ -131,28 +133,63 @@ export async function createWalkInBooking(input: {
   if (!customerId) {
     const { data: created } = await sb
       .from("customers")
-      .insert({ salon_id: session.salonId, phone: input.customerPhone, name: input.customerName, utm_source: "walk-in" })
+      .insert({
+        salon_id: session.salonId,
+        phone: input.customerPhone,
+        name: input.customerName,
+        email: input.customerEmail || null,
+        utm_source: "walk-in",
+      })
       .select("id")
       .single();
     customerId = created?.id;
+  } else if (input.customerEmail) {
+    // Backfill email if customer has it now but didn't before.
+    await sb.from("customers").update({ email: input.customerEmail }).eq("id", customerId);
   }
   if (!customerId) return { ok: false as const, error: "CUSTOMER_FAILED" };
 
-  const { error } = await sb.from("bookings").insert({
-    salon_id: session.salonId,
-    customer_id: customerId,
-    service_id: input.serviceId,
-    date: input.date,
-    time_slot: input.timeSlot,
-    status: "confirmed",
-    notes: input.notes ?? null,
-    utm_source: "walk-in",
-  });
-  if (error) {
+  const { data: booking, error } = await sb
+    .from("bookings")
+    .insert({
+      salon_id: session.salonId,
+      customer_id: customerId,
+      service_id: input.serviceId,
+      date: input.date,
+      time_slot: input.timeSlot,
+      status: "confirmed",
+      notes: input.notes ?? null,
+      utm_source: "walk-in",
+    })
+    .select("id")
+    .single();
+  if (error || !booking) {
     // Postgres unique-violation code 23505 (from migration 004 partial unique index).
     // Falls back to "BOOKING_FAILED" for any other failure.
-    if ((error as { code?: string }).code === "23505") return { ok: false as const, error: "SLOT_TAKEN" };
+    if ((error as { code?: string } | null)?.code === "23505") return { ok: false as const, error: "SLOT_TAKEN" };
     return { ok: false as const, error: "BOOKING_FAILED" };
+  }
+
+  // G3: send confirmation email if walk-in customer left an email. Best-effort.
+  if (input.customerEmail) {
+    try {
+      const [{ data: svc }, { data: salon }] = await Promise.all([
+        sb.from("services").select("name_lat, price").eq("id", input.serviceId).single(),
+        sb.from("salons").select("address").eq("id", session.salonId).single(),
+      ]);
+      await sendBookingConfirmation({
+        to: input.customerEmail,
+        customerName: input.customerName,
+        serviceName: svc?.name_lat ?? "—",
+        date: input.date,
+        timeSlot: input.timeSlot,
+        price: svc?.price ?? 0,
+        salonAddress: salon?.address ?? "",
+        bookingId: booking.id,
+      });
+    } catch (e) {
+      console.error("walk-in confirmation email failed:", e instanceof Error ? e.message : "unknown");
+    }
   }
 
   revalidatePath("/admin/termini");

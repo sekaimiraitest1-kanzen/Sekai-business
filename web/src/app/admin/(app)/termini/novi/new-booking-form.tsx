@@ -64,6 +64,7 @@ export function NewBookingForm({ services, workingHours, recentCustomers }: {
   const router = useRouter();
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [serviceId, setServiceId] = useState<string>(services[0]?.id ?? "");
   const [date, setDate] = useState<string>(todayStr());
   const [timeSlot, setTimeSlot] = useState<string>("");
@@ -120,6 +121,7 @@ export function NewBookingForm({ services, workingHours, recentCustomers }: {
       const res = await createWalkInBooking({
         customerName: name.trim(),
         customerPhone: phone.trim(),
+        customerEmail: email.trim() || undefined,
         serviceId,
         date,
         timeSlot,
@@ -177,7 +179,8 @@ export function NewBookingForm({ services, workingHours, recentCustomers }: {
             <span data-lat>{matchedCustomer.name} — postojeća mušterija</span>
           </div>
         )}
-        <input className="adm-input" placeholder="Marko Marković" value={name} onChange={(e) => setName(e.target.value)} />
+        <input className="adm-input" placeholder="Marko Marković" value={name} onChange={(e) => setName(e.target.value)} style={{ marginBottom: 8 }} />
+        <input className="adm-input" type="email" inputMode="email" placeholder="email (opciono — za potvrdu)" value={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
 
       {/* ── 2. Service ─────────────────────────────── */}

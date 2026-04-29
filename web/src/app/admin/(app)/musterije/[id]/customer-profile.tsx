@@ -170,11 +170,23 @@ export function CustomerProfile({ customer, bookings, loyaltyProgress, loyaltyTa
               </div>
             </div>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.5)", textTransform: "uppercase" }}>
-              {b.status}
+              <span data-sr>{statusLabel(b.status, "sr")}</span>
+              <span data-lat>{statusLabel(b.status, "lat")}</span>
             </div>
           </div>
         ))}
       </div>
     </>
   );
+}
+
+function statusLabel(status: string, lang: "sr" | "lat"): string {
+  const map: Record<string, { sr: string; lat: string }> = {
+    confirmed: { sr: "ПОТВРЂЕНО", lat: "POTVRĐENO" },
+    pending: { sr: "ЧЕКА", lat: "ČEKA" },
+    done: { sr: "ОБАВЉЕНО", lat: "OBAVLJENO" },
+    no_show: { sr: "NO-SHOW", lat: "NO-SHOW" },
+    cancelled: { sr: "ОТКАЗАНО", lat: "OTKAZANO" },
+  };
+  return map[status]?.[lang] ?? status.toUpperCase();
 }

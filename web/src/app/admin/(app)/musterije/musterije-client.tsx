@@ -96,7 +96,12 @@ export function MusterijeClient({ customers, initialSearch }: { customers: Custo
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, fontWeight: 600, color: "var(--cream)", letterSpacing: ".04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {c.name ?? "(no name)"}
+                {c.name ?? (
+                  <span style={{ opacity: 0.4 }}>
+                    <span data-sr>(без имена)</span>
+                    <span data-lat>(bez imena)</span>
+                  </span>
+                )}
                 {c.no_show_flag && <span style={{ color: "var(--danger)", marginLeft: 6, fontSize: 11 }}>⚠</span>}
               </div>
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "rgba(245,233,208,.5)" }}>
@@ -104,7 +109,12 @@ export function MusterijeClient({ customers, initialSearch }: { customers: Custo
               </div>
             </div>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.4)", textAlign: "right" }}>
-              {daysSince != null ? `${daysSince}d` : "—"}
+              {daysSince != null ? (
+                <>
+                  <span data-sr>пре {daysSince}д.</span>
+                  <span data-lat>pre {daysSince}d</span>
+                </>
+              ) : "—"}
               {c.no_show_count != null && c.no_show_count > 0 && (
                 <div style={{ color: "var(--danger)", marginTop: 2 }}>
                   {c.no_show_count} no-show

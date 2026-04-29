@@ -103,3 +103,51 @@ export async function sendOrderEmail(input: {
     `,
   });
 }
+
+/**
+ * G2 — Sent when admin marks an order `ready` in /admin/shop/porudzbine.
+ * Customer can come pick up. No-op if customer didn't leave an email.
+ */
+export async function sendOrderReadyEmail(input: {
+  to: string;
+  customerName: string;
+  total: number;
+  orderId: string;
+  salonAddress: string;
+  salonPhone: string;
+}) {
+  if (!input.to) return;
+  const resend = getResend();
+  await resend.emails.send({
+    from: `Berbernica Trisa Shop <${FROM_EMAIL}>`,
+    to: input.to,
+    subject: `Tvoja porudžbina je spremna za preuzimanje — ${input.total} RSD`,
+    html: `
+      <div style="font-family: Inter, sans-serif; max-width: 540px; margin: 0 auto; color: #1A0F05; background: #FAF3E3; padding: 32px 24px;">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <div style="width: 56px; height: 56px; background: #D4A53A; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, serif; font-size: 28px; font-weight: 900; font-style: italic; color: #1A0F05;">Т</div>
+          <div style="font-family: Georgia, serif; font-size: 18px; font-style: italic; color: #5C3A22; margin-top: 8px;">Berbernica Triša · Batajnica</div>
+        </div>
+
+        <h1 style="font-family: Georgia, serif; font-style: italic; font-size: 28px; color: #1A0F05; text-align: center; margin: 24px 0;">Spremna za pickup, ${input.customerName}.</h1>
+        <p style="text-align: center; color: #5C3A22; line-height: 1.6;">Dođi u salon kad ti odgovara — proizvodi te čekaju na pultu.</p>
+
+        <div style="background: #F5E9D0; padding: 24px; margin: 24px 0;">
+          <table style="width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 13px;">
+            <tr><td style="color: #5C3A22; padding: 6px 0;">UKUPNO</td><td style="text-align: right; font-family: Georgia, serif; font-style: italic; color: #D4A53A; font-size: 18px;">${input.total} RSD</td></tr>
+            <tr><td style="color: #5C3A22; padding: 6px 0;">PLAĆANJE</td><td style="text-align: right; color: #1A0F05;">Gotovina ili kartica u salonu</td></tr>
+            <tr><td style="color: #5C3A22; padding: 6px 0;">ADRESA</td><td style="text-align: right; color: #1A0F05;">${input.salonAddress}</td></tr>
+            <tr><td style="color: #5C3A22; padding: 6px 0;">TELEFON</td><td style="text-align: right; color: #1A0F05;"><a href="tel:${input.salonPhone}" style="color: #1A0F05; text-decoration: none;">${input.salonPhone}</a></td></tr>
+          </table>
+        </div>
+
+        <p style="text-align: center; color: #5C3A22; font-size: 12px; margin-top: 24px;">
+          Vidimo se.<br>
+          — Triša
+        </p>
+
+        <p style="text-align: center; font-size: 11px; color: #5C3A22; margin-top: 24px; opacity: 0.6;">Order ID: ${input.orderId.slice(0, 8).toUpperCase()}</p>
+      </div>
+    `,
+  });
+}

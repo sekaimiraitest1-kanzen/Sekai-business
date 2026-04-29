@@ -20,6 +20,18 @@ const STATUSES = [
   { value: "cancelled", sr: "ОТКАЗАНО", lat: "OTKAZANO" },
 ] as const;
 
+// L8: enforce a sane state machine on the buttons.
+// pending → ready / cancelled
+// ready → picked_up / cancelled
+// picked_up → (terminal)
+// cancelled → (terminal, allow re-pending via DB if needed)
+const ALLOWED_TRANSITIONS: Record<string, ReadonlySet<string>> = {
+  pending: new Set(["ready", "cancelled"]),
+  ready: new Set(["picked_up", "cancelled"]),
+  picked_up: new Set([]),
+  cancelled: new Set([]),
+};
+
 export function PorudzbineClient({ orders }: { orders: Order[] }) {
   const [selected, setSelected] = useState<Order | null>(null);
 
@@ -112,17 +124,29 @@ function OrderDetail({ order, onClose }: { order: Order; onClose: () => void }) 
           )}
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 16 }}>
-            {STATUSES.map((s) => (
-              <button
-                key={s.value}
-                className={`adm-btn ${order.status === s.value ? "" : "adm-btn-secondary"}`}
-                disabled={pending || order.status === s.value}
-                onClick={() => start(async () => { await updateOrderStatus(order.id, s.value); onClose(); })}
-              >
-                <span data-sr>{s.sr}</span><span data-lat>{s.lat}</span>
-              </button>
-            ))}
+            {STATUSES.map((s) => {
+              const allowed = ALLOWED_TRANSITIONS[order.status]?.has(s.value);
+              const isCurrent = order.status === s.value;
+              const disabled = pending || isCurrent || !allowed;
+              return (
+                <button
+                  key={s.value}
+                  className={`adm-btn ${isCurrent ? "" : "adm-btn-secondary"}`}
+                  disabled={disabled}
+                  style={!allowed && !isCurrent ? { opacity: 0.3 } : undefined}
+                  onClick={() => start(async () => { await updateOrderStatus(order.id, s.value); onClose(); })}
+                >
+                  <span data-sr>{s.sr}</span><span data-lat>{s.lat}</span>
+                </button>
+              );
+            })}
           </div>
+          {(order.status === "picked_up" || order.status === "cancelled") && (
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.4)", marginTop: 8, textAlign: "center" }}>
+              <span data-sr>Поруџбина је затворена.</span>
+              <span data-lat>Porudžbina je zatvorena.</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
