@@ -386,3 +386,26 @@
   border: 1px solid rgba(212, 165, 58, 0.2);
   color: rgba(245, 233, 208, 0.7);
 }
+
+/* ── DRAG HANDLE (sortable rows) ──────────────────────
+   Used by usluge + galerija for drag-to-reorder. Keeps tap-to-edit on the
+   rest of the card by isolating the drag listeners to this small grip button. */
+.adm-drag-handle {
+  width: 24px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  color: rgba(245, 233, 208, 0.35);
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  flex-shrink: 0;
+  padding: 0;
+  margin-right: -4px;
+  touch-action: none; /* required by @dnd-kit on touch devices */
+  user-select: none;
+}
+.adm-drag-handle:active { cursor: grabbing; color: var(--mustard); }

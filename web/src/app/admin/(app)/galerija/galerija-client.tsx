@@ -1,17 +1,59 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { compressToWebP } from "@/lib/storage/compress-client";
-import { createGalleryImage, deleteGalleryImage, updateGalleryImage } from "./actions";
+import { createGalleryImage, deleteGalleryImage, reorderGalleryImages, updateGalleryImage } from "./actions";
 
 type Image = { id: string; url: string; alt_sr: string | null; alt_lat: string | null; sort_order: number; size: string };
 
-export function GalerijaClient({ images }: { images: Image[] }) {
+export function GalerijaClient({ images: initialImages }: { images: Image[] }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [pending, start] = useTransition();
   const [editing, setEditing] = useState<Image | null>(null);
+  // Local copy for instant drag feedback; server-side revalidatePath catches up.
+  const [images, setImages] = useState<Image[]>(initialImages);
+  useEffect(() => setImages(initialImages), [initialImages]);
+
+  // PointerSensor for desktop: 8px move before drag activates → tap-to-edit still works.
+  // TouchSensor for mobile: 200ms long-press before drag → quick tap opens the editor.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = images.findIndex((img) => img.id === active.id);
+    const newIdx = images.findIndex((img) => img.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    const next = arrayMove(images, oldIdx, newIdx);
+    setImages(next);
+    start(() => {
+      void reorderGalleryImages(next.map((img) => img.id));
+    });
+  }
 
   async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -68,6 +110,13 @@ export function GalerijaClient({ images }: { images: Image[] }) {
         </div>
       )}
 
+      {pending && images.length > 0 && (
+        <div className="adm-banner info" style={{ fontSize: 11 }}>
+          <span data-sr>Чувам редослед…</span>
+          <span data-lat>Čuvam redosled…</span>
+        </div>
+      )}
+
       {images.length === 0 && !uploading && (
         <div className="adm-empty">
           <span data-sr>Нема слика. Додај прву.</span>
@@ -75,17 +124,15 @@ export function GalerijaClient({ images }: { images: Image[] }) {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4 }}>
-        {images.map((img) => (
-          <div key={img.id} style={{ position: "relative", aspectRatio: "1", overflow: "hidden", background: "var(--brown-900)" }} onClick={() => setEditing(img)}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={img.url} alt={img.alt_sr ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            {img.size === "large" && (
-              <div style={{ position: "absolute", top: 6, left: 6, background: "var(--mustard)", color: "var(--brown-950)", fontFamily: "'JetBrains Mono', monospace", fontSize: 9, padding: "2px 6px", letterSpacing: ".08em" }}>BIG</div>
-            )}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <SortableContext items={images.map((img) => img.id)} strategy={rectSortingStrategy}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4 }}>
+            {images.map((img) => (
+              <SortableGalleryTile key={img.id} image={img} onClick={() => setEditing(img)} />
+            ))}
           </div>
-        ))}
-      </div>
+        </SortableContext>
+      </DndContext>
 
       {editing && (
         <ImageEditor
@@ -97,6 +144,30 @@ export function GalerijaClient({ images }: { images: Image[] }) {
         />
       )}
     </>
+  );
+}
+
+function SortableGalleryTile({ image: img, onClick }: { image: Image; onClick: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: img.id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    position: "relative",
+    aspectRatio: "1",
+    overflow: "hidden",
+    background: "var(--brown-900)",
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 2 : "auto",
+    touchAction: "none",
+  };
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={onClick}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={img.url} alt={img.alt_sr ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" }} />
+      {img.size === "large" && (
+        <div style={{ position: "absolute", top: 6, left: 6, background: "var(--mustard)", color: "var(--brown-950)", fontFamily: "'JetBrains Mono', monospace", fontSize: 9, padding: "2px 6px", letterSpacing: ".08em" }}>BIG</div>
+      )}
+    </div>
   );
 }
 

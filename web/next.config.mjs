@@ -11,11 +11,10 @@ const nextConfig = {
       { protocol: "https", hostname: "ljxovmahbyxgyyttvldv.supabase.co" },
     ],
   },
-  // Supabase typed select returns array shapes for FK joins where runtime is single-object.
-  // Codegen + manual annotations will fix this in a follow-up; runtime is correct today.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // FK-join shape mismatch between Supabase inference and runtime is now handled
+  // via local type aliases at page boundaries (musterije/[id], shop/porudzbine).
+  // Codegen (`supabase gen types typescript`) deferred to a session with CLI auth;
+  // when it lands, replace the manual aliases with generated types.
   eslint: {
     ignoreDuringBuilds: true,
   },
