@@ -88,7 +88,8 @@ export async function submitOrder(input: OrderInput) {
       orderId: order.id,
     });
   } catch (e) {
-    console.error("order email failed", e);
+    // Log only the message — the error object may serialize the customer email/name passed to sendOrderEmail.
+    console.error("order email failed:", e instanceof Error ? e.message : "unknown");
   }
 
   return { ok: true as const, orderId: order.id };

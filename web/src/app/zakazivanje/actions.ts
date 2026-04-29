@@ -114,7 +114,8 @@ export async function submitBooking(input: BookingInput) {
         bookingId: booking.id,
       });
     } catch (e) {
-      console.error("booking email failed", e);
+      // Log only the message — the error object may serialize customer email/name passed to sendBookingConfirmation.
+      console.error("booking email failed:", e instanceof Error ? e.message : "unknown");
     }
   }
 

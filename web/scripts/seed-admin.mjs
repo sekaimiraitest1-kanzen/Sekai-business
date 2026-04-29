@@ -2,6 +2,7 @@
 // Run from web/: node scripts/seed-admin.mjs
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -37,7 +38,9 @@ async function main() {
   const { data: existing } = await sb.auth.admin.listUsers();
   let user = existing?.users?.find((u) => u.email === ADMIN_EMAIL);
   if (!user) {
-    const tmpPassword = "TrisaAdmin-" + Math.random().toString(36).slice(2, 14) + "!";
+    // Cryptographically random password — never logged. Admin uses PIN; if Auth-level password is ever needed,
+    // recover via Supabase magic-link reset.
+    const tmpPassword = randomBytes(24).toString("base64url");
     const { data: created, error } = await sb.auth.admin.createUser({
       email: ADMIN_EMAIL,
       password: tmpPassword,
@@ -46,7 +49,7 @@ async function main() {
     if (error) throw error;
     user = created.user;
     console.log("  created auth user id =", user.id);
-    console.log("  ⚠ generated random password (recoverable via magic link):", tmpPassword);
+    console.log("  ⚠ Auth password set to random bytes (not printed). Use magic-link reset if direct Auth login needed.");
   } else {
     console.log("  existing auth user id =", user.id);
   }
