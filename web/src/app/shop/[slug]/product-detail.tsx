@@ -7,9 +7,11 @@ import { useCart } from "@/lib/shop/cart-context";
 type Product = {
   id: string;
   slug: string;
-  name: string;
+  name_sr: string;
+  name_lat: string;
   brand: string | null;
-  description: string | null;
+  description_sr: string | null;
+  description_lat: string | null;
   price: number;
   category: string | null;
   stock: number;
@@ -20,7 +22,8 @@ type Product = {
 type Related = {
   id: string;
   slug: string;
-  name: string;
+  name_sr: string;
+  name_lat: string;
   brand: string | null;
   price: number;
   image_url: string | null;
@@ -40,7 +43,7 @@ export function ProductDetail({ product, related }: { product: Product; related:
       {
         productId: product.id,
         slug: product.slug,
-        name: product.name,
+        name: product.name_lat,
         price: product.price,
         image_url: product.image_url,
       },
@@ -65,10 +68,10 @@ export function ProductDetail({ product, related }: { product: Product; related:
           <div className="pd-image">
             {product.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={product.image_url} alt={product.name} />
+              <img src={product.image_url} alt={product.name_lat} />
             ) : (
               <div className="pd-image-placeholder">
-                <div className="pd-placeholder-brand">{product.brand ?? product.name.slice(0, 5).toUpperCase()}</div>
+                <div className="pd-placeholder-brand">{product.brand ?? product.name_lat.slice(0, 5).toUpperCase()}</div>
                 <div className="pd-placeholder-meta" data-sr>FOTOGRAFIJA STIŽE</div>
                 <div className="pd-placeholder-meta" data-lat>FOTOGRAFIJA STIŽE</div>
               </div>
@@ -83,7 +86,8 @@ export function ProductDetail({ product, related }: { product: Product; related:
 
         <div className="pd-info">
           {product.brand && <div className="pd-brand">{product.brand}</div>}
-          <h1 className="pd-name">{product.name}</h1>
+          <h1 className="pd-name" data-sr>{product.name_sr}</h1>
+          <h1 className="pd-name" data-lat>{product.name_lat}</h1>
 
           <div className="pd-stock">
             {out ? (
@@ -103,8 +107,11 @@ export function ProductDetail({ product, related }: { product: Product; related:
             )}
           </div>
 
-          {product.description && (
-            <div className="pd-desc">{product.description}</div>
+          {product.description_sr && (
+            <div className="pd-desc" data-sr>{product.description_sr}</div>
+          )}
+          {product.description_lat && (
+            <div className="pd-desc" data-lat>{product.description_lat}</div>
           )}
 
           <div className="pd-price-row">
@@ -213,17 +220,18 @@ export function ProductDetail({ product, related }: { product: Product; related:
                   <div className="product-img">
                     {r.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={r.image_url} alt={r.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                      <img src={r.image_url} alt={r.name_lat} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                     ) : (
                       <div className="product-img-placeholder">
-                        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 24, color: "rgba(245,233,208,.06)", letterSpacing: ".1em" }}>{r.brand ?? r.name.slice(0, 5).toUpperCase()}</div>
+                        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 24, color: "rgba(245,233,208,.06)", letterSpacing: ".1em" }}>{r.brand ?? r.name_lat.slice(0, 5).toUpperCase()}</div>
                       </div>
                     )}
                     {r.badge && <div className={`product-badge badge-${r.badge}`}>{r.badge.toUpperCase()}</div>}
                   </div>
                   <div className="product-body">
                     {r.brand && <div className="product-brand-tag">{r.brand}</div>}
-                    <div className="product-name">{r.name}</div>
+                    <div className="product-name" data-sr>{r.name_sr}</div>
+                    <div className="product-name" data-lat>{r.name_lat}</div>
                     <div className="product-footer">
                       <div className="product-price">{r.price}<span>RSD</span></div>
                     </div>

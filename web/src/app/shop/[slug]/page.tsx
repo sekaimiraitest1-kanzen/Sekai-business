@@ -8,14 +8,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const sb = createClient();
   const { data } = await sb
     .from("products")
-    .select("name, brand, description")
+    .select("name_lat, brand, description_lat")
     .eq("slug", params.slug)
     .eq("active", true)
     .single();
   if (!data) return { title: "Berbernica Triša · Shop" };
   return {
-    title: `${data.name}${data.brand ? " — " + data.brand : ""} · Berbernica Triša`,
-    description: data.description?.slice(0, 160) ?? `Kupi ${data.name} u Berbernici Triša.`,
+    title: `${data.name_lat}${data.brand ? " — " + data.brand : ""} · Berbernica Triša`,
+    description: data.description_lat?.slice(0, 160) ?? `Kupi ${data.name_lat} u Berbernici Triša.`,
   };
 }
 
@@ -24,7 +24,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   const { data: product } = await sb
     .from("products")
-    .select("id, slug, name, brand, description, price, category, stock, image_url, badge")
+    .select("id, slug, name_sr, name_lat, brand, description_sr, description_lat, price, category, stock, image_url, badge")
     .eq("slug", params.slug)
     .eq("active", true)
     .single();
@@ -34,7 +34,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
   // Sibling products from the same category (max 4)
   const { data: related } = await sb
     .from("products")
-    .select("id, slug, name, brand, price, image_url, badge, stock")
+    .select("id, slug, name_sr, name_lat, brand, price, image_url, badge, stock")
     .eq("active", true)
     .eq("category", product.category)
     .neq("id", product.id)

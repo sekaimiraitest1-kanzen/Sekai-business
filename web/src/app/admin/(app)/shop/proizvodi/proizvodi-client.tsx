@@ -7,9 +7,11 @@ import { upsertProduct, deleteProduct, uploadProductImage } from "./actions";
 type Product = {
   id: string;
   slug: string;
-  name: string;
+  name_sr: string;
+  name_lat: string;
   brand: string | null;
-  description: string | null;
+  description_sr: string | null;
+  description_lat: string | null;
   price: number;
   category: string | null;
   stock: number;
@@ -59,7 +61,7 @@ export function ProizvodiClient({ products, categories }: { products: Product[];
             <div style={{ width: 56, height: 56, background: "var(--brown-700)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>📦</div>
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 14, fontWeight: 900, fontStyle: "italic", color: "var(--cream)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 14, fontWeight: 900, fontStyle: "italic", color: "var(--cream)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name_lat}</div>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.4)", letterSpacing: ".06em", textTransform: "uppercase" }}>{p.brand}</div>
             <div style={{ display: "flex", gap: 8, marginTop: 4, alignItems: "center" }}>
               <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "var(--mustard)", fontWeight: 600 }}>{p.price} RSD</span>
@@ -86,9 +88,11 @@ function slugify(s: string): string {
 }
 
 function ProductEditor({ product, categories, onClose }: { product: Product | null; categories: Category[]; onClose: () => void }) {
-  const [name, setName] = useState(product?.name ?? "");
+  const [nameSr, setNameSr] = useState(product?.name_sr ?? "");
+  const [nameLat, setNameLat] = useState(product?.name_lat ?? "");
   const [brand, setBrand] = useState(product?.brand ?? "");
-  const [desc, setDesc] = useState(product?.description ?? "");
+  const [descSr, setDescSr] = useState(product?.description_sr ?? "");
+  const [descLat, setDescLat] = useState(product?.description_lat ?? "");
   const [price, setPrice] = useState(product?.price.toString() ?? "");
   const [stock, setStock] = useState(product?.stock.toString() ?? "0");
   const [category, setCategory] = useState(product?.category ?? categories[0]?.slug ?? "");
@@ -128,13 +132,15 @@ function ProductEditor({ product, categories, onClose }: { product: Product | nu
 
   function save() {
     start(async () => {
-      const slug = product?.slug ?? slugify(name);
+      const slug = product?.slug ?? slugify(nameLat);
       await upsertProduct({
         id: product?.id,
         slug,
-        name: name.trim(),
+        name_sr: nameSr.trim(),
+        name_lat: nameLat.trim(),
         brand: brand.trim() || undefined,
-        description: desc.trim() || undefined,
+        description_sr: descSr.trim() || undefined,
+        description_lat: descLat.trim() || undefined,
         price: parseInt(price) || 0,
         category: category || undefined,
         stock: parseInt(stock) || 0,
@@ -162,12 +168,16 @@ function ProductEditor({ product, categories, onClose }: { product: Product | nu
             {uploading ? "UPLOADING…" : product?.id ? "📷 IZMENI SLIKU" : "💡 SAČUVAJ PRVO"}
           </button>
 
-          <label className="adm-form-label">NAZIV</label>
-          <input className="adm-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Pomada Batajnica" />
+          <label className="adm-form-label">NAZIV (ĆIRILICA)</label>
+          <input className="adm-input" value={nameSr} onChange={(e) => setNameSr(e.target.value)} placeholder="Помада Батајница" />
+          <label className="adm-form-label">NAZIV (LATINICA)</label>
+          <input className="adm-input" value={nameLat} onChange={(e) => setNameLat(e.target.value)} placeholder="Pomada Batajnica" />
           <label className="adm-form-label">BRAND</label>
           <input className="adm-input" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="TRIŠA" />
-          <label className="adm-form-label">OPIS</label>
-          <textarea className="adm-input" rows={3} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Strong hold, matte finish…" />
+          <label className="adm-form-label">OPIS (ĆIRILICA)</label>
+          <textarea className="adm-input" rows={2} value={descSr} onChange={(e) => setDescSr(e.target.value)} placeholder="Јак фиксиран, мат завршетак…" />
+          <label className="adm-form-label">OPIS (LATINICA)</label>
+          <textarea className="adm-input" rows={2} value={descLat} onChange={(e) => setDescLat(e.target.value)} placeholder="Strong hold, matte finish…" />
 
           <div style={{ display: "flex", gap: 8 }}>
             <div style={{ flex: 1 }}>
@@ -199,10 +209,10 @@ function ProductEditor({ product, categories, onClose }: { product: Product | nu
             AKTIVAN (vidljiv u shop-u)
           </label>
 
-          <button className="adm-btn adm-btn-block" disabled={pending || !name || !price} onClick={save}>SAČUVAJ</button>
+          <button className="adm-btn adm-btn-block" disabled={pending || !nameSr || !nameLat || !price} onClick={save}>SAČUVAJ</button>
           {product && (
             <button className="adm-btn adm-btn-danger adm-btn-block" disabled={pending} onClick={() => {
-              if (confirm(`Obrisi "${product.name}"?`)) start(async () => { await deleteProduct(product.id); onClose(); });
+              if (confirm(`Obrisi "${product.name_lat}"?`)) start(async () => { await deleteProduct(product.id); onClose(); });
             }}>OBRIŠI</button>
           )}
           <button className="adm-btn adm-btn-secondary adm-btn-block" onClick={onClose}>OTKAŽI</button>
@@ -215,9 +225,11 @@ function ProductEditor({ product, categories, onClose }: { product: Product | nu
 type ProductInput = {
   id?: string;
   slug: string;
-  name: string;
+  name_sr: string;
+  name_lat: string;
   brand?: string;
-  description?: string;
+  description_sr?: string;
+  description_lat?: string;
   price: number;
   category?: string;
   stock: number;

@@ -7,9 +7,11 @@ import { useCart } from "@/lib/shop/cart-context";
 type Product = {
   id: string;
   slug: string;
-  name: string;
+  name_sr: string;
+  name_lat: string;
   brand: string | null;
-  description: string | null;
+  description_sr: string | null;
+  description_lat: string | null;
   price: number;
   category: string | null;
   stock: number;
@@ -91,15 +93,15 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
                 key={p.id}
                 href={`/shop/${p.slug}`}
                 className={`product-card ${out ? "out-of-stock" : ""}`}
-                aria-label={`${p.brand ? p.brand + " — " : ""}${p.name}, ${p.price} RSD`}
+                aria-label={`${p.brand ? p.brand + " — " : ""}${p.name_lat}, ${p.price} RSD`}
               >
                 <div className="product-img">
                   {p.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.image_url} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    <img src={p.image_url} alt={p.name_lat} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                   ) : (
                     <div className="product-img-placeholder">
-                      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 32, color: "rgba(245,233,208,.06)", letterSpacing: ".1em" }}>{p.brand ?? p.name.slice(0, 5).toUpperCase()}</div>
+                      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 32, color: "rgba(245,233,208,.06)", letterSpacing: ".1em" }}>{p.brand ?? p.name_lat.slice(0, 5).toUpperCase()}</div>
                     </div>
                   )}
                   {p.badge && <div className={`product-badge badge-${p.badge}`}>{p.badge.toUpperCase()}</div>}
@@ -112,19 +114,20 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
                 </div>
                 <div className="product-body">
                   {p.brand && <div className="product-brand-tag">{p.brand}</div>}
-                  <div className="product-name">{p.name}</div>
+                  <div className="product-name" data-sr>{p.name_sr}</div>
+                  <div className="product-name" data-lat>{p.name_lat}</div>
                   <div className="product-footer">
                     <div className="product-price">{p.price}<span>RSD</span></div>
                     <button
                       className="product-cta"
                       type="button"
-                      aria-label={`Dodaj ${p.name} u korpu`}
+                      aria-label={`Dodaj ${p.name_lat} u korpu`}
                       disabled={out}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         cart.add(
-                          { productId: p.id, slug: p.slug, name: p.name, price: p.price, image_url: p.image_url },
+                          { productId: p.id, slug: p.slug, name: p.name_lat, price: p.price, image_url: p.image_url },
                           1,
                           p.stock
                         );

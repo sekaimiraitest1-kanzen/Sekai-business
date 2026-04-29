@@ -9,9 +9,11 @@ import { pathFromUrl } from "@/lib/storage/url";
 export type ProductInput = {
   id?: string;
   slug: string;
-  name: string;
+  name_sr: string;
+  name_lat: string;
   brand?: string;
-  description?: string;
+  description_sr?: string;
+  description_lat?: string;
   price: number;
   category?: string;
   stock: number;
@@ -25,9 +27,16 @@ export async function upsertProduct(input: ProductInput) {
   const row = {
     salon_id: session.salonId,
     slug: input.slug,
-    name: input.name,
+    // Keep legacy `name` / `description` filled with the LAT variant so any
+    // external integration that still reads them gets a sensible value. The
+    // public site reads name_sr / name_lat directly from the bilingual columns.
+    name: input.name_lat,
+    name_sr: input.name_sr,
+    name_lat: input.name_lat,
     brand: input.brand ?? null,
-    description: input.description ?? null,
+    description: input.description_lat ?? null,
+    description_sr: input.description_sr ?? null,
+    description_lat: input.description_lat ?? null,
     price: input.price,
     category: input.category ?? null,
     stock: input.stock,
