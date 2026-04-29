@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tailwind reset / utilities are loaded but legacy.css owns the visual layer.
+   We use Tailwind only for admin panel and other surfaces that don't follow
+   the public-site design system. */
