@@ -1,0 +1,227 @@
+{
+  "success": false,
+  "filesScanned": 111,
+  "totalFindings": 20,
+  "findings": [
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/scripts/seed-admin.mjs",
+      "line": 40,
+      "column": 14,
+      "category": "secret",
+      "severity": "medium",
+      "confidence": "medium",
+      "type": "Password Assignment",
+      "matched": "Pass***in-\"",
+      "description": "Hardcoded passwords are a critical vulnerability."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/scripts/seed-admin.mjs",
+      "line": 0,
+      "column": 0,
+      "category": "history",
+      "severity": "high",
+      "confidence": "medium",
+      "type": "GIT_HISTORY_SECRET",
+      "matched": "Pass***in-\"",
+      "description": "Secret was removed from code but still exists in git history (commit b19e0b1d04, Wed Apr 29 11:40:02 2026 +0200). Anyone with repo access can retrieve it."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/scripts/seed-admin.mjs",
+      "line": 49,
+      "column": 5,
+      "category": "config",
+      "severity": "high",
+      "confidence": "medium",
+      "type": "PII_IN_CONSOLE_LOG",
+      "matched": "cons***word",
+      "description": "PII fields logged to console. Log output may be stored in log aggregation services, exposing sensitive user data."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/scripts/seed-admin.mjs",
+      "line": 86,
+      "column": 3,
+      "category": "config",
+      "severity": "high",
+      "confidence": "medium",
+      "type": "PII_IN_CONSOLE_LOG",
+      "matched": "cons***MAIL",
+      "description": "PII fields logged to console. Log output may be stored in log aggregation services, exposing sensitive user data."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/scripts/seed-admin.mjs",
+      "line": 57,
+      "column": 18,
+      "category": "llm",
+      "severity": "medium",
+      "confidence": "low",
+      "type": "RAG_SYSTEM_DOCS_WITH_USER_DOCS",
+      "matched": "upse***user",
+      "description": "System/internal documents mixed with user documents in the same collection. User queries could retrieve sensitive internal docs."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/scripts/seed-admin.mjs",
+      "line": 26,
+      "column": 21,
+      "category": "config",
+      "severity": "medium",
+      "confidence": "low",
+      "type": "PII_EMAIL_HARDCODED",
+      "matched": "\"ber***com\"",
+      "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/app/page.tsx",
+      "line": 373,
+      "column": 42,
+      "category": "config",
+      "severity": "medium",
+      "confidence": "low",
+      "type": "PII_EMAIL_HARDCODED",
+      "matched": "\"ber***com\"",
+      "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/components/site-footer.tsx",
+      "line": 59,
+      "column": 57,
+      "category": "config",
+      "severity": "medium",
+      "confidence": "low",
+      "type": "PII_EMAIL_HARDCODED",
+      "matched": "\"ber***com\"",
+      "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/app/shop/actions.ts",
+      "line": 91,
+      "column": 5,
+      "category": "config",
+      "severity": "high",
+      "confidence": "medium",
+      "type": "PII_IN_CONSOLE_LOG",
+      "matched": "cons***mail",
+      "description": "PII fields logged to console. Log output may be stored in log aggregation services, exposing sensitive user data."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/app/zakazivanje/actions.ts",
+      "line": 117,
+      "column": 7,
+      "category": "config",
+      "severity": "high",
+      "confidence": "medium",
+      "type": "PII_IN_CONSOLE_LOG",
+      "matched": "cons***mail",
+      "description": "PII fields logged to console. Log output may be stored in log aggregation services, exposing sensitive user data."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/lib/email/client.ts",
+      "line": 12,
+      "column": 60,
+      "category": "config",
+      "severity": "medium",
+      "confidence": "low",
+      "type": "PII_EMAIL_HARDCODED",
+      "matched": "\"onb***dev\"",
+      "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/lib/supabase/server.ts",
+      "line": 0,
+      "column": 0,
+      "category": "api",
+      "severity": "medium",
+      "confidence": "medium",
+      "type": "API_NO_RATE_LIMIT",
+      "matched": "No r***ound",
+      "description": "HTTP server detected without any rate-limiting library. APIs without rate limits are vulnerable to brute-force and DoS attacks."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/app/admin/(app)/galerija/actions.ts",
+      "line": 18,
+      "column": 40,
+      "category": "api",
+      "severity": "high",
+      "confidence": "low",
+      "type": "API_UPLOAD_NO_TYPE_CHECK",
+      "matched": "fil***",
+      "description": "File upload using original filename without type validation."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/app/admin/(app)/galerija/actions.ts",
+      "line": 20,
+      "column": 53,
+      "category": "api",
+      "severity": "high",
+      "confidence": "low",
+      "type": "API_UPLOAD_NO_TYPE_CHECK",
+      "matched": "fil***",
+      "description": "File upload using original filename without type validation."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/app/admin/(app)/galerija/galerija-client.tsx",
+      "line": 27,
+      "column": 31,
+      "category": "api",
+      "severity": "high",
+      "confidence": "low",
+      "type": "API_UPLOAD_NO_TYPE_CHECK",
+      "matched": "fil***",
+      "description": "File upload using original filename without type validation."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/app/admin/(app)/galerija/galerija-client.tsx",
+      "line": 28,
+      "column": 33,
+      "category": "api",
+      "severity": "high",
+      "confidence": "low",
+      "type": "API_UPLOAD_NO_TYPE_CHECK",
+      "matched": "fil***",
+      "description": "File upload using original filename without type validation."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/app/admin/(app)/shop/proizvodi/actions.ts",
+      "line": 70,
+      "column": 40,
+      "category": "api",
+      "severity": "high",
+      "confidence": "low",
+      "type": "API_UPLOAD_NO_TYPE_CHECK",
+      "matched": "fil***",
+      "description": "File upload using original filename without type validation."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/app/admin/(app)/shop/proizvodi/actions.ts",
+      "line": 73,
+      "column": 54,
+      "category": "api",
+      "severity": "high",
+      "confidence": "low",
+      "type": "API_UPLOAD_NO_TYPE_CHECK",
+      "matched": "fil***",
+      "description": "File upload using original filename without type validation."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/app/admin/(app)/shop/proizvodi/proizvodi-client.tsx",
+      "line": 115,
+      "column": 29,
+      "category": "api",
+      "severity": "high",
+      "confidence": "low",
+      "type": "API_UPLOAD_NO_TYPE_CHECK",
+      "matched": "fil***",
+      "description": "File upload using original filename without type validation."
+    },
+    {
+      "file": "/home/kaizenlinux/Projects/Luka_Projects/LukaPr_Trisha/Berbernica/web/src/app/admin/(app)/shop/proizvodi/proizvodi-client.tsx",
+      "line": 116,
+      "column": 31,
+      "category": "api",
+      "severity": "high",
+      "confidence": "low",
+      "type": "API_UPLOAD_NO_TYPE_CHECK",
+      "matched": "fil***",
+      "description": "File upload using original filename without type validation."
+    }
+  ]
+}

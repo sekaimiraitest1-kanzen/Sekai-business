@@ -39,3 +39,6 @@ coverage/
 
 # Original handoff bundle (kept for reference, not for shipping)
 Trisha-handoff.zip
+
+# ship-safe cache (do not commit)
+.ship-safe/
