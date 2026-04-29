@@ -6,6 +6,7 @@ import "@/styles/legacy.css";
 import "@/styles/legacy-booking.css";
 import "@/styles/legacy-shop.css";
 import "@/styles/product-detail.css";
+import { ServiceWorkerRegister } from "@/components/sw-register";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin", "cyrillic"],
@@ -68,7 +69,10 @@ export default function RootLayout({
       data-lang={lang}
       className={`${cormorant.variable} ${playfair.variable} ${oswald.variable} ${inter.variable} ${jetbrains.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        <ServiceWorkerRegister />
+      </body>
     </html>
   );
 }
