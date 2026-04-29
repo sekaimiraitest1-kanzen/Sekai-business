@@ -6,7 +6,10 @@ export function SiteFooter({ phone, email, address }: { phone?: string; email?: 
       <div className="footer-grid">
         <div className="footer-brand">
           <Link href="/" className="nav-logo" style={{ textDecoration: "none" }}>
-            <div className="nav-logo-mark">Т</div>
+            <div className="nav-logo-mark">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-120.png" alt="Berbernica Triša" />
+            </div>
             <div className="nav-logo-text">
               <span data-sr>Берберница Триша</span>
               <span data-lat>Berbernica Triša</span>

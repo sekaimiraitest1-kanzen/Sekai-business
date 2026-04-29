@@ -20,7 +20,10 @@ export function ShopShell({ children }: { children: React.ReactNode }) {
     <div className="sh-page">
       <nav className="sh-nav">
         <Link href="/" className="sh-nav-logo">
-          <div className="sh-nav-logo-mark">Т</div>
+          <div className="sh-nav-logo-mark">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-120.png" alt="Berbernica Triša" />
+          </div>
           <div className="sh-nav-logo-text">
             <span data-sr>Берберница Триша</span>
             <span data-lat>Berbernica Triša</span>

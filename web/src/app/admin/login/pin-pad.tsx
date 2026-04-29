@@ -71,22 +71,19 @@ export function LoginPad() {
       </div>
       <div
         style={{
-          width: 56,
-          height: 56,
+          width: 72,
+          height: 72,
           background: "var(--mustard)",
           borderRadius: "50%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: "'Playfair Display', serif",
-          fontSize: 28,
-          fontWeight: 900,
-          fontStyle: "italic",
-          color: "var(--brown-950)",
           marginBottom: 16,
+          padding: 6,
         }}
       >
-        Т
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-120.png" alt="Triša" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
       </div>
       <div
         style={{

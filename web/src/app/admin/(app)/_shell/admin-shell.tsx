@@ -47,7 +47,10 @@ export function AdminShell({ session, children }: { session: AdminSession; child
   return (
     <div className="adm-shell">
       <header className="adm-app-bar">
-        <div className="adm-app-bar-logo">Т</div>
+        <div className="adm-app-bar-logo">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-120.png" alt="Triša" />
+        </div>
         <div className="adm-app-bar-title">
           <span data-sr>{title.sr}</span>
           <span data-lat>{title.lat}</span>

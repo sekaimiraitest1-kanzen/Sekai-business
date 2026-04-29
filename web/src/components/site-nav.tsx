@@ -5,7 +5,10 @@ export function SiteNav() {
   return (
     <nav className="nav">
       <Link href="/" className="nav-logo">
-        <div className="nav-logo-mark">Т</div>
+        <div className="nav-logo-mark">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-120.png" alt="Berbernica Triša" />
+        </div>
         <div className="nav-logo-text">
           <span data-sr>Берберница</span>
           <span data-lat>Berbernica</span>
