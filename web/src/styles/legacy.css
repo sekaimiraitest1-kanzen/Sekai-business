@@ -455,7 +455,49 @@ body {
 .service-item:hover .service-name { color: var(--mustard); }
 .service-item-left { flex: 1; }
 
-.service-item:hover .service-name { color: var(--mustard); }
+/* ── PREMIUM / FEATURED service: spans both columns, with mustard accent ── */
+.service-item.featured {
+  grid-column: 1 / -1;
+  border-right: none !important;
+  border-top: 1px solid rgba(212,165,58,.25);
+  padding-top: 56px;
+  padding-bottom: 56px;
+  background: linear-gradient(
+    to right,
+    rgba(212,165,58,.04) 0%,
+    rgba(212,165,58,.08) 50%,
+    rgba(212,165,58,.04) 100%
+  );
+  position: relative;
+}
+.service-item.featured::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--mustard) 50%,
+    transparent 100%
+  );
+}
+.service-item.featured .service-meta {
+  color: var(--mustard);
+  letter-spacing: 0.18em;
+}
+.service-item.featured .service-name {
+  color: var(--mustard);
+}
+.service-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(245,233,208,.55);
+  margin-top: 16px;
+  max-width: 560px;
+  letter-spacing: 0.01em;
+}
 
 .service-meta {
   font-family: 'JetBrains Mono', monospace;

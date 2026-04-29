@@ -177,25 +177,39 @@ export default async function HomePage() {
 
           <div className="services-list">
             {services.length > 0
-              ? services.map((s, i) => (
-                  <div key={i} className="service-item">
-                    <div className="service-item-left">
-                      <div className="service-meta">
-                        <span data-sr>{s.duration_min} МИН</span>
-                        <span data-lat>{s.duration_min} MIN</span>
+              ? services.map((s, i) => {
+                  // Premium tier — flagged by name; spans both columns at the end of the grid.
+                  const isFeatured = /vip/i.test(s.name_lat);
+                  return (
+                    <div key={i} className={`service-item ${isFeatured ? "featured" : ""}`}>
+                      <div className="service-item-left">
+                        <div className="service-meta">
+                          <span data-sr>{s.duration_min} МИН{isFeatured ? " · PREMIUM" : ""}</span>
+                          <span data-lat>{s.duration_min} MIN{isFeatured ? " · PREMIUM" : ""}</span>
+                        </div>
+                        <div className="service-name">
+                          <span data-sr>{s.name_sr}</span>
+                          <span data-lat>{s.name_lat}</span>
+                        </div>
+                        {isFeatured && (
+                          <div className="service-desc">
+                            <span data-sr>
+                              Шишање · сређивање браде · топао пешкир третман · восак за нос и уши · стилизовање браде.
+                            </span>
+                            <span data-lat>
+                              Šišanje · sređivanje brade · topao peškir tretman · vosak za nos i uši · stilizovanje brade.
+                            </span>
+                          </div>
+                        )}
                       </div>
-                      <div className="service-name">
-                        <span data-sr>{s.name_sr}</span>
-                        <span data-lat>{s.name_lat}</span>
+                      <div className="service-price">
+                        {s.price}
+                        <span className="service-currency" data-sr>РСД</span>
+                        <span className="service-currency" data-lat>RSD</span>
                       </div>
                     </div>
-                    <div className="service-price">
-                      {s.price}
-                      <span className="service-currency" data-sr>РСД</span>
-                      <span className="service-currency" data-lat>RSD</span>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               : DEFAULT_SERVICES.map((s, i) => (
                   <div key={i} className="service-item">
                     <div className="service-item-left">
