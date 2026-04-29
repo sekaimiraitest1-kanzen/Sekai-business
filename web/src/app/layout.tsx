@@ -51,11 +51,22 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3050"),
   manifest: "/manifest.json",
   themeColor: "#1A0F05",
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Триша",
+    startupImage: [{ url: "/icons/icon-512.png" }],
   },
+  // Hint to Android browsers that this is meant to be installed.
+  applicationName: "Триша",
+  formatDetection: { telephone: false, email: false, address: false },
 };
 
 export default function RootLayout({

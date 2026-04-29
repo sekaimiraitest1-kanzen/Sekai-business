@@ -409,3 +409,67 @@
   user-select: none;
 }
 .adm-drag-handle:active { cursor: grabbing; color: var(--mustard); }
+
+/* ── INSTALL PROMPT (admin-only PWA add-to-home banner) ─
+   Renders nothing until the browser fires `beforeinstallprompt` and the user
+   hasn't dismissed within the last 7 days. Sits at the bottom on mobile,
+   inside .adm-root which is constrained to max-width 430px. */
+.adm-install-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  width: calc(100% - 24px);
+  max-width: 406px;
+  z-index: 90;
+  background: var(--mustard);
+  color: var(--brown-950);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 14px;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+.adm-install-text { flex: 1; min-width: 0; }
+.adm-install-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.adm-install-sub {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 11px;
+  opacity: 0.78;
+  margin-top: 1px;
+}
+.adm-install-cta {
+  flex-shrink: 0;
+  background: var(--brown-950);
+  color: var(--mustard);
+  border: none;
+  padding: 8px 14px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.adm-install-cta:active { transform: scale(0.97); }
+.adm-install-x {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: rgba(26, 15, 5, 0.55);
+  font-size: 22px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.adm-install-x:hover { color: var(--brown-950); }
