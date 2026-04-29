@@ -30,19 +30,17 @@ export default async function HomePage() {
     lat: content.get(key)?.lat || fallbackLat,
   });
 
-  // 9 site-content slots — all fallbacks are EMPTY by design. With empty DB the
-  // public site renders blank where content is wired, so the admin team can
-  // verify via /admin/sajt that everything they seed reaches the public page
-  // (and that no string is silently hardcoded). Once content is in the DB the
-  // public site never shows blank.
-  const heroEyebrow  = getC("hero_eyebrow",  "", "");
-  const heroTitle    = getC("hero_title",    "", "");
-  const heroSubtitle = getC("hero_subtitle", "", "");
-  const aboutTitle   = getC("about_title",   "", "");
-  const aboutStory   = getC("about_story",   "", "");
-  const review1      = getC("review_1",      "", "");
-  const review2      = getC("review_2",      "", "");
-  const review3      = getC("review_3",      "", "");
+  // 9 site-content slots — fallbacks restore the original page text so a
+  // DB outage / unseeded fresh deploy still renders the salon's voice. DB
+  // values (admin /admin/sajt) take precedence whenever present.
+  const heroEyebrow  = getC("hero_eyebrow",  "СТИЛ · ТРАДИЦИЈА · ПРИЧА", "STIL · TRADICIJA · PRIČA");
+  const heroTitle    = getC("hero_title",    "Место где се рез|претвара у причу", "Mesto gde se rez|pretvara u priču");
+  const heroSubtitle = getC("hero_subtitle", "Берберница Триша — традиционална мушка берберница у Батајници. Шишање, брада, добра прича. Без журбе, без комплекса. Само оно што треба.", "Berbernica Triša — tradicionalna muška berbernica u Batajnici. Šišanje, brada, dobra priča. Bez žurbe, bez kompleksa. Samo ono što treba.");
+  const aboutTitle   = getC("about_title",   "Твој изглед,|наша правила.", "Tvoj izgled,|naša pravila.");
+  const aboutStory   = getC("about_story",   "Заборави на чекање у редовима и листање старих новина. Основани 2025. године, спојили смо петогодишњи „гринд\" у берберској столици са технологијом која поштује твоје време. Код нас нема филозофирања: фокус је на бруталном фејду, хируршки прецизној бради и здравом изгледу косе.", "Zaboravi na čekanje u redovima i listanje starih novina. Osnovani 2025. godine, spojili smo petogodišnji „grind\" u berberskoj stolici sa tehnologijom koja poštuje tvoje vreme. Kod nas nema filozofiranja: fokus je na brutalnom Fade-u, hirurški preciznoj bradi i zdravom izgledu kose.");
+  const review1      = getC("review_1",      "Најбоље шишање у Батајници. Триша увек стигне на време, никад не журим, и излазим срећан. Цена ок, атмосфера супер.", "Najbolje šišanje u Batajnici. Triša uvek stigne na vreme, nikad ne žurim, i izlazim srećan. Cena ok, atmosfera super.");
+  const review2      = getC("review_2",      "Долазим од првог дана отварања. Никад ме није разочарао. Зна како шишам. И син ми иде код њега.", "Dolazim od prvog dana otvaranja. Nikad me nije razočarao. Zna kako šišam. I sin mi ide kod njega.");
+  const review3      = getC("review_3",      "Лепа, топла берберница. Без надувавања, без „стилиста\". Само добар занат и права прича.", "Lepa, topla berbernica. Bez naduvavanja, bez „stilista\". Samo dobar zanat i prava priča.");
 
   // Hero / about titles use a "|" line-break marker — first segment renders normally, second as <em>.
   const splitTitle = (s: string): [string, string] => {
@@ -57,13 +55,15 @@ export default async function HomePage() {
   // the section never goes empty (BUG-6 fix). DB values come from /admin/galerija.
   // CSS classes g1..g6 define the asymmetric grid spans (g1 is 2×2 large, g2/g3/g6 span 2 cols, g4/g5 span 1).
   // Map DB rows in sort_order to those classes positionally — admin's drag-reorder controls layout order.
-  // Empty DB → empty section. No hardcoded fallback so the verification re-seed test is meaningful.
-  const gallery = (galleryRes.data ?? []).slice(0, 6).map((row, i) => ({
-    cls: `g${i + 1}`,
-    src: row.url,
-    altSr: row.alt_sr ?? "",
-    altLat: row.alt_lat ?? "",
-  }));
+  // GALLERY const fallback covers fresh-deploy / DB-outage scenarios.
+  const gallery = (galleryRes.data && galleryRes.data.length > 0)
+    ? galleryRes.data.slice(0, 6).map((row, i) => ({
+        cls: `g${i + 1}`,
+        src: row.url,
+        altSr: row.alt_sr ?? "",
+        altLat: row.alt_lat ?? "",
+      }))
+    : GALLERY.map((g) => ({ cls: g.cls, src: g.src, altSr: g.alt, altLat: g.alt }));
   // working_hours are stored in salon-local time (Belgrade). On Vercel the
   // process is UTC, so convert before computing today's open status — otherwise
   // a 21:00 Belgrade visit would read as 19:00/20:00 UTC and the badge could
@@ -222,38 +222,58 @@ export default async function HomePage() {
           </p>
 
           <div className="services-list">
-            {services.map((s, i) => {
-              // Premium tier is now a per-row DB flag (services.featured) — admin /admin/usluge
-              // can mark any service as featured and supply its own description / meta tag.
-              const isFeatured = !!s.featured;
-              const metaSr = s.meta_sr || `${s.duration_min} МИН`;
-              const metaLat = s.meta_lat || `${s.duration_min} MIN`;
-              return (
-                <div key={i} className={`service-item ${isFeatured ? "featured" : ""}`}>
-                  <div className="service-item-left">
-                    <div className="service-meta">
-                      <span data-sr>{metaSr}</span>
-                      <span data-lat>{metaLat}</span>
-                    </div>
-                    <div className="service-name">
-                      <span data-sr>{s.name_sr}</span>
-                      <span data-lat>{s.name_lat}</span>
-                    </div>
-                    {isFeatured && (s.description_sr || s.description_lat) && (
-                      <div className="service-desc">
-                        <span data-sr>{s.description_sr ?? ""}</span>
-                        <span data-lat>{s.description_lat ?? ""}</span>
+            {services.length > 0
+              ? services.map((s, i) => {
+                  // Premium tier is now a per-row DB flag (services.featured) — admin /admin/usluge
+                  // can mark any service as featured and supply its own description / meta tag.
+                  const isFeatured = !!s.featured;
+                  const metaSr = s.meta_sr || `${s.duration_min} МИН`;
+                  const metaLat = s.meta_lat || `${s.duration_min} MIN`;
+                  return (
+                    <div key={i} className={`service-item ${isFeatured ? "featured" : ""}`}>
+                      <div className="service-item-left">
+                        <div className="service-meta">
+                          <span data-sr>{metaSr}</span>
+                          <span data-lat>{metaLat}</span>
+                        </div>
+                        <div className="service-name">
+                          <span data-sr>{s.name_sr}</span>
+                          <span data-lat>{s.name_lat}</span>
+                        </div>
+                        {isFeatured && (s.description_sr || s.description_lat) && (
+                          <div className="service-desc">
+                            <span data-sr>{s.description_sr ?? ""}</span>
+                            <span data-lat>{s.description_lat ?? ""}</span>
+                          </div>
+                        )}
                       </div>
-                    )}
+                      <div className="service-price">
+                        {s.price}
+                        <span className="service-currency" data-sr>РСД</span>
+                        <span className="service-currency" data-lat>RSD</span>
+                      </div>
+                    </div>
+                  );
+                })
+              : DEFAULT_SERVICES.map((s, i) => (
+                  <div key={i} className="service-item">
+                    <div className="service-item-left">
+                      <div className="service-meta">
+                        <span data-sr>{s.metaSr}</span>
+                        <span data-lat>{s.metaLat}</span>
+                      </div>
+                      <div className="service-name">
+                        <span data-sr>{s.nameSr}</span>
+                        <span data-lat>{s.nameLat}</span>
+                      </div>
+                    </div>
+                    <div className="service-price">
+                      {s.price}
+                      <span className="service-currency" data-sr>РСД</span>
+                      <span className="service-currency" data-lat>RSD</span>
+                    </div>
                   </div>
-                  <div className="service-price">
-                    {s.price}
-                    <span className="service-currency" data-sr>РСД</span>
-                    <span className="service-currency" data-lat>RSD</span>
-                  </div>
-                </div>
-              );
-            })}
+                ))}
           </div>
 
           <div className="services-footer">
@@ -326,10 +346,9 @@ export default async function HomePage() {
 
           <div className="reviews-grid">
             {REVIEWS.map((r, i) => {
-              const dbText = [review1, review2, review3][i] ?? { sr: "", lat: "" };
-              // Skip cards whose text isn't seeded yet — admin /admin/sajt populates
-              // review_1 / review_2 / review_3 in site_content.
-              if (!dbText.sr && !dbText.lat) return null;
+              const dbText = [review1, review2, review3][i];
+              // getC() always returns either DB value or hardcoded fallback,
+              // so we always have text to render (no skip).
               return (
                 <div key={i} className="review-card">
                   <div className="review-quote-mark">&quot;</div>
@@ -370,10 +389,10 @@ export default async function HomePage() {
               <div className="map-placeholder-inner">
                 <div className="map-pin"></div>
                 <div className="map-label">
-                  {salon?.address || ""}
+                  {salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica"}
                 </div>
                 <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(salon?.address ?? "")}`}
+                  href={`https://maps.google.com/?q=${encodeURIComponent(salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica")}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -396,24 +415,18 @@ export default async function HomePage() {
               <HoursCard workingHours={salon?.working_hours} />
 
               <div className="contact-info">
-                {salon?.phone && (
-                  <div className="contact-row">
-                    <span>📞</span>
-                    <span>{salon.phone}</span>
-                  </div>
-                )}
-                {salon?.email && (
-                  <div className="contact-row">
-                    <span>✉</span>
-                    <span>{salon.email}</span>
-                  </div>
-                )}
-                {salon?.address && (
-                  <div className="contact-row">
-                    <span>📍</span>
-                    <span>{salon.address}</span>
-                  </div>
-                )}
+                <div className="contact-row">
+                  <span>📞</span>
+                  <span>{salon?.phone ?? "065 9003 742"}</span>
+                </div>
+                <div className="contact-row">
+                  <span>✉</span>
+                  <span>{salon?.email ?? "berbernicatrisa@gmail.com"}</span>
+                </div>
+                <div className="contact-row">
+                  <span>📍</span>
+                  <span>{salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica"}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -509,10 +522,36 @@ function HoursCard({ workingHours }: { workingHours?: WorkingHours | null }) {
 // Reviewer metadata for the testimonials section. Only initials, author name,
 // and source label live in code — the actual review text is editable via
 // /admin/sajt → review_1 / review_2 / review_3 (site_content table).
-// Cards render only for slots that have text in DB.
 // ──────────────────────────────────────────────────────────
 const REVIEWS = [
   { initialsSr: "МК", initialsLat: "MK", authorSr: "Марко К.", authorLat: "Marko K.", sourceSr: "Google · 2 нед.", sourceLat: "Google · 2 ned." },
   { initialsSr: "НЈ", initialsLat: "NJ", authorSr: "Никола Ј.", authorLat: "Nikola J.", sourceSr: "Google · 1 мес.", sourceLat: "Google · 1 mes." },
   { initialsSr: "СП", initialsLat: "SP", authorSr: "Стефан П.", authorLat: "Stefan P.", sourceSr: "Google · 3 нед.", sourceLat: "Google · 3 ned." },
+];
+
+// Used as the empty-DB fallback for /#usluge (matches the salon's pre-clear
+// service catalog). Once admin /admin/usluge has rows, this list is bypassed.
+const DEFAULT_SERVICES = [
+  { metaSr: "30 МИН", metaLat: "30 MIN", nameSr: "Обично шишање", nameLat: "Obično šišanje", price: 900 },
+  { metaSr: "50 МИН · SIGNATURE", metaLat: "50 MIN · SIGNATURE", nameSr: "Фејд шишање", nameLat: "Fade šišanje", price: 1200 },
+  { metaSr: "60 МИН · МАКАЗЕ", metaLat: "60 MIN · MAKAZE", nameSr: "Шишање маказама", nameLat: "Šišanje makazama", price: 1200 },
+  { metaSr: "70 МИН · КОМПЛЕТ", metaLat: "70 MIN · KOMPLET", nameSr: "Шишање + брада (комплет)", nameLat: "Šišanje + brada (komplet)", price: 1400 },
+  { metaSr: "30 МИН", metaLat: "30 MIN", nameSr: "Бријање главе", nameLat: "Brijanje glave", price: 800 },
+  { metaSr: "20 МИН", metaLat: "20 MIN", nameSr: "Шејвер", nameLat: "Shaver", price: 600 },
+  { metaSr: "30 МИН", metaLat: "30 MIN", nameSr: "Само брада", nameLat: "Samo brada", price: 600 },
+  { metaSr: "20 МИН", metaLat: "20 MIN", nameSr: "Стилизовање браде", nameLat: "Stilizovanje brade", price: 400 },
+  { metaSr: "30 МИН", metaLat: "30 MIN", nameSr: "Восак за нос и уши", nameLat: "Vosak za nos i uši", price: 600 },
+  { metaSr: "15 МИН", metaLat: "15 MIN", nameSr: "Прање косе", nameLat: "Pranje kose", price: 200 },
+  { metaSr: "90 МИН · ПРЕМИУМ", metaLat: "90 MIN · PREMIUM", nameSr: "VIP третман", nameLat: "VIP tretman", price: 2500 },
+];
+
+// Used as the empty-DB fallback for /#galerija. Source files live in
+// public/legacy/uploads/ and were the original 6 photos Triša provided.
+const GALLERY = [
+  { cls: "g1", src: "/legacy/uploads/IMG_0025.jpeg", alt: "Salon" },
+  { cls: "g2", src: "/legacy/uploads/IMG_0026.jpeg", alt: "Fade" },
+  { cls: "g3", src: "/legacy/uploads/IMG_0585.jpeg", alt: "Šišanje" },
+  { cls: "g4", src: "/legacy/uploads/IMG_0641.jpeg", alt: "Fade" },
+  { cls: "g5", src: "/legacy/uploads/IMG_0716.jpeg", alt: "Stil" },
+  { cls: "g6", src: "/legacy/uploads/IMG_0823.jpeg", alt: "Rezultat" },
 ];
