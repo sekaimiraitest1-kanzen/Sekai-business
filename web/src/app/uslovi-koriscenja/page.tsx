@@ -29,7 +29,7 @@ export default async function TermsPage() {
   return (
     <>
       <SiteNav />
-      <main className="legal-page">
+      <main className="legal-page" id="main-content">
         <div className="legal-container">
           <div className="legal-eyebrow">
             <span data-sr>§ ПРАВНО</span>

@@ -23,6 +23,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
 
   return (
     <main
+      id="main-content"
       style={{
         minHeight: "100vh",
         display: "flex",

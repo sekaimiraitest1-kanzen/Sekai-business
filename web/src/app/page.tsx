@@ -104,6 +104,8 @@ export default async function HomePage() {
       <SiteBanner />
       <SiteNav />
 
+      <main id="main-content">
+
       {/* ── HERO ────────────────────────────────────────── */}
       <section className="hero" id="hero">
         <div className={`hero-open-tag${openStatus.isOpen ? "" : " closed"}`}>
@@ -499,6 +501,8 @@ export default async function HomePage() {
         <p className="cta-band-note" data-sr>Резервација за мање од 30 секунди. Без налога.</p>
         <p className="cta-band-note" data-lat>Rezervacija za manje od 30 sekundi. Bez naloga.</p>
       </section>
+
+      </main>
 
       <SiteFooter phone={salon?.phone ?? undefined} email={salon?.email ?? undefined} address={salon?.address ?? undefined} workingHours={salon?.working_hours ?? undefined} socialLinks={socialLinks} />
     </>

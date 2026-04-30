@@ -1011,6 +1011,43 @@ footer {
   color: rgba(212,165,58,.3);
 }
 
+/* ── SKIP TO CONTENT (a11y) ──────────────────── */
+.skip-to-content {
+  position: fixed;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  background: var(--mustard);
+  color: var(--brown-950);
+  padding: 12px 24px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+.skip-to-content:focus {
+  top: 12px;
+  outline: 2px solid var(--cream);
+  outline-offset: 2px;
+}
+
+/* ── GLOBAL FOCUS RING (a11y) ─────────────────── */
+/* Default focus-visible for any link/button that doesn't define its own.
+   Uses :where() for low specificity — components can override freely. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--mustard);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+/* But ONLY when keyboard navigation — mouse click shouldn't show ring. */
+:where(a, button, input, select, textarea, [tabindex]):focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* ── LEGAL PAGES (Privacy, Terms) ──────────────── */
 .legal-page {
   background: var(--brown-950);

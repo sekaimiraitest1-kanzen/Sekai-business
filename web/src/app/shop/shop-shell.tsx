@@ -42,7 +42,7 @@ export function ShopShell({ children }: { children: React.ReactNode }) {
         </button>
       </nav>
 
-      <main>{children}</main>
+      <main id="main-content">{children}</main>
 
       {cartOpen && (
         <CartDrawer

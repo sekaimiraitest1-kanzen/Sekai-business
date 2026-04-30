@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 export default function OfflinePage() {
   return (
     <main
+      id="main-content"
       style={{
         minHeight: "100dvh",
         background: "var(--paper, #FAF3E3)",

@@ -9,6 +9,7 @@ import "@/styles/product-detail.css";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { CookieNotice } from "@/components/cookie-notice";
 import { PlausibleScript } from "@/components/plausible";
+import { SkipToContent } from "@/components/skip-to-content";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin", "cyrillic"],
@@ -126,6 +127,7 @@ export default function RootLayout({
       className={`${cormorant.variable} ${playfair.variable} ${oswald.variable} ${inter.variable} ${jetbrains.variable}`}
     >
       <body>
+        <SkipToContent />
         {children}
         <CookieNotice />
         <ServiceWorkerRegister />

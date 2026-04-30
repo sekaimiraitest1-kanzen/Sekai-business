@@ -3,11 +3,11 @@ import { LangToggle } from "./lang-toggle";
 
 export function SiteNav() {
   return (
-    <nav className="nav">
-      <Link href="/" className="nav-logo">
+    <nav className="nav" aria-label="Glavna navigacija">
+      <Link href="/" className="nav-logo" aria-label="Berbernica Triša — početna">
         <div className="nav-logo-mark">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-120.png" alt="Berbernica Triša" width={120} height={120} />
+          <img src="/logo-120.png" alt="" width={120} height={120} />
         </div>
         <div className="nav-logo-text">
           <span data-sr>Берберница</span>

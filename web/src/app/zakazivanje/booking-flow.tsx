@@ -161,7 +161,7 @@ export function BookingFlow({
         <LangToggle />
       </nav>
 
-      <div className="booking-wrap">
+      <main id="main-content" className="booking-wrap">
         <ProgressBar step={step} />
 
         {step === 1 && (
@@ -396,7 +396,7 @@ export function BookingFlow({
             </div>
           </div>
         )}
-      </div>
+      </main>
 
       {calOpen && (
         <CalendarSheet
