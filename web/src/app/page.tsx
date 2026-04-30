@@ -6,13 +6,14 @@ import { createClient } from "@/lib/supabase/server";
 import { computeOpenStatus } from "@/lib/working-hours";
 import { buildLocalBusinessJsonLd } from "@/lib/seo/local-business";
 import { formatPhoneE164 } from "@/lib/phone";
+import { parseSocialLinks, visibleLinks } from "@/lib/social-links";
 
 export default async function HomePage() {
   const supabase = createClient();
 
   // Read salon + services + gallery + site_content in parallel
   const [salonRes, servicesRes, galleryRes, contentRes] = await Promise.all([
-    supabase.from("salons").select("name, address, phone, email, working_hours").eq("slug", process.env.NEXT_PUBLIC_DEFAULT_SALON_SLUG ?? "trisa").single(),
+    supabase.from("salons").select("name, address, phone, email, working_hours, social_links").eq("slug", process.env.NEXT_PUBLIC_DEFAULT_SALON_SLUG ?? "trisa").single(),
     supabase.from("services").select("name_sr, name_lat, price, duration_min, featured, description_sr, description_lat, meta_sr, meta_lat").eq("active", true).order("sort_order", { ascending: true }),
     supabase.from("gallery_images").select("id, url, alt_sr, alt_lat, sort_order, size").order("sort_order", { ascending: true }),
     supabase.from("site_content").select("key, value_sr, value_lat"),
@@ -75,6 +76,15 @@ export default async function HomePage() {
   const openStatus = computeOpenStatus(salon?.working_hours, belgradeNow);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3050";
+  const socialLinks = parseSocialLinks((salon as unknown as { social_links?: unknown })?.social_links);
+  // sameAs only emits enabled+filled platforms — keeps JSON-LD clean while
+  // matching the visual footer surface. GBP comes from a server-only env var
+  // because it's not surfaced as a footer icon (it's a directory listing,
+  // not a social profile).
+  const sameAsUrls = [
+    ...visibleLinks(socialLinks).map((l) => l.url),
+    process.env.NEXT_PUBLIC_GBP_URL,
+  ].filter((u): u is string => typeof u === "string" && u.trim() !== "");
   const localBusinessJsonLd = buildLocalBusinessJsonLd({
     salon: {
       name: salon?.name,
@@ -85,6 +95,7 @@ export default async function HomePage() {
     },
     services: services.map((s) => ({ name_lat: s.name_lat, price: s.price })),
     siteUrl,
+    sameAs: sameAsUrls,
   });
 
   return (
@@ -321,22 +332,24 @@ export default async function HomePage() {
               <span data-lat>Naš rad.</span>
             </h2>
           </div>
-          <a
-            href="https://instagram.com/"
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: "12px",
-              letterSpacing: ".1em",
-              color: "rgba(212,165,58,.5)",
-              textDecoration: "none",
-              textTransform: "uppercase",
-            }}
-          >
-            <span data-sr>ПОГЛЕДАЈ НА INSTAGRAM →</span>
-            <span data-lat>POGLEDAJ NA INSTAGRAM →</span>
-          </a>
+          {socialLinks.instagram.enabled && socialLinks.instagram.url.trim() !== "" && (
+            <a
+              href={socialLinks.instagram.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: "12px",
+                letterSpacing: ".1em",
+                color: "rgba(212,165,58,.5)",
+                textDecoration: "none",
+                textTransform: "uppercase",
+              }}
+            >
+              <span data-sr>ПОГЛЕДАЈ НА INSTAGRAM →</span>
+              <span data-lat>POGLEDAJ NA INSTAGRAM →</span>
+            </a>
+          )}
         </div>
 
         <div className="gallery-grid">
@@ -487,7 +500,7 @@ export default async function HomePage() {
         <p className="cta-band-note" data-lat>Rezervacija za manje od 30 sekundi. Bez naloga.</p>
       </section>
 
-      <SiteFooter phone={salon?.phone ?? undefined} email={salon?.email ?? undefined} address={salon?.address ?? undefined} workingHours={salon?.working_hours ?? undefined} />
+      <SiteFooter phone={salon?.phone ?? undefined} email={salon?.email ?? undefined} address={salon?.address ?? undefined} workingHours={salon?.working_hours ?? undefined} socialLinks={socialLinks} />
     </>
   );
 }

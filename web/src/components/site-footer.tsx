@@ -1,9 +1,23 @@
 import Link from "next/link";
 import { formatPhoneE164 } from "@/lib/phone";
+import { SocialLinksRow } from "@/components/social-links-row";
+import { EMPTY_SOCIAL_LINKS, type SocialLinks } from "@/lib/social-links";
 
 type WorkingHours = Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", { open: string; close: string } | null> | null;
 
-export function SiteFooter({ phone, email, address, workingHours }: { phone?: string; email?: string; address?: string; workingHours?: WorkingHours }) {
+export function SiteFooter({
+  phone,
+  email,
+  address,
+  workingHours,
+  socialLinks,
+}: {
+  phone?: string;
+  email?: string;
+  address?: string;
+  workingHours?: WorkingHours;
+  socialLinks?: SocialLinks;
+}) {
   // Compress working hours into 3 footer rows: weekday range, Saturday, Sunday.
   const wh = workingHours ?? null;
   const weekdayHours = wh?.mon && wh?.fri ? `${wh.mon.open.slice(0, 5)}—${wh.fri.close.slice(0, 5)}` : null;
@@ -89,6 +103,8 @@ export function SiteFooter({ phone, email, address, workingHours }: { phone?: st
           </div>
         </div>
       </div>
+
+      <SocialLinksRow links={socialLinks ?? EMPTY_SOCIAL_LINKS} />
 
       <div className="footer-bottom">
         <div className="footer-copy">© 2026 BERBERNICA TRIŠA · BATAJNICA</div>

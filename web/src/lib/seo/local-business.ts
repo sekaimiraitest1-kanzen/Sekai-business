@@ -33,10 +33,19 @@ export function buildLocalBusinessJsonLd({
   salon,
   services,
   siteUrl,
+  sameAs,
 }: {
   salon: SalonInput;
   services: ServiceInput[];
   siteUrl: string;
+  /**
+   * Caller-built list of cross-network entity URLs (Instagram, Facebook,
+   * TikTok, LinkedIn, X — drawn from `salons.social_links` enabled+filled —
+   * plus optionally GBP via `NEXT_PUBLIC_GBP_URL`). Page renderer keeps the
+   * source-of-truth so this builder stays decoupled from the social-links
+   * domain.
+   */
+  sameAs?: string[];
 }) {
   const fullAddress = salon.address ?? FALLBACK_ADDRESS;
   const [streetPart, cityPart] = fullAddress.split(",").map((s) => s.trim());
@@ -109,7 +118,7 @@ export function buildLocalBusinessJsonLd({
     ],
     openingHoursSpecification,
     ...(offerCatalog ? { hasOfferCatalog: offerCatalog } : {}),
-    // TODO(B.2): populate sameAs once Instagram URL is fixed and GBP/Facebook URLs collected.
-    // TODO(B.x): populate aggregateRating from GBP API or a verified source. Not safe to hardcode.
+    ...(sameAs && sameAs.length > 0 ? { sameAs } : {}),
+    // TODO: populate aggregateRating from GBP API or a verified source. Not safe to hardcode.
   };
 }
