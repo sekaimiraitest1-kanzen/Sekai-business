@@ -19,7 +19,11 @@ const EXT_BY_MIME: Record<string, string> = {
   "image/webp": "webp",
   "image/gif": "gif",
 };
-const MAX_BYTES = 8 * 1024 * 1024; // 8MB — Supabase bucket limit is 10MB, leave headroom
+// 2MB ceiling — well above the typical compress-client.ts output of
+// 200-800KB at q=0.82 + 2000px max edge, but tight enough that a Postman/curl
+// upload bypassing the client can't blow Supabase Free tier's 1GB storage cap
+// or eat into the 5GB/mo bandwidth budget. Was 8MB in pre-launch dev.
+const MAX_BYTES = 2 * 1024 * 1024;
 
 /**
  * Upload an image to a public Supabase Storage bucket and return the public URL.
