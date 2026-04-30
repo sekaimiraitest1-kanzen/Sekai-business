@@ -45,3 +45,6 @@ Trisha-handoff.zip
 
 # code-review-graph cache (auto-regenerated, do not commit)
 .code-review-graph/
+
+# serena MCP cache (auto-regenerated, do not commit)
+.serena/
