@@ -2,17 +2,23 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import { logClientError } from "@/lib/error-log";
 
 /**
  * Per-route error boundary. Caught from anywhere inside the app router.
  * Renders the same brand-consistent shell as `not-found` so a runtime crash
- * doesn't drop the user into Vercel's default white error screen.
+ * doesn't drop the user into Vercel's default white error screen. Captures
+ * the error to Supabase `error_log` so admin can triage post-hoc.
  */
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    // Surface in dev console + Vercel logs. In V1.1 this is where Sentry
-    // capture would attach (see release plan Sprint 4).
     console.error("[error.tsx]", error);
+    void logClientError({
+      message: error.message,
+      stack: error.stack,
+      digest: error.digest,
+      surface: "client",
+    });
   }, [error]);
 
   return (

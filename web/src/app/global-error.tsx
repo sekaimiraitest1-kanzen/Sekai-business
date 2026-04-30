@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { logClientError } from "@/lib/error-log";
 
 /**
  * Global error boundary — fires when the root layout itself crashes.
@@ -11,6 +12,12 @@ import { useEffect } from "react";
 export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
   useEffect(() => {
     console.error("[global-error.tsx]", error);
+    void logClientError({
+      message: error.message,
+      stack: error.stack,
+      digest: error.digest,
+      surface: "global",
+    });
   }, [error]);
 
   return (
