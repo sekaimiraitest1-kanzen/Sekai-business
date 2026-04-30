@@ -1127,21 +1127,22 @@ footer {
 .footer-legal a:hover { color: var(--mustard); }
 .footer-legal-sep { color: rgba(245,233,208,.2); }
 .footer-imprint {
-  display: none;
-  /* When populated, reveal via additional class server-side */
-}
-.footer-imprint:not(:empty) {
-  display: block;
   max-width: 1200px;
   margin: 12px auto 0;
   padding-top: 16px;
   border-top: 1px solid rgba(245,233,208,.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   letter-spacing: .08em;
   color: rgba(245,233,208,.25);
   text-align: center;
 }
+.footer-imprint-sep { color: rgba(245,233,208,.15); }
 
 /* ── COOKIE NOTICE ────────────────────────────── */
 .cookie-notice {

@@ -52,9 +52,9 @@ export default async function TermsPage() {
               или наручивање.
             </p>
             <p>
-              Сајт води Берберница Триша, Мајора Зорана Радосављевића 226б,
-              Батајница, Београд. Подаци правног субјекта (пун назив, ПИБ,
-              матични број) ће бити унети до тренутка лансирања.
+              Сајт води BERBERNICA TRIŠA, Мајора Зорана Радосављевића 226б,
+              Батајница, Београд. ПИБ 115240647, матични број 68208955,
+              основана 2.9.2025.
             </p>
 
             <h2>2. Резервација термина</h2>
@@ -190,9 +190,9 @@ export default async function TermsPage() {
               ili naručivanje.
             </p>
             <p>
-              Sajt vodi Berbernica Triša, Majora Zorana Radosavljevića 226b,
-              Batajnica, Beograd. Podaci pravnog subjekta (pun naziv, PIB,
-              matični broj) će biti uneti do trenutka lansiranja.
+              Sajt vodi BERBERNICA TRIŠA, Majora Zorana Radosavljevića 226b,
+              Batajnica, Beograd. PIB 115240647, matični broj 68208955,
+              osnovana 2.9.2025.
             </p>
 
             <h2>2. Rezervacija termina</h2>

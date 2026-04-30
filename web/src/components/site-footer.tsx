@@ -119,17 +119,14 @@ export function SiteFooter({
         <div className="footer-tagline">— STIL · TRADICIJA · PRIČA —</div>
       </div>
 
-      {/* Imprint placeholder — populated when Stefan delivers legal entity
-          data on launch day (per docs/release-domain-plugin.md §8). Until
-          then, hidden via CSS to avoid empty box on the page. */}
-      <div className="footer-imprint" aria-hidden="true">
-        {/*
-          TODO: insert actual fields:
-            BERBERNICA TRIŠA D.O.O.
-            PIB: <pib>
-            MB:  <mb>
-            <street>, <city>
-        */}
+      <div className="footer-imprint">
+        <span>BERBERNICA TRIŠA</span>
+        <span className="footer-imprint-sep">·</span>
+        <span>PIB 115240647</span>
+        <span className="footer-imprint-sep">·</span>
+        <span>МБ 68208955</span>
+        <span className="footer-imprint-sep">·</span>
+        <span>{address ?? "Majora Zorana Radosavljevića 226b, Batajnica"}</span>
       </div>
     </footer>
   );

@@ -53,8 +53,8 @@ export default async function PrivacyPage() {
               <a href="mailto:berbernicatrisa@gmail.com">berbernicatrisa@gmail.com</a>.
             </p>
             <p>
-              Подаци регистрације правног субјекта (пун назив, ПИБ, матични
-              број) биће упуњени до тренутка лансирања сајта.
+              <strong>Подаци пословног субјекта:</strong> BERBERNICA TRIŠA,
+              ПИБ 115240647, матични број 68208955, основана 2.9.2025.
             </p>
 
             <h2>2. Које податке прикупљамо</h2>
@@ -202,8 +202,8 @@ export default async function PrivacyPage() {
               <a href="mailto:berbernicatrisa@gmail.com">berbernicatrisa@gmail.com</a>.
             </p>
             <p>
-              Podaci registracije pravnog subjekta (pun naziv, PIB, matični
-              broj) biće upunjeni do trenutka lansiranja sajta.
+              <strong>Podaci poslovnog subjekta:</strong> BERBERNICA TRIŠA,
+              PIB 115240647, matični broj 68208955, osnovana 2.9.2025.
             </p>
 
             <h2>2. Koje podatke prikupljamo</h2>

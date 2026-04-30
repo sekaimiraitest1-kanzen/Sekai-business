@@ -119,6 +119,19 @@ export function buildLocalBusinessJsonLd({
     openingHoursSpecification,
     ...(offerCatalog ? { hasOfferCatalog: offerCatalog } : {}),
     ...(sameAs && sameAs.length > 0 ? { sameAs } : {}),
+    foundingDate: "2025-09-02",
+    // taxID is the Serbian PIB. Schema.org accepts free-form string; Google's
+    // structured-data validator treats this as a strong entity-disambiguation
+    // signal alongside the address + name.
+    taxID: "RS115240647",
+    // identifier emits the matični broj (Business Registry number) as a
+    // PropertyValue so structured-data crawlers can match the entity to the
+    // Serbian Agency for Business Registers (APR) database.
+    identifier: {
+      "@type": "PropertyValue",
+      propertyID: "MB-RS",
+      value: "68208955",
+    },
     // TODO: populate aggregateRating from GBP API or a verified source. Not safe to hardcode.
   };
 }
