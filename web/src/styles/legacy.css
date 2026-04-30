@@ -1011,6 +1011,58 @@ footer {
   color: rgba(212,165,58,.3);
 }
 
+/* ── FOOTER SOCIAL ROW ───────────────────────────── */
+.footer-social-row {
+  max-width: 1200px;
+  margin: 0 auto 20px;
+  padding: 20px 0 0;
+  border-top: 1px solid rgba(245,233,208,.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.footer-social-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(212,165,58,.5);
+}
+.footer-social-icons {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.footer-social-icon {
+  color: var(--mustard);
+  opacity: 0.7;
+  transition: opacity 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+.footer-social-icon:hover,
+.footer-social-icon:focus-visible {
+  opacity: 1;
+  color: var(--mustard-bright);
+  transform: translateY(-1px);
+  outline: none;
+}
+.footer-social-icon:focus-visible {
+  outline: 1px solid var(--mustard);
+  outline-offset: 2px;
+}
+@media (max-width: 768px) {
+  .footer-social-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
 /* ── HERO VISUAL — PREMIUM ───────────────────────── */
 .hero-visual {
   display: flex;
