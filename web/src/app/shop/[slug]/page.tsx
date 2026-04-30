@@ -16,8 +16,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     .eq("slug", params.slug)
     .eq("active", true)
     .single();
-  if (!data) return { title: "Berbernica Triša · Shop" };
-  const title = `${data.name_lat}${data.brand ? " — " + data.brand : ""} · Berbernica Triša`;
+  if (!data) return { title: "Продавница" };
+  // Title template in root layout wraps as "%s · Берберница Триша" — return
+  // bare product+brand here to avoid duplicating the brand in the final title.
+  const title = `${data.name_lat}${data.brand ? " — " + data.brand : ""}`;
   const description = data.description_lat?.slice(0, 160) ?? `Kupi ${data.name_lat} u Berbernici Triša.`;
   return {
     title,
