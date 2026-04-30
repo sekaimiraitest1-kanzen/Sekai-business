@@ -343,7 +343,13 @@ export default async function HomePage() {
           {gallery.map((g, i) => (
             <div key={i} className={`gallery-item ${g.cls}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={g.src} alt={g.altLat} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <img
+                src={g.src}
+                alt={g.altLat}
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                loading="lazy"
+                decoding="async"
+              />
             </div>
           ))}
         </div>
