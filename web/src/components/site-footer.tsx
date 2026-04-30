@@ -16,7 +16,7 @@ export function SiteFooter({ phone, email, address, workingHours }: { phone?: st
           <Link href="/" className="nav-logo" style={{ textDecoration: "none" }}>
             <div className="nav-logo-mark">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-120.png" alt="Berbernica Triša" />
+              <img src="/logo-120.png" alt="Berbernica Triša" width={120} height={120} />
             </div>
             <div className="nav-logo-text">
               <span data-sr>Берберница Триша</span>

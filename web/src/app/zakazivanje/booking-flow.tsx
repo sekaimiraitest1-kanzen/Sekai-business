@@ -141,6 +141,10 @@ export function BookingFlow({
 
   return (
     <>
+      <h1 className="sr-only">
+        <span data-sr>Заказивање термина — Берберница Триша, Батајница</span>
+        <span data-lat>Zakazivanje termina — Berbernica Triša, Batajnica</span>
+      </h1>
       <nav className="bk-nav">
         <Link href="/" className="bk-nav-back">
           ← <span data-sr>НАЗАД</span><span data-lat>NAZAD</span>

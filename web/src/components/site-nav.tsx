@@ -7,7 +7,7 @@ export function SiteNav() {
       <Link href="/" className="nav-logo">
         <div className="nav-logo-mark">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-120.png" alt="Berbernica Triša" />
+          <img src="/logo-120.png" alt="Berbernica Triša" width={120} height={120} />
         </div>
         <div className="nav-logo-text">
           <span data-sr>Берберница</span>

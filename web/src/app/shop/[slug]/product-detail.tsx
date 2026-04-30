@@ -68,7 +68,12 @@ export function ProductDetail({ product, related }: { product: Product; related:
           <div className="pd-image">
             {product.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={product.image_url} alt={product.name_lat} />
+              <img
+                src={product.image_url}
+                alt={`${product.name_lat}${product.brand ? " — " + product.brand : ""} | Berbernica Triša`}
+                width={800}
+                height={800}
+              />
             ) : (
               <div className="pd-image-placeholder">
                 <div className="pd-placeholder-brand">{product.brand ?? product.name_lat.slice(0, 5).toUpperCase()}</div>
