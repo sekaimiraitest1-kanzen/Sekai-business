@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { trackEvent, EVENTS } from "@/lib/plausible";
 
 export function LangToggle() {
   const [lang, setLang] = useState<"sr" | "lat">("sr");
@@ -12,10 +13,12 @@ export function LangToggle() {
   }, []);
 
   function set(next: "sr" | "lat") {
+    if (next === lang) return; // no-op + no spam tracking
     setLang(next);
     document.documentElement.setAttribute("data-lang", next);
     document.documentElement.setAttribute("lang", next === "sr" ? "sr-Cyrl" : "sr-Latn");
     document.cookie = `lang=${next};path=/;max-age=${60 * 60 * 24 * 365}`;
+    trackEvent(EVENTS.LANG_TOGGLED, { script: next });
   }
 
   return (

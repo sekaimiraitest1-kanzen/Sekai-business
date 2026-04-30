@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { LangToggle } from "@/components/lang-toggle";
 import { useCart } from "@/lib/shop/cart-context";
 import { submitOrder } from "./actions";
+import { trackEvent, trackRevenue, EVENTS } from "@/lib/plausible";
 
 /**
  * Shared shell for /shop/* — top nav with cart count, slide-in cart drawer,
@@ -147,8 +148,17 @@ function CheckoutDrawer({ onClose, onSuccess }: { onClose: () => void; onSuccess
         items: cart.items.map((it) => ({ productId: it.productId, name: it.name, quantity: it.quantity, price: it.price })),
         pickupNote: note,
       });
-      if (res.ok) onSuccess(res.orderId);
-      else setErr(res.error);
+      if (res.ok) {
+        const totalRsd = cart.items.reduce((sum, it) => sum + it.price * it.quantity, 0);
+        const itemCount = cart.items.reduce((n, it) => n + it.quantity, 0);
+        trackRevenue(EVENTS.ORDER_PLACED, totalRsd, {
+          itemCount,
+          hasEmail: !!email,
+        });
+        onSuccess(res.orderId);
+      } else {
+        setErr(res.error);
+      }
     });
   }
 

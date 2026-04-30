@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { LangToggle } from "@/components/lang-toggle";
 import { submitBooking, getTakenSlots } from "./actions";
+import { trackEvent, EVENTS } from "@/lib/plausible";
 
 type Service = {
   id: string;
@@ -132,6 +133,12 @@ export function BookingFlow({
       });
       if (res.ok) {
         setBookingId(res.bookingId);
+        const svc = services.find((s) => s.id === serviceId);
+        trackEvent(EVENTS.BOOKING_COMPLETED, {
+          service: svc?.name_lat ?? "unknown",
+          price: svc?.price ?? 0,
+          hasEmail: !!email,
+        });
         go(5);
       } else {
         setSubmitErr(res.error);

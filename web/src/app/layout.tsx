@@ -8,6 +8,7 @@ import "@/styles/legacy-shop.css";
 import "@/styles/product-detail.css";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { CookieNotice } from "@/components/cookie-notice";
+import { PlausibleScript } from "@/components/plausible";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin", "cyrillic"],
@@ -128,6 +129,7 @@ export default function RootLayout({
         {children}
         <CookieNotice />
         <ServiceWorkerRegister />
+        <PlausibleScript />
       </body>
     </html>
   );
