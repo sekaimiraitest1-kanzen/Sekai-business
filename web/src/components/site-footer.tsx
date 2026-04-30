@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatPhoneE164 } from "@/lib/phone";
 
 type WorkingHours = Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", { open: string; close: string } | null> | null;
 
@@ -62,7 +63,14 @@ export function SiteFooter({ phone, email, address, workingHours }: { phone?: st
           <div className="footer-col-title" data-sr>КОНТАКТ</div>
           <div className="footer-col-title" data-lat>KONTAKT</div>
           <div className="footer-info">
-            <div className="footer-info-item">{phone ?? "065 9003 742"}</div>
+            <div className="footer-info-item">
+              <a
+                href={`tel:${formatPhoneE164(phone ?? "065 9003 742")}`}
+                style={{ color: "inherit", textDecoration: "none" }}
+              >
+                {phone ?? "065 9003 742"}
+              </a>
+            </div>
             <div className="footer-info-item">{email ?? "berbernicatrisa@gmail.com"}</div>
             <div className="footer-info-item">{address ?? "Majora Zorana Radosavljevića 226b, Batajnica"}</div>
           </div>

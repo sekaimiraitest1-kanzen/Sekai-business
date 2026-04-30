@@ -1,8 +1,11 @@
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteBanner } from "@/components/site-banner";
+import { JsonLd } from "@/components/json-ld";
 import { createClient } from "@/lib/supabase/server";
 import { computeOpenStatus } from "@/lib/working-hours";
+import { buildLocalBusinessJsonLd } from "@/lib/seo/local-business";
+import { formatPhoneE164 } from "@/lib/phone";
 
 export default async function HomePage() {
   const supabase = createClient();
@@ -71,8 +74,22 @@ export default async function HomePage() {
   const belgradeNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Belgrade" }));
   const openStatus = computeOpenStatus(salon?.working_hours, belgradeNow);
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3050";
+  const localBusinessJsonLd = buildLocalBusinessJsonLd({
+    salon: {
+      name: salon?.name,
+      address: salon?.address,
+      phone: salon?.phone,
+      email: salon?.email,
+      workingHours: salon?.working_hours ?? null,
+    },
+    services: services.map((s) => ({ name_lat: s.name_lat, price: s.price })),
+    siteUrl,
+  });
+
   return (
     <>
+      <JsonLd data={localBusinessJsonLd} />
       <SiteBanner />
       <SiteNav />
 
@@ -417,7 +434,12 @@ export default async function HomePage() {
               <div className="contact-info">
                 <div className="contact-row">
                   <span>📞</span>
-                  <span>{salon?.phone ?? "065 9003 742"}</span>
+                  <a
+                    href={`tel:${formatPhoneE164(salon?.phone ?? "065 9003 742")}`}
+                    style={{ color: "inherit", textDecoration: "none" }}
+                  >
+                    {salon?.phone ?? "065 9003 742"}
+                  </a>
                 </div>
                 <div className="contact-row">
                   <span>✉</span>
