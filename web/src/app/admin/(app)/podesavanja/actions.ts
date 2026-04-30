@@ -4,6 +4,13 @@ import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/with-admin";
+import {
+  SOCIAL_PLATFORMS,
+  parseSocialLinks,
+  validateSocialUrl,
+  type SocialLinks,
+  type SocialPlatform,
+} from "@/lib/social-links";
 
 export async function changePin(currentPin: string, newPin: string) {
   if (!/^\d{4}$/.test(newPin)) return { ok: false as const, error: "INVALID_NEW" };
@@ -57,6 +64,45 @@ export async function deleteAnnouncement(id: string) {
   const session = await requireAdmin();
   const sb = createAdminClient();
   await sb.from("site_announcements").delete().eq("id", id).eq("salon_id", session.salonId);
+  revalidatePath("/admin/podesavanja");
+  revalidatePath("/");
+  return { ok: true as const };
+}
+
+/**
+ * Persist the salon's social-link configuration. Validates each URL against
+ * its platform's expected hostname; an empty URL is allowed (means "don't
+ * surface yet — keep the row but hide the icon"). Returns granular per-row
+ * errors so the admin form can highlight just the problematic fields without
+ * losing the user's other input.
+ */
+export async function updateSocialLinks(input: SocialLinks): Promise<
+  | { ok: true }
+  | { ok: false; errors: Partial<Record<SocialPlatform, string>> }
+> {
+  const session = await requireAdmin();
+  const errors: Partial<Record<SocialPlatform, string>> = {};
+
+  const sanitized: SocialLinks = parseSocialLinks(input);
+  for (const p of SOCIAL_PLATFORMS) {
+    const link = sanitized[p];
+    // Trim before validation so users pasting "  https://...  " aren't punished.
+    link.url = link.url.trim();
+    if (link.enabled && link.url === "") {
+      errors[p] = "Unesite URL ako želite da prikažete ovu mrežu";
+      continue;
+    }
+    const v = validateSocialUrl(p, link.url);
+    if (!v.ok) errors[p] = v.error;
+  }
+
+  if (Object.keys(errors).length > 0) return { ok: false as const, errors };
+
+  const sb = createAdminClient();
+  await sb.from("salons").update({ social_links: sanitized }).eq("id", session.salonId);
+
+  // Footer is rendered on home; sameAs JSON-LD is also on home; both must
+  // re-render after this write.
   revalidatePath("/admin/podesavanja");
   revalidatePath("/");
   return { ok: true as const };

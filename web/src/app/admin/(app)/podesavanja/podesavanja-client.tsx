@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { changePin, upsertAnnouncement, deleteAnnouncement } from "./actions";
+import { changePin, upsertAnnouncement, deleteAnnouncement, updateSocialLinks } from "./actions";
+import {
+  SOCIAL_PLATFORMS,
+  PLATFORM_META,
+  type SocialLinks,
+  type SocialPlatform,
+} from "@/lib/social-links";
 
 type Ann = {
   id: string;
@@ -14,8 +20,18 @@ type Ann = {
   ends_at: string | null;
 };
 
-export function PodesavanjaClient({ announcements, email, icalUrl }: { announcements: Ann[]; email: string; icalUrl: string }) {
-  const [tab, setTab] = useState<"pin" | "banner" | "info">("pin");
+export function PodesavanjaClient({
+  announcements,
+  email,
+  icalUrl,
+  socialLinks,
+}: {
+  announcements: Ann[];
+  email: string;
+  icalUrl: string;
+  socialLinks: SocialLinks;
+}) {
+  const [tab, setTab] = useState<"pin" | "banner" | "social" | "info">("pin");
   return (
     <>
       <div className="adm-page-header">
@@ -30,11 +46,15 @@ export function PodesavanjaClient({ announcements, email, icalUrl }: { announcem
       <div className="adm-toggle" style={{ marginBottom: 16 }}>
         <button className={`adm-toggle-opt ${tab === "pin" ? "active" : ""}`} onClick={() => setTab("pin")} type="button">PIN</button>
         <button className={`adm-toggle-opt ${tab === "banner" ? "active" : ""}`} onClick={() => setTab("banner")} type="button">BANNER</button>
+        <button className={`adm-toggle-opt ${tab === "social" ? "active" : ""}`} onClick={() => setTab("social")} type="button">
+          <span data-sr>ДРУШТВЕНЕ</span><span data-lat>DRUŠTVENE</span>
+        </button>
         <button className={`adm-toggle-opt ${tab === "info" ? "active" : ""}`} onClick={() => setTab("info")} type="button">INFO</button>
       </div>
 
       {tab === "pin" && <PinChange />}
       {tab === "banner" && <Announcements list={announcements} />}
+      {tab === "social" && <SocialLinksForm initial={socialLinks} />}
       {tab === "info" && (
         <>
           <div className="adm-card" style={{ flexDirection: "column", alignItems: "stretch" }}>
@@ -49,6 +69,84 @@ export function PodesavanjaClient({ announcements, email, icalUrl }: { announcem
         </>
       )}
     </>
+  );
+}
+
+function SocialLinksForm({ initial }: { initial: SocialLinks }) {
+  const [links, setLinks] = useState<SocialLinks>(initial);
+  const [errors, setErrors] = useState<Partial<Record<SocialPlatform, string>>>({});
+  const [pending, start] = useTransition();
+  const [savedFlash, setSavedFlash] = useState(false);
+
+  function update(p: SocialPlatform, patch: Partial<{ enabled: boolean; url: string }>) {
+    setLinks((prev) => ({ ...prev, [p]: { ...prev[p], ...patch } }));
+    if (errors[p]) setErrors((prev) => ({ ...prev, [p]: undefined }));
+  }
+
+  function save() {
+    setErrors({});
+    setSavedFlash(false);
+    start(async () => {
+      const res = await updateSocialLinks(links);
+      if (res.ok) {
+        setSavedFlash(true);
+        setTimeout(() => setSavedFlash(false), 2000);
+      } else {
+        setErrors(res.errors);
+      }
+    });
+  }
+
+  return (
+    <div className="adm-card" style={{ flexDirection: "column", alignItems: "stretch", gap: 14 }}>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(245,233,208,.7)", lineHeight: 1.5, marginBottom: 4 }}>
+        <span data-sr>
+          Чекирај мреже које желиш да прикажеш у футеру сајта и упиши URL профила. Празан URL значи да се иконица скрива чак и ако је чекирано.
+        </span>
+        <span data-lat>
+          Čekiraj mreže koje želiš da prikažeš u footer-u sajta i upiši URL profila. Prazan URL znači da se ikonica skriva čak i ako je čekirano.
+        </span>
+      </div>
+      {SOCIAL_PLATFORMS.map((p) => {
+        const meta = PLATFORM_META[p];
+        const link = links[p];
+        const err = errors[p];
+        return (
+          <div key={p} style={{ display: "flex", flexDirection: "column", gap: 6, paddingBottom: 10, borderBottom: "1px solid rgba(245,233,208,.06)" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--cream)", fontFamily: "'Oswald', sans-serif", fontSize: 13, letterSpacing: ".06em", textTransform: "uppercase" }}>
+              <input
+                type="checkbox"
+                checked={link.enabled}
+                onChange={(e) => update(p, { enabled: e.target.checked })}
+              />
+              {meta.label}
+            </label>
+            <input
+              className="adm-input"
+              type="url"
+              placeholder={meta.placeholder}
+              value={link.url}
+              onChange={(e) => update(p, { url: e.target.value })}
+              disabled={!link.enabled}
+              style={{ opacity: link.enabled ? 1 : 0.4, fontSize: 12 }}
+            />
+            {err && (
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "var(--danger)" }}>
+                ⚠ {err}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {savedFlash && (
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "var(--success)" }}>
+          <span data-sr>✓ САЧУВАНО</span><span data-lat>✓ SAČUVANO</span>
+        </div>
+      )}
+      <button className="adm-btn adm-btn-block" disabled={pending} onClick={save}>
+        <span data-sr>САЧУВАЈ</span><span data-lat>SAČUVAJ</span>
+      </button>
+    </div>
   );
 }
 

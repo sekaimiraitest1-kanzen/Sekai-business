@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/with-admin";
+import { parseSocialLinks } from "@/lib/social-links";
 import { PodesavanjaClient } from "./podesavanja-client";
 
 export const dynamic = "force-dynamic";
@@ -15,12 +16,23 @@ function icalToken(): string {
 export default async function PodesavanjaPage() {
   const session = await requireAdmin();
   const sb = createAdminClient();
-  const { data: announcements } = await sb
-    .from("site_announcements")
-    .select("*")
-    .eq("salon_id", session.salonId)
-    .order("created_at", { ascending: false });
+  const [annsRes, salonRes] = await Promise.all([
+    sb
+      .from("site_announcements")
+      .select("*")
+      .eq("salon_id", session.salonId)
+      .order("created_at", { ascending: false }),
+    sb.from("salons").select("social_links").eq("id", session.salonId).single(),
+  ]);
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3050";
   const icalUrl = `${baseUrl}/api/ical?t=${icalToken()}`;
-  return <PodesavanjaClient announcements={announcements ?? []} email={session.email} icalUrl={icalUrl} />;
+  const socialLinks = parseSocialLinks(salonRes.data?.social_links);
+  return (
+    <PodesavanjaClient
+      announcements={annsRes.data ?? []}
+      email={session.email}
+      icalUrl={icalUrl}
+      socialLinks={socialLinks}
+    />
+  );
 }
