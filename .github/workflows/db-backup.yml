@@ -1,0 +1,57 @@
+name: Database backup
+
+# Free-tier-friendly backup strategy: GitHub Actions cron pg_dumps the
+# Supabase Postgres nightly and uploads the SQL as a workflow artifact
+# (90-day retention, free, no external storage account). Compressed with
+# gzip. Runs on a low-traffic hour (03:00 UTC = 04/05:00 Europe/Belgrade).
+#
+# Required repo secrets:
+#   SUPABASE_DB_HOST     e.g. db.ljxovmahbyxgyyttvldv.supabase.co
+#   SUPABASE_DB_PASSWORD the postgres user's password
+#
+# To restore: download the latest artifact, gunzip, then
+#   psql "$DATABASE_URL" < trisha-YYYY-MM-DD.sql
+
+on:
+  schedule:
+    - cron: "0 3 * * *"        # 03:00 UTC daily
+  workflow_dispatch: {}        # allow manual run from Actions tab
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Install Postgres client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client
+
+      - name: Run pg_dump
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGHOST: ${{ secrets.SUPABASE_DB_HOST }}
+          PGUSER: postgres
+          PGDATABASE: postgres
+        run: |
+          STAMP=$(date -u +%Y-%m-%d)
+          mkdir -p out
+          pg_dump \
+            --no-owner --no-privileges \
+            --schema=public \
+            --schema=auth \
+            --no-publications --no-subscriptions \
+            -f "out/trisha-${STAMP}.sql"
+          gzip -9 "out/trisha-${STAMP}.sql"
+          ls -lh out/
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_number }}
+          path: out/*.sql.gz
+          retention-days: 90
+          compression-level: 0   # already gzipped
