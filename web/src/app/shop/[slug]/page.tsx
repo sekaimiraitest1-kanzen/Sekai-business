@@ -1,21 +1,35 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ProductDetail } from "./product-detail";
+import { JsonLd } from "@/components/json-ld";
+import { buildProductJsonLd } from "@/lib/seo/product";
+import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumbs";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const sb = createClient();
   const { data } = await sb
     .from("products")
-    .select("name_lat, brand, description_lat")
+    .select("name_lat, brand, description_lat, image_url")
     .eq("slug", params.slug)
     .eq("active", true)
     .single();
   if (!data) return { title: "Berbernica Triša · Shop" };
+  const title = `${data.name_lat}${data.brand ? " — " + data.brand : ""} · Berbernica Triša`;
+  const description = data.description_lat?.slice(0, 160) ?? `Kupi ${data.name_lat} u Berbernici Triša.`;
   return {
-    title: `${data.name_lat}${data.brand ? " — " + data.brand : ""} · Berbernica Triša`,
-    description: data.description_lat?.slice(0, 160) ?? `Kupi ${data.name_lat} u Berbernici Triša.`,
+    title,
+    description,
+    alternates: { canonical: `/shop/${params.slug}` },
+    openGraph: {
+      type: "website",
+      url: `/shop/${params.slug}`,
+      title,
+      description,
+      ...(data.image_url ? { images: [{ url: data.image_url, alt: data.name_lat }] } : {}),
+    },
   };
 }
 
@@ -40,5 +54,22 @@ export default async function ProductPage({ params }: { params: { slug: string }
     .neq("id", product.id)
     .limit(4);
 
-  return <ProductDetail product={product} related={related ?? []} />;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3050";
+  const productJsonLd = buildProductJsonLd({ product, siteUrl });
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd({
+    siteUrl,
+    items: [
+      { name: "Početna", path: "/" },
+      { name: "Prodavnica", path: "/shop" },
+      { name: product.name_lat, path: `/shop/${product.slug}` },
+    ],
+  });
+
+  return (
+    <>
+      <JsonLd data={productJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
+      <ProductDetail product={product} related={related ?? []} />
+    </>
+  );
 }

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { BookingFlow } from "./booking-flow";
+import { JsonLd } from "@/components/json-ld";
+import { buildServiceListJsonLd } from "@/lib/seo/service";
+import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumbs";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +30,7 @@ export default async function ZakazivanjePage() {
       .single(),
     supabase
       .from("services")
-      .select("id, name_sr, name_lat, price, duration_min")
+      .select("id, name_sr, name_lat, price, duration_min, description_sr, description_lat")
       .eq("active", true)
       .order("sort_order", { ascending: true }),
   ]);
@@ -35,12 +38,35 @@ export default async function ZakazivanjePage() {
   const services = servicesRes.data ?? [];
   const salon = salonRes.data;
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3050";
+  const serviceListJsonLd = buildServiceListJsonLd({
+    siteUrl,
+    services: services.map((s) => ({
+      name_lat: s.name_lat,
+      name_sr: s.name_sr,
+      price: s.price,
+      duration_min: s.duration_min,
+      description_lat: s.description_lat,
+    })),
+  });
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd({
+    siteUrl,
+    items: [
+      { name: "Početna", path: "/" },
+      { name: "Zakazivanje", path: "/zakazivanje" },
+    ],
+  });
+
   return (
-    <BookingFlow
-      services={services}
-      salonId={salon?.id ?? ""}
-      salonAddress={salon?.address ?? ""}
-      workingHours={salon?.working_hours ?? null}
-    />
+    <>
+      <JsonLd data={serviceListJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
+      <BookingFlow
+        services={services}
+        salonId={salon?.id ?? ""}
+        salonAddress={salon?.address ?? ""}
+        workingHours={salon?.working_hours ?? null}
+      />
+    </>
   );
 }
