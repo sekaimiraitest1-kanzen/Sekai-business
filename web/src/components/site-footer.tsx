@@ -106,9 +106,30 @@ export function SiteFooter({
 
       <SocialLinksRow links={socialLinks ?? EMPTY_SOCIAL_LINKS} />
 
+      <div className="footer-legal">
+        <Link href="/privatnost" data-sr>Политика приватности</Link>
+        <Link href="/privatnost" data-lat>Politika privatnosti</Link>
+        <span className="footer-legal-sep">·</span>
+        <Link href="/uslovi-koriscenja" data-sr>Услови коришћења</Link>
+        <Link href="/uslovi-koriscenja" data-lat>Uslovi korišćenja</Link>
+      </div>
+
       <div className="footer-bottom">
         <div className="footer-copy">© 2026 BERBERNICA TRIŠA · BATAJNICA</div>
         <div className="footer-tagline">— STIL · TRADICIJA · PRIČA —</div>
+      </div>
+
+      {/* Imprint placeholder — populated when Stefan delivers legal entity
+          data on launch day (per docs/release-domain-plugin.md §8). Until
+          then, hidden via CSS to avoid empty box on the page. */}
+      <div className="footer-imprint" aria-hidden="true">
+        {/*
+          TODO: insert actual fields:
+            BERBERNICA TRIŠA D.O.O.
+            PIB: <pib>
+            MB:  <mb>
+            <street>, <city>
+        */}
       </div>
     </footer>
   );

@@ -7,6 +7,7 @@ import "@/styles/legacy-booking.css";
 import "@/styles/legacy-shop.css";
 import "@/styles/product-detail.css";
 import { ServiceWorkerRegister } from "@/components/sw-register";
+import { CookieNotice } from "@/components/cookie-notice";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin", "cyrillic"],
@@ -125,6 +126,7 @@ export default function RootLayout({
     >
       <body>
         {children}
+        <CookieNotice />
         <ServiceWorkerRegister />
       </body>
     </html>
