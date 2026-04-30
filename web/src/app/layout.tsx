@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Cormorant_Garamond, Playfair_Display, Oswald, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
@@ -46,11 +46,13 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Берберница Триша · Батајница",
-  description: "Твоје место за стил, традицију и добру причу.",
+  title: {
+    default: "Берберница Триша · Батајница",
+    template: "%s · Берберница Триша",
+  },
+  description: "Твоје место за стил, традицију и добру причу. Мушка берберница у Батајници — шишање, брада, бријање. Заказивање онлине.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3050"),
   manifest: "/manifest.json",
-  themeColor: "#1A0F05",
   icons: {
     icon: [
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
@@ -64,14 +66,50 @@ export const metadata: Metadata = {
     title: "Триша",
     startupImage: [{ url: "/icons/icon-512.png" }],
   },
-  // Hint to Android browsers that this is meant to be installed.
   applicationName: "Триша",
   formatDetection: { telephone: false, email: false, address: false },
-  // Cross-vendor counterpart to apple-mobile-web-app-capable; prevents the Chrome
-  // deprecation warning on every page load (BUG-9 from QA report).
   other: {
     "mobile-web-app-capable": "yes",
   },
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "sr_RS",
+    url: "/",
+    siteName: "Берберница Триша",
+    title: "Берберница Триша · Батајница",
+    description: "Мушка берберница у Батајници. Шишање, брада, бријање. Заказивање онлине, без чекања.",
+    images: [
+      {
+        url: "/logo-source.png",
+        width: 600,
+        height: 600,
+        alt: "Берберница Триша — Батајница",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Берберница Триша · Батајница",
+    description: "Мушка берберница у Батајници. Шишање, брада, бријање. Заказивање онлине, без чекања.",
+    images: ["/logo-source.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1A0F05",
 };
 
 export default function RootLayout({
