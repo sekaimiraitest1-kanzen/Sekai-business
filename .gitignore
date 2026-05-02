@@ -48,3 +48,4 @@ Trisha-handoff.zip
 
 # serena MCP cache (auto-regenerated, do not commit)
 .serena/
+.vercel
