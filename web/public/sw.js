@@ -6,7 +6,7 @@
 //   - /admin/* and /api/*                          → network-only (never cache auth-bound or mutation traffic)
 //   - Cross-origin (Supabase Storage, Resend, etc) → pass-through, no cache
 
-const VERSION = "trisa-sw-v1";
+const VERSION = "trisa-sw-v2";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
