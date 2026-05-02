@@ -107,12 +107,29 @@ export function NewBookingForm({ services, workingHours, recentCustomers }: {
     return opts;
   }, [workingHours]);
 
+  // Mirror the public booking flow: rewrite "now HH:MM" each minute so an
+  // admin keeping the form open across a slot boundary doesn't see a stale
+  // bookable slot that has just passed.
+  const [nowHHMM, setNowHHMM] = useState<string>("");
+  useEffect(() => {
+    const compute = () => {
+      const d = nowBelgrade();
+      setNowHHMM(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
+    };
+    compute();
+    const id = setInterval(compute, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   const free = useMemo(() => {
     if (!date || !selectedService || !workingHours) return [];
     const wh = workingHours[dayKey(new Date(date + "T00:00:00"))];
     if (!wh) return [];
-    return freeSlots(wh.open, wh.close, selectedService.duration_min, taken);
-  }, [date, selectedService, workingHours, taken]);
+    const all = freeSlots(wh.open, wh.close, selectedService.duration_min, taken);
+    // For TODAY only: drop slots that have already started or finished.
+    if (date === todayStr() && nowHHMM) return all.filter((s) => s > nowHHMM);
+    return all;
+  }, [date, selectedService, workingHours, taken, nowHHMM]);
 
   const grouped = useMemo(() => groupSlotsByPeriod(free), [free]);
   const closedDay = workingHours && date ? workingHours[dayKey(new Date(date + "T00:00:00"))] === null : false;

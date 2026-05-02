@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/with-admin";
 import { isStaff } from "@/lib/auth/admin-session";
-import { todayKey } from "@/lib/datetime";
+import { todayKey, isPastBelgrade } from "@/lib/datetime";
 import { sendBookingConfirmation } from "@/lib/email/templates";
 import { computeBlockedSlots, rangesOverlap, toMinutes, type Range } from "@/lib/booking/slots";
+import { bookingCancelToken } from "@/lib/booking/cancel-token";
 
 /**
  * Same semantics as the public `getTakenSlots`: returns every grid slot that
@@ -63,7 +64,7 @@ export async function updateBookingStatus(bookingId: string, status: Status) {
 
   const { data: booking, error: bErr } = await sb
     .from("bookings")
-    .select("id, customer_id, staff_id")
+    .select("id, customer_id, staff_id, surcharge_applied")
     .eq("id", bookingId)
     .eq("salon_id", session.salonId)
     .single();
@@ -100,6 +101,13 @@ export async function updateBookingStatus(bookingId: string, status: Status) {
   if (status === "done" && booking.customer_id) {
     await sb.from("customers").update({ last_visit_date: todayKey() }).eq("id", booking.customer_id);
     await sb.from("loyalty_events").insert({ salon_id: session.salonId, customer_id: booking.customer_id, event_type: "visit", points: 1 });
+    // Penalty was actually paid — clear the flag so the next booking
+    // returns to the base price. We only clear when this specific booking
+    // was the surcharged one; otherwise an unrelated 'done' booking
+    // (no surcharge applied) would forgive a separate outstanding flag.
+    if (booking.surcharge_applied) {
+      await sb.from("customers").update({ no_show_flag: false }).eq("id", booking.customer_id);
+    }
   }
 
   revalidatePath("/admin/termini");
@@ -129,6 +137,13 @@ export async function createWalkInBooking(input: {
 }) {
   const session = await requireAdmin();
   const sb = createAdminClient();
+
+  // Reject past timestamps. Staff in the shop can still admin-enter past
+  // dates (e.g. "logging yesterday's walk-in") but TODAY's past times are
+  // typo-prone — better to fail loud.
+  if (isPastBelgrade(input.date, input.timeSlot)) {
+    return { ok: false as const, error: "TIME_PAST" };
+  }
 
   // Slot conflict guard — duration-aware overlap. Public booking uses the
   // same logic; walk-in must not bypass it. Migration 004 adds a partial
@@ -175,10 +190,12 @@ export async function createWalkInBooking(input: {
   if (overlapsBlock) return { ok: false as const, error: "SLOT_TAKEN" };
 
   // Upsert customer (skip soft-deleted — same phone walk-in after delete
-  // creates a fresh row instead of reviving the removed one).
+  // creates a fresh row instead of reviving the removed one). We also pull
+  // the no_show_flag here so the walk-in can apply the surcharge if the
+  // customer earned it.
   const { data: existing } = await sb
     .from("customers")
-    .select("id")
+    .select("id, no_show_flag")
     .eq("salon_id", session.salonId)
     .eq("phone", input.customerPhone)
     .is("deleted_at", null)
@@ -209,6 +226,10 @@ export async function createWalkInBooking(input: {
   // walk-ins stay unassigned (Triša may pass the customer to staff later;
   // DONE click will stamp whoever finishes).
   const initialStaffId = isStaff(session) ? session.adminUserId : null;
+  // Auto-apply +30% surcharge if this customer arrived with an unresolved
+  // no_show_flag (from a previous late cancel or no-show). Triša can clear
+  // the flag manually from the customer profile if she wants to forgive.
+  const surchargeApplied = existing?.no_show_flag === true;
 
   const { data: booking, error } = await sb
     .from("bookings")
@@ -222,6 +243,7 @@ export async function createWalkInBooking(input: {
       notes: input.notes ?? null,
       utm_source: "walk-in",
       staff_id: initialStaffId,
+      surcharge_applied: surchargeApplied,
     })
     .select("id")
     .single();
@@ -239,15 +261,21 @@ export async function createWalkInBooking(input: {
         sb.from("services").select("name_lat, price").eq("id", input.serviceId).single(),
         sb.from("salons").select("address").eq("id", session.salonId).single(),
       ]);
+      const basePrice = svc?.price ?? 0;
+      const finalPrice = surchargeApplied ? Math.round(basePrice * 1.3) : basePrice;
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://berbernica-ruby.vercel.app";
       await sendBookingConfirmation({
         to: input.customerEmail,
         customerName: input.customerName,
         serviceName: svc?.name_lat ?? "—",
         date: input.date,
         timeSlot: input.timeSlot,
-        price: svc?.price ?? 0,
+        price: finalPrice,
+        basePrice,
+        surchargeApplied,
         salonAddress: salon?.address ?? "",
         bookingId: booking.id,
+        cancelUrl: `${baseUrl}/otkazi/${booking.id}?t=${bookingCancelToken(booking.id)}`,
       });
     } catch (e) {
       console.error("walk-in confirmation email failed:", e instanceof Error ? e.message : "unknown");

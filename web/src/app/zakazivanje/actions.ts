@@ -4,6 +4,8 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBookingConfirmation } from "@/lib/email/templates";
 import { computeBlockedSlots, rangesOverlap, toMinutes, type Range } from "@/lib/booking/slots";
+import { isPastBelgrade } from "@/lib/datetime";
+import { bookingCancelToken } from "@/lib/booking/cancel-token";
 
 const bookingSchema = z.object({
   salonId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID format"),
@@ -27,6 +29,14 @@ export async function submitBooking(input: BookingInput) {
     return { ok: false as const, error: "INVALID_INPUT" };
   }
   const data = parsed.data;
+
+  // Reject any attempt to book a slot whose start moment is already past
+  // in Belgrade time. The picker filters this client-side; this is the
+  // server backstop for stale tabs and direct API calls.
+  if (isPastBelgrade(data.date, data.timeSlot)) {
+    return { ok: false as const, error: "TIME_PAST" };
+  }
+
   const sb = createAdminClient();
 
   // 1. Upsert customer by (salon_id, phone). Soft-deleted rows are treated
@@ -118,7 +128,14 @@ export async function submitBooking(input: BookingInput) {
   });
   if (overlapsBlock) return { ok: false as const, error: "SLOT_TAKEN" };
 
-  // 3. Insert booking
+  // 3. Insert booking. surcharge_applied is set if the customer has an
+  //    active no_show_flag from a previous late cancel / no-show — the
+  //    next booking automatically gets +30% (visible to the customer in
+  //    the confirmation email and the success screen). Flag is cleared
+  //    once this surcharged booking is marked 'done' so the penalty
+  //    can't double-charge.
+  const surchargeApplied = existingCustomer?.no_show_flag === true;
+
   const { data: booking, error: bErr } = await sb
     .from("bookings")
     .insert({
@@ -129,6 +146,7 @@ export async function submitBooking(input: BookingInput) {
       time_slot: data.timeSlot,
       status: "confirmed",
       utm_source: data.utmSource ?? "direct",
+      surcharge_applied: surchargeApplied,
     })
     .select("id")
     .single();
@@ -138,20 +156,29 @@ export async function submitBooking(input: BookingInput) {
     return { ok: false as const, error: "BOOKING_CREATE_FAILED" };
   }
 
-  // Send confirmation email (best-effort, don't block on failure)
+  // Send confirmation email (best-effort, don't block on failure). Pulls
+  // the actual service price + applies the 30% surcharge if it was set
+  // above, and embeds the cancel-link token so the customer can self-cancel
+  // straight from the email.
   if (data.email) {
     try {
-      const { data: svc } = await sb.from("services").select("name_lat").eq("id", data.serviceId).single();
+      const { data: svc } = await sb.from("services").select("name_lat, price").eq("id", data.serviceId).single();
       const { data: salon } = await sb.from("salons").select("address").eq("id", data.salonId).single();
+      const basePrice = svc?.price ?? 0;
+      const finalPrice = surchargeApplied ? Math.round(basePrice * 1.3) : basePrice;
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://berbernica-ruby.vercel.app";
       await sendBookingConfirmation({
         to: data.email,
         customerName: data.name,
         serviceName: svc?.name_lat ?? "—",
         date: data.date,
         timeSlot: data.timeSlot,
-        price: 0, // could re-fetch service.price if needed
+        price: finalPrice,
+        basePrice,
+        surchargeApplied,
         salonAddress: salon?.address ?? "",
         bookingId: booking.id,
+        cancelUrl: `${baseUrl}/otkazi/${booking.id}?t=${bookingCancelToken(booking.id)}`,
       });
     } catch (e) {
       // Log only the message — the error object may serialize customer email/name passed to sendBookingConfirmation.
@@ -159,7 +186,32 @@ export async function submitBooking(input: BookingInput) {
     }
   }
 
-  return { ok: true as const, bookingId: booking.id, noShowFlag: existingCustomer?.no_show_flag ?? false };
+  return {
+    ok: true as const,
+    bookingId: booking.id,
+    noShowFlag: existingCustomer?.no_show_flag ?? false,
+    surchargeApplied,
+  };
+}
+
+/**
+ * Light read-only helper called from the booking flow once the customer
+ * types their phone number, so we can warn them BEFORE they submit that a
+ * 30% surcharge will apply (because of a prior late cancel / no-show).
+ * Returns just the bare flag — no PII beyond what the customer already
+ * gave us.
+ */
+export async function checkCustomerFlag(salonId: string, phone: string): Promise<{ flagged: boolean }> {
+  if (!salonId || !phone || phone.trim().length < 6) return { flagged: false };
+  const sb = createAdminClient();
+  const { data } = await sb
+    .from("customers")
+    .select("no_show_flag")
+    .eq("salon_id", salonId)
+    .eq("phone", phone.trim())
+    .is("deleted_at", null)
+    .maybeSingle();
+  return { flagged: data?.no_show_flag === true };
 }
 
 /**

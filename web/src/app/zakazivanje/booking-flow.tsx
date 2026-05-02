@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { LangToggle } from "@/components/lang-toggle";
-import { submitBooking, getTakenSlots } from "./actions";
+import { submitBooking, getTakenSlots, checkCustomerFlag } from "./actions";
 import { trackEvent, EVENTS } from "@/lib/plausible";
 
 type Service = {
@@ -65,6 +65,7 @@ export function BookingFlow({
   const [taken, setTaken] = useState<string[]>([]);
   const [calOpen, setCalOpen] = useState(false);
   const [submitErr, setSubmitErr] = useState<string | null>(null);
+  const [flagged, setFlagged] = useState<boolean>(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [lang, setLang] = useState<"sr" | "lat">("sr");
@@ -106,13 +107,53 @@ export function BookingFlow({
     void getTakenSlots(salonId, date, selectedService.duration_min).then(setTaken);
   }, [date, salonId, selectedService]);
 
+  // Surcharge preview: when the customer types their phone in step 4 we hit
+  // a debounced server lookup that returns just `flagged: bool`. Used to
+  // show the +30% banner BEFORE submit so the customer isn't surprised by
+  // the email price.
+  useEffect(() => {
+    const trimmed = phone.trim();
+    if (trimmed.length < 6) { setFlagged(false); return; }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      const res = await checkCustomerFlag(salonId, trimmed);
+      if (!cancelled) setFlagged(res.flagged);
+    }, 350);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [phone, salonId]);
+
+  // Tracks "now HH:MM" in Belgrade and reactively refreshes once a minute so
+  // a tab left open across a slot boundary auto-removes the just-passed slot
+  // without needing a full reload. Initialised lazily on the client.
+  const [nowHHMM, setNowHHMM] = useState<string>("");
+  useEffect(() => {
+    const compute = () => {
+      const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Belgrade" }));
+      setNowHHMM(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
+    };
+    compute();
+    const id = setInterval(compute, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const todayBelgrade = useMemo(() => {
+    const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Belgrade" }));
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }, []);
+
   const slots = useMemo(() => {
     if (!date || !selectedService || !workingHours) return [];
     const d = new Date(date + "T00:00:00");
     const wh = workingHours[dayKey(d)];
     if (!wh) return [];
-    return generateSlots(wh.open, wh.close, selectedService.duration_min);
-  }, [date, selectedService, workingHours]);
+    const all = generateSlots(wh.open, wh.close, selectedService.duration_min);
+    // Past-slot filter: only relevant when picking today. Slots whose start
+    // time has already passed (or is the current minute) are removed.
+    if (date === todayBelgrade && nowHHMM) {
+      return all.filter((s) => s > nowHHMM);
+    }
+    return all;
+  }, [date, selectedService, workingHours, todayBelgrade, nowHHMM]);
 
   function go(n: 1 | 2 | 3 | 4 | 5) {
     setStep(n);
@@ -312,6 +353,21 @@ export function BookingFlow({
             </div>
 
             <SummaryBar service={selectedService} dateLabel={`${formatDateLabel(date, lang)} · ${time}`} lang={lang} />
+
+            {flagged && (
+              <div style={{ padding: 14, background: "rgba(204,34,34,.1)", borderLeft: "3px solid #cc2222", marginBottom: 16, fontSize: 13, lineHeight: 1.55, color: "var(--cream)" }}>
+                ⚠ <strong>
+                  <span data-sr>Овај термин има +30% доплате</span>
+                  <span data-lat>Ovaj termin ima +30% doplate</span>
+                </strong>
+                <br />
+                <span data-sr>Зато што је твој претходни термин отказан мање од 2 сата пре, или ниси дошао. Доплата се наплаћује у салону. Следећи термин се враћа на редовну цену.</span>
+                <span data-lat>Zato što je tvoj prethodni termin otkazan manje od 2 sata pre, ili nisi došao. Doplata se naplaćuje u salonu. Sledeći termin se vraća na redovnu cenu.</span>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, marginTop: 8, color: "#ffb0b0" }}>
+                  {selectedService.price} RSD → <strong>{Math.round(selectedService.price * 1.3)} RSD</strong>
+                </div>
+              </div>
+            )}
 
             <div className="form-group">
               <label className="form-label" data-sr>ИМЕ И ПРЕЗИМЕ</label>

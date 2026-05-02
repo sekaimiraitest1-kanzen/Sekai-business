@@ -7,15 +7,41 @@ export async function sendBookingConfirmation(input: {
   date: string;
   timeSlot: string;
   price: number;
+  basePrice?: number;
+  surchargeApplied?: boolean;
   salonAddress: string;
   bookingId: string;
+  cancelUrl?: string;
 }) {
-  if (!input.to) return; // skip if customer didn't provide email
+  if (!input.to) return;
   const resend = getResend();
+  const surcharge = input.surchargeApplied === true;
+  const basePrice = input.basePrice ?? input.price;
+  // Body fragments injected conditionally:
+  //  - surcharge banner (only when +30% kicks in)
+  //  - base-price line (so customer sees the bump explicitly: "Bila bi X, zbog kasnog otkaza prošli put platićeš X+30%")
+  //  - cancel-link CTA (omitted if no token-URL was passed in)
+  const surchargeBanner = surcharge ? `
+    <div style="background: rgba(204,34,34,.1); padding: 14px; margin-bottom: 16px; font-size: 13px; color: #5C3A22; line-height: 1.55; border-left: 3px solid #cc2222;">
+      ⚠ <strong>Doplata +30%</strong> primenjena na ovaj termin jer je tvoj prethodni termin otkazan manje od 2h pre, ili nisi došao. Naplaćuje se u salonu. Sledeći termin se vraća na redovnu cenu.
+    </div>
+  ` : "";
+  const priceRow = surcharge ? `
+    <tr><td style="color: #5C3A22; padding: 6px 0;">REDOVNA CENA</td><td style="text-align: right; color: #5C3A22; text-decoration: line-through;">${basePrice} RSD</td></tr>
+    <tr><td style="color: #cc2222; padding: 6px 0;">CENA SA DOPLATOM</td><td style="text-align: right; font-family: Georgia, serif; font-style: italic; color: #cc2222; font-size: 18px;">${input.price} RSD</td></tr>
+  ` : `
+    <tr><td style="color: #5C3A22; padding: 6px 0;">CENA</td><td style="text-align: right; font-family: Georgia, serif; font-style: italic; color: #D4A53A; font-size: 18px;">${input.price} RSD</td></tr>
+  `;
+  const cancelBlock = input.cancelUrl ? `
+    <div style="text-align: center; margin: 24px 0;">
+      <a href="${input.cancelUrl}" style="display: inline-block; padding: 10px 20px; background: transparent; border: 1px solid rgba(92,58,34,.3); color: #5C3A22; text-decoration: none; font-size: 12px; letter-spacing: .04em;">Otkaži termin</a>
+      <div style="font-size: 10px; color: #5C3A22; opacity: 0.6; margin-top: 6px;">Do 2 sata pre — bez doplate. Posle 2 sata — sledeći termin +30%.</div>
+    </div>
+  ` : "";
   await resend.emails.send({
     from: `Berbernica Trisa <${FROM_EMAIL}>`,
     to: input.to,
-    subject: `Potvrda rezervacije — ${input.date} u ${input.timeSlot}`,
+    subject: `Potvrda rezervacije — ${input.date} u ${input.timeSlot}${surcharge ? " (+30%)" : ""}`,
     html: `
       <div style="font-family: Inter, sans-serif; max-width: 540px; margin: 0 auto; color: #1A0F05; background: #FAF3E3; padding: 32px 24px;">
         <div style="text-align: center; margin-bottom: 24px;">
@@ -26,19 +52,23 @@ export async function sendBookingConfirmation(input: {
         <h1 style="font-family: Georgia, serif; font-style: italic; font-size: 28px; color: #1A0F05; text-align: center; margin: 24px 0;">Vidimo se, ${input.customerName}.</h1>
         <p style="text-align: center; color: #5C3A22; line-height: 1.6;">Tvoja rezervacija je potvrđena.</p>
 
+        ${surchargeBanner}
+
         <div style="background: #F5E9D0; padding: 24px; margin: 24px 0;">
           <table style="width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 13px;">
             <tr><td style="color: #5C3A22; padding: 6px 0;">USLUGA</td><td style="text-align: right; color: #1A0F05;">${input.serviceName}</td></tr>
             <tr><td style="color: #5C3A22; padding: 6px 0;">DATUM</td><td style="text-align: right; color: #1A0F05;">${input.date}</td></tr>
             <tr><td style="color: #5C3A22; padding: 6px 0;">VREME</td><td style="text-align: right; color: #1A0F05;">${input.timeSlot}</td></tr>
-            <tr><td style="color: #5C3A22; padding: 6px 0;">CENA</td><td style="text-align: right; font-family: Georgia, serif; font-style: italic; color: #D4A53A; font-size: 18px;">${input.price} RSD</td></tr>
+            ${priceRow}
             <tr><td style="color: #5C3A22; padding: 6px 0;">ADRESA</td><td style="text-align: right; color: #1A0F05;">${input.salonAddress}</td></tr>
             <tr><td style="color: #5C3A22; padding: 6px 0;">ID</td><td style="text-align: right; color: #1A0F05;">${input.bookingId.slice(0, 8).toUpperCase()}</td></tr>
           </table>
         </div>
 
+        ${cancelBlock}
+
         <div style="background: rgba(212,165,58,.1); padding: 16px; font-size: 12px; color: #5C3A22; line-height: 1.6;">
-          ⚠ Otkazivanje je slobodno do 2 sata pre termina. Kasnije otkazivanje nosi penal od 30% cene usluge.
+          ⚠ Otkazivanje je slobodno do 2 sata pre termina. Kasnije otkazivanje povlači +30% doplate na sledeći termin.
         </div>
 
         <p style="text-align: center; color: #5C3A22; font-size: 12px; margin-top: 24px;">

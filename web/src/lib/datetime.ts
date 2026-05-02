@@ -76,6 +76,29 @@ export function periodRange(period: "day" | "week" | "month"): { from: Date; to:
   return { from: first, to: last };
 }
 
+/**
+ * "HH:MM" of the current moment in Belgrade. Used by booking flow to filter
+ * past slots so a customer at 14:52 can't pick the 14:00 slot that has
+ * already started or finished. Returns the exact minute, no rounding.
+ */
+export function nowHHMMBelgrade(): string {
+  const d = nowBelgrade();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+/**
+ * True iff date+time is in the past in Belgrade time. Date string is
+ * YYYY-MM-DD, time string is HH:MM (24h). Used as the server-side guard in
+ * submitBooking / createWalkInBooking — never trust the client to filter
+ * its own slots.
+ */
+export function isPastBelgrade(dateKey: string, timeHHMM: string): boolean {
+  const today = todayKey();
+  if (dateKey < today) return true;
+  if (dateKey > today) return false;
+  return timeHHMM <= nowHHMMBelgrade();
+}
+
 /** Previous period of equal length, for change-% comparisons. */
 export function previousRange(period: "day" | "week" | "month", current: { from: Date; to: Date }): { from: Date; to: Date } {
   if (period === "day") {
