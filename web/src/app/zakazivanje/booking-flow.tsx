@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { LangToggle } from "@/components/lang-toggle";
 import { submitBooking, getTakenSlots } from "./actions";
 import { trackEvent, EVENTS } from "@/lib/plausible";
@@ -68,6 +68,16 @@ export function BookingFlow({
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [lang, setLang] = useState<"sr" | "lat">("sr");
+  const continueBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  function pickService(id: string) {
+    setServiceId(id);
+    // After state commits, smooth-scroll the NASTAVI button into view so the
+    // user doesn't have to scroll past a long service list to find it.
+    requestAnimationFrame(() => {
+      continueBtnRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
 
   // sync lang from <html data-lang>
   useEffect(() => {
@@ -182,7 +192,7 @@ export function BookingFlow({
                 <div
                   key={s.id}
                   className={`service-card ${serviceId === s.id ? "selected" : ""}`}
-                  onClick={() => setServiceId(s.id)}
+                  onClick={() => pickService(s.id)}
                 >
                   <div>
                     <div className="service-card-name" data-sr>{s.name_sr}</div>
@@ -203,7 +213,7 @@ export function BookingFlow({
             </div>
 
             <div style={{ marginTop: 32 }}>
-              <button className="bk-btn-primary" disabled={!serviceId} onClick={() => go(2)}>
+              <button ref={continueBtnRef} className="bk-btn-primary" disabled={!serviceId} onClick={() => go(2)}>
                 <span data-sr>НАСТАВИ →</span>
                 <span data-lat>NASTAVI →</span>
               </button>
