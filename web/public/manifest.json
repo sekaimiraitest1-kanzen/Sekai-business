@@ -2,7 +2,7 @@
   "name": "Берберница Триша",
   "short_name": "Триша",
   "description": "Твоје место за стил, традицију и добру причу.",
-  "start_url": "/",
+  "start_url": "/admin/login",
   "display": "standalone",
   "background_color": "#FAF3E3",
   "theme_color": "#1A0F05",

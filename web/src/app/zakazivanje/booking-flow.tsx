@@ -66,6 +66,7 @@ export function BookingFlow({
   const [calOpen, setCalOpen] = useState(false);
   const [submitErr, setSubmitErr] = useState<string | null>(null);
   const [flagged, setFlagged] = useState<boolean>(false);
+  const [loyaltyReward, setLoyaltyReward] = useState<"free_cut" | null>(null);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [lang, setLang] = useState<"sr" | "lat">("sr");
@@ -107,17 +108,19 @@ export function BookingFlow({
     void getTakenSlots(salonId, date, selectedService.duration_min).then(setTaken);
   }, [date, salonId, selectedService]);
 
-  // Surcharge preview: when the customer types their phone in step 4 we hit
-  // a debounced server lookup that returns just `flagged: bool`. Used to
-  // show the +30% banner BEFORE submit so the customer isn't surprised by
-  // the email price.
+  // Surcharge / loyalty preview: when the customer types their phone in step 4
+  // we hit a debounced server lookup. Result drives two mutually-exclusive
+  // banners — free-cut redemption wins over no-show surcharge upstream.
   useEffect(() => {
     const trimmed = phone.trim();
-    if (trimmed.length < 6) { setFlagged(false); return; }
+    if (trimmed.length < 6) { setFlagged(false); setLoyaltyReward(null); return; }
     let cancelled = false;
     const t = setTimeout(async () => {
       const res = await checkCustomerFlag(salonId, trimmed);
-      if (!cancelled) setFlagged(res.flagged);
+      if (!cancelled) {
+        setFlagged(res.flagged);
+        setLoyaltyReward(res.loyaltyReward);
+      }
     }, 350);
     return () => { cancelled = true; clearTimeout(t); };
   }, [phone, salonId]);
@@ -354,7 +357,21 @@ export function BookingFlow({
 
             <SummaryBar service={selectedService} dateLabel={`${formatDateLabel(date, lang)} · ${time}`} lang={lang} />
 
-            {flagged && (
+            {loyaltyReward === "free_cut" && (
+              <div style={{ padding: 14, background: "rgba(212,165,58,.18)", borderLeft: "3px solid var(--mustard)", marginBottom: 16, fontSize: 13, lineHeight: 1.55, color: "var(--cream)" }}>
+                🎁 <strong>
+                  <span data-sr>Овај термин је БЕСПЛАТАН!</span>
+                  <span data-lat>Ovaj termin je BESPLATAN!</span>
+                </strong>
+                <br />
+                <span data-sr>Имаш активну loyalty награду за 6. долазак. Цена за овај термин је 0 RSD.</span>
+                <span data-lat>Imaš aktivnu loyalty nagradu za 6. dolazak. Cena za ovaj termin je 0 RSD.</span>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, marginTop: 8, color: "var(--mustard)" }}>
+                  {selectedService.price} RSD → <strong>0 RSD</strong>
+                </div>
+              </div>
+            )}
+            {flagged && !loyaltyReward && (
               <div style={{ padding: 14, background: "rgba(204,34,34,.1)", borderLeft: "3px solid #cc2222", marginBottom: 16, fontSize: 13, lineHeight: 1.55, color: "var(--cream)" }}>
                 ⚠ <strong>
                   <span data-sr>Овај термин има +30% доплате</span>

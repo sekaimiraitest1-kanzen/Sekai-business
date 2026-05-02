@@ -14,22 +14,54 @@ export async function saveCustomerNote(id: string, note: string) {
 }
 
 /**
- * G1 — Redeem loyalty reward. Inserts a `redeem` event with points = the
- * configured threshold (6 by default). Net visit-redeem balance drops back
- * below the threshold so the UI no longer shows the "ready to redeem" state.
+ * Redeem loyalty reward — Triša picks ONE of two options after asking the
+ * customer which they prefer. The choice is stored on the customer row
+ * (`loyalty_pending_reward`) and consumed automatically by the next
+ * applicable transaction:
+ *   - `free_cut`  → next booking auto-applies price=0 + bookings.is_loyalty_redeem
+ *   - `shop_20`   → next order auto-applies 20% off total + orders.is_loyalty_discount
+ *
+ * The redeem event itself still drops the visit counter so the customer
+ * starts a fresh loyalty cycle.
  */
-export async function redeemLoyalty(customerId: string, pointsCost: number) {
+export async function redeemLoyalty(
+  customerId: string,
+  pointsCost: number,
+  rewardType: "free_cut" | "shop_20",
+) {
   const session = await requireAdmin();
   const sb = createAdminClient();
-  const { error } = await sb.from("loyalty_events").insert({
+
+  // Block stacking — only one pending reward at a time. If Triša already
+  // gave the customer a reward and they haven't consumed it yet, refuse
+  // until that one is used (or manually cleared via SQL).
+  const { data: cust } = await sb
+    .from("customers")
+    .select("loyalty_pending_reward")
+    .eq("id", customerId)
+    .eq("salon_id", session.salonId)
+    .maybeSingle();
+  if (cust?.loyalty_pending_reward) {
+    return { ok: false as const, error: "REWARD_ALREADY_PENDING" };
+  }
+
+  const { error: evErr } = await sb.from("loyalty_events").insert({
     salon_id: session.salonId,
     customer_id: customerId,
     event_type: "redeem",
     points: pointsCost,
   });
-  if (error) return { ok: false as const, error: error.message };
+  if (evErr) return { ok: false as const, error: evErr.message };
+
+  const { error: cuErr } = await sb
+    .from("customers")
+    .update({ loyalty_pending_reward: rewardType })
+    .eq("id", customerId)
+    .eq("salon_id", session.salonId);
+  if (cuErr) return { ok: false as const, error: cuErr.message };
+
   revalidatePath(`/admin/musterije/${customerId}`);
-  return { ok: true as const };
+  return { ok: true as const, rewardType };
 }
 
 /**

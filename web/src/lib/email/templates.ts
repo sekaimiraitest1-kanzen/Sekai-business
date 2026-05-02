@@ -9,6 +9,7 @@ export async function sendBookingConfirmation(input: {
   price: number;
   basePrice?: number;
   surchargeApplied?: boolean;
+  loyaltyFreeCut?: boolean;
   salonAddress: string;
   bookingId: string;
   cancelUrl?: string;
@@ -16,17 +17,29 @@ export async function sendBookingConfirmation(input: {
   if (!input.to) return;
   const resend = getResend();
   const surcharge = input.surchargeApplied === true;
+  const loyalty = input.loyaltyFreeCut === true;
   const basePrice = input.basePrice ?? input.price;
   // Body fragments injected conditionally:
   //  - surcharge banner (only when +30% kicks in)
   //  - base-price line (so customer sees the bump explicitly: "Bila bi X, zbog kasnog otkaza prošli put platićeš X+30%")
   //  - cancel-link CTA (omitted if no token-URL was passed in)
+  // Three pricing modes — only one banner shows at a time. Loyalty wins
+  // over surcharge in the booking action upstream, so by the time we get
+  // here `loyalty=true` already implies `surcharge=false`.
+  const loyaltyBanner = loyalty ? `
+    <div style="background: rgba(212,165,58,.18); padding: 14px; margin-bottom: 16px; font-size: 13px; color: #5C3A22; line-height: 1.55; border-left: 3px solid #D4A53A;">
+      🎁 <strong>BESPLATAN TERMIN</strong> — iskoristio si nagradu za 6. dolazak. Cena je 0 RSD. Hvala što biraš nas.
+    </div>
+  ` : "";
   const surchargeBanner = surcharge ? `
     <div style="background: rgba(204,34,34,.1); padding: 14px; margin-bottom: 16px; font-size: 13px; color: #5C3A22; line-height: 1.55; border-left: 3px solid #cc2222;">
       ⚠ <strong>Doplata +30%</strong> primenjena na ovaj termin jer je tvoj prethodni termin otkazan manje od 2h pre, ili nisi došao. Naplaćuje se u salonu. Sledeći termin se vraća na redovnu cenu.
     </div>
   ` : "";
-  const priceRow = surcharge ? `
+  const priceRow = loyalty ? `
+    <tr><td style="color: #5C3A22; padding: 6px 0;">REDOVNA CENA</td><td style="text-align: right; color: #5C3A22; text-decoration: line-through;">${basePrice} RSD</td></tr>
+    <tr><td style="color: #D4A53A; padding: 6px 0;">CENA</td><td style="text-align: right; font-family: Georgia, serif; font-style: italic; color: #D4A53A; font-size: 18px;">0 RSD · LOYALTY</td></tr>
+  ` : surcharge ? `
     <tr><td style="color: #5C3A22; padding: 6px 0;">REDOVNA CENA</td><td style="text-align: right; color: #5C3A22; text-decoration: line-through;">${basePrice} RSD</td></tr>
     <tr><td style="color: #cc2222; padding: 6px 0;">CENA SA DOPLATOM</td><td style="text-align: right; font-family: Georgia, serif; font-style: italic; color: #cc2222; font-size: 18px;">${input.price} RSD</td></tr>
   ` : `
@@ -41,7 +54,7 @@ export async function sendBookingConfirmation(input: {
   await resend.emails.send({
     from: `Berbernica Trisa <${FROM_EMAIL}>`,
     to: input.to,
-    subject: `Potvrda rezervacije — ${input.date} u ${input.timeSlot}${surcharge ? " (+30%)" : ""}`,
+    subject: `Potvrda rezervacije — ${input.date} u ${input.timeSlot}${loyalty ? " (LOYALTY GRATIS)" : surcharge ? " (+30%)" : ""}`,
     html: `
       <div style="font-family: Inter, sans-serif; max-width: 540px; margin: 0 auto; color: #1A0F05; background: #FAF3E3; padding: 32px 24px;">
         <div style="text-align: center; margin-bottom: 24px;">
@@ -52,6 +65,7 @@ export async function sendBookingConfirmation(input: {
         <h1 style="font-family: Georgia, serif; font-style: italic; font-size: 28px; color: #1A0F05; text-align: center; margin: 24px 0;">Vidimo se, ${input.customerName}.</h1>
         <p style="text-align: center; color: #5C3A22; line-height: 1.6;">Tvoja rezervacija je potvrđena.</p>
 
+        ${loyaltyBanner}
         ${surchargeBanner}
 
         <div style="background: #F5E9D0; padding: 24px; margin: 24px 0;">
@@ -145,13 +159,17 @@ export async function sendOrderConfirmationToCustomer(input: {
   to: string;
   customerName: string;
   items: { name: string; quantity: number; price: number }[];
+  subtotal?: number;
   total: number;
+  loyaltyDiscount?: boolean;
   orderId: string;
   salonAddress: string;
   salonPhone: string;
 }) {
   if (!input.to) return;
   const resend = getResend();
+  const loyaltyDiscount = input.loyaltyDiscount === true;
+  const subtotal = input.subtotal ?? input.total;
   const itemsHtml = input.items
     .map(
       (it) => `<tr>
@@ -161,10 +179,30 @@ export async function sendOrderConfirmationToCustomer(input: {
     )
     .join("");
 
+  // When loyalty discount applies the totals row becomes two-line
+  // (subtotal struck through, final highlighted) plus an explicit banner
+  // above the items. Otherwise it's the existing single-line summary.
+  const loyaltyBanner = loyaltyDiscount ? `
+    <div style="background: rgba(212,165,58,.18); padding: 14px; margin: 16px 0; font-size: 13px; color: #5C3A22; line-height: 1.55; border-left: 3px solid #D4A53A;">
+      🎁 <strong>−20% LOYALTY POPUST</strong> — iskoristio si nagradu za 6. dolazak. Hvala što biraš nas.
+    </div>
+  ` : "";
+  const totalRows = loyaltyDiscount ? `
+    <tr><td colspan="2" style="border-top: 1px solid rgba(92,58,34,.2); padding-top: 12px;"></td></tr>
+    <tr><td style="color: #5C3A22; padding: 4px 0;">SUBTOTAL</td><td style="text-align: right; color: #5C3A22; text-decoration: line-through;">${subtotal} RSD</td></tr>
+    <tr><td style="color: #D4A53A; padding: 4px 0; font-weight: 600;">UKUPNO (−20%)</td><td style="text-align: right; font-family: Georgia, serif; font-style: italic; font-size: 22px; color: #D4A53A;">${input.total} RSD</td></tr>
+  ` : `
+    <tr><td colspan="2" style="border-top: 1px solid rgba(92,58,34,.2); padding-top: 12px;"></td></tr>
+    <tr>
+      <td style="font-family: Inter, sans-serif; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #1A0F05;">UKUPNO</td>
+      <td style="text-align: right; font-family: Georgia, serif; font-style: italic; font-size: 22px; color: #D4A53A;">${input.total} RSD</td>
+    </tr>
+  `;
+
   await resend.emails.send({
     from: `Berbernica Trisa Shop <${FROM_EMAIL}>`,
     to: input.to,
-    subject: `Potvrda porudžbine — ${input.total} RSD`,
+    subject: `Potvrda porudžbine — ${input.total} RSD${loyaltyDiscount ? " (−20% LOYALTY)" : ""}`,
     html: `
       <div style="font-family: Inter, sans-serif; max-width: 540px; margin: 0 auto; color: #1A0F05; background: #FAF3E3; padding: 32px 24px;">
         <div style="text-align: center; margin-bottom: 24px;">
@@ -175,14 +213,12 @@ export async function sendOrderConfirmationToCustomer(input: {
         <h1 style="font-family: Georgia, serif; font-style: italic; font-size: 28px; color: #1A0F05; text-align: center; margin: 24px 0;">Hvala, ${input.customerName}.</h1>
         <p style="text-align: center; color: #5C3A22; line-height: 1.6;">Tvoja porudžbina je primljena. Triša će ti javiti čim bude spremna za preuzimanje.</p>
 
+        ${loyaltyBanner}
+
         <div style="background: #F5E9D0; padding: 24px; margin: 24px 0;">
           <table style="width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 13px;">
             ${itemsHtml}
-            <tr><td colspan="2" style="border-top: 1px solid rgba(92,58,34,.2); padding-top: 12px;"></td></tr>
-            <tr>
-              <td style="font-family: Inter, sans-serif; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #1A0F05;">UKUPNO</td>
-              <td style="text-align: right; font-family: Georgia, serif; font-style: italic; font-size: 22px; color: #D4A53A;">${input.total} RSD</td>
-            </tr>
+            ${totalRows}
             <tr><td style="color: #5C3A22; padding: 6px 0;">PLAĆANJE</td><td style="text-align: right; color: #1A0F05;">Gotovina ili kartica u salonu</td></tr>
             <tr><td style="color: #5C3A22; padding: 6px 0;">ADRESA</td><td style="text-align: right; color: #1A0F05;">${input.salonAddress}</td></tr>
             <tr><td style="color: #5C3A22; padding: 6px 0;">TELEFON</td><td style="text-align: right; color: #1A0F05;"><a href="tel:${input.salonPhone}" style="color: #1A0F05; text-decoration: none;">${input.salonPhone}</a></td></tr>

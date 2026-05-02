@@ -33,10 +33,11 @@ export async function submitOrder(input: OrderInput) {
   if (!salon) return { ok: false as const, error: "NO_SALON" };
 
   // Upsert customer (skip soft-deleted rows — same phone re-buying after
-  // delete starts fresh).
+  // delete starts fresh). Pull loyalty_pending_reward so we can auto-apply
+  // the 20% shop discount if the customer earned + chose it.
   const { data: existing } = await sb
     .from("customers")
-    .select("id")
+    .select("id, loyalty_pending_reward")
     .eq("salon_id", salon.id)
     .eq("phone", data.customerPhone)
     .is("deleted_at", null)
@@ -53,7 +54,12 @@ export async function submitOrder(input: OrderInput) {
   }
   if (!customerId) return { ok: false as const, error: "CUSTOMER_FAILED" };
 
-  const total = data.items.reduce((sum, it) => sum + it.price * it.quantity, 0);
+  const subtotal = data.items.reduce((sum, it) => sum + it.price * it.quantity, 0);
+  // Auto-apply -20% loyalty discount if the customer redeemed for shop_20.
+  // We don't allow rewards to chain — the discount is consumed on this
+  // single order regardless of items / quantity / final total.
+  const isLoyaltyDiscount = existing?.loyalty_pending_reward === "shop_20";
+  const total = isLoyaltyDiscount ? Math.round(subtotal * 0.8) : subtotal;
 
   // Decrement stock atomically (best-effort)
   for (const it of data.items) {
@@ -72,10 +78,18 @@ export async function submitOrder(input: OrderInput) {
       total,
       status: "pending",
       pickup_note: data.pickupNote || null,
+      is_loyalty_discount: isLoyaltyDiscount,
     })
     .select("id")
     .single();
   if (error || !order) return { ok: false as const, error: "ORDER_FAILED" };
+
+  // Consume the reward so it can't be replayed on a parallel session.
+  // Only after a successful order insert — a transient DB failure leaves
+  // the reward intact for the next attempt.
+  if (isLoyaltyDiscount && customerId) {
+    await sb.from("customers").update({ loyalty_pending_reward: null }).eq("id", customerId);
+  }
 
   // Two emails fired in parallel, both best-effort. Failure of either does
   // NOT roll the order back — the row is already in DB, Triša can recover
@@ -98,12 +112,14 @@ export async function submitOrder(input: OrderInput) {
       to: data.customerEmail || "",
       customerName: data.customerName,
       items: data.items.map((it) => ({ name: it.name, quantity: it.quantity, price: it.price })),
+      subtotal,
       total,
+      loyaltyDiscount: isLoyaltyDiscount,
       orderId: order.id,
       salonAddress: salon.address ?? "",
       salonPhone: salon.phone ?? "",
     }).catch((e) => console.error("order email (customer) failed:", e instanceof Error ? e.message : "unknown")),
   ]);
 
-  return { ok: true as const, orderId: order.id };
+  return { ok: true as const, orderId: order.id, loyaltyDiscount: isLoyaltyDiscount, subtotal, total };
 }

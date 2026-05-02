@@ -16,6 +16,7 @@ type Customer = {
   admin_notes: string | null;
   last_visit_date: string | null;
   created_at: string;
+  loyalty_pending_reward?: "free_cut" | "shop_20" | null;
 };
 
 type Booking = {
@@ -104,24 +105,54 @@ export function CustomerProfile({ customer, bookings, loyaltyProgress, loyaltyTa
               transition: "width .3s ease",
             }} />
           </div>
-          {canRedeem ? (
+          {customer.loyalty_pending_reward ? (
+            <div style={{ background: "rgba(212,165,58,.12)", padding: 12, borderRadius: 4, border: "1px solid rgba(212,165,58,.3)" }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 14, fontStyle: "italic", color: "var(--mustard)" }}>
+                🎁 <span data-sr>Награда чека:</span><span data-lat>Nagrada čeka:</span>{" "}
+                {customer.loyalty_pending_reward === "free_cut" ? (
+                  <><span data-sr>БЕСПЛАТНО ШИШАЊЕ</span><span data-lat>BESPLATNO ŠIŠANJE</span></>
+                ) : (
+                  <><span data-sr>−20% У SHOP-У</span><span data-lat>−20% U SHOP-U</span></>
+                )}
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(245,233,208,.55)", marginTop: 6, fontFamily: "'JetBrains Mono', monospace" }}>
+                {customer.loyalty_pending_reward === "free_cut" ? (
+                  <><span data-sr>Аутоматски се примењује на следеће заказивање.</span><span data-lat>Automatski se primenjuje na sledeće zakazivanje.</span></>
+                ) : (
+                  <><span data-sr>Аутоматски се примењује на следећу поруџбину.</span><span data-lat>Automatski se primenjuje na sledeću porudžbinu.</span></>
+                )}
+              </div>
+            </div>
+          ) : canRedeem ? (
             <>
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 14, fontStyle: "italic", color: "var(--mustard)" }}>
-                <span data-sr>✓ Стекао је бесплатно шишање.</span>
-                <span data-lat>✓ Stekao je besplatno šišanje.</span>
+                <span data-sr>✓ Стекао је награду — питај га шта жели:</span>
+                <span data-lat>✓ Stekao je nagradu — pitaj ga šta želi:</span>
               </div>
-              <button
-                className="adm-btn"
-                disabled={pending}
-                onClick={() => start(async () => {
-                  if (confirm("Iskoristi nagradu? (uklanja status sa profila)")) {
-                    await redeemLoyalty(customer.id, loyaltyTarget);
-                  }
-                })}
-              >
-                <span data-sr>ИСКОРИСТИ НАГРАДУ</span>
-                <span data-lat>ISKORISTI NAGRADU</span>
-              </button>
+              <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
+                <button
+                  className="adm-btn"
+                  disabled={pending}
+                  onClick={() => start(async () => {
+                    if (!confirm("Dodeli BESPLATNO ŠIŠANJE? Sledeći termin je gratis.")) return;
+                    const r = await redeemLoyalty(customer.id, loyaltyTarget, "free_cut");
+                    if (!r.ok) alert(r.error === "REWARD_ALREADY_PENDING" ? "Već ima aktivnu nagradu." : "Greška.");
+                  })}
+                >
+                  ✂ <span data-sr>БЕСПЛАТНО ШИШАЊЕ</span><span data-lat>BESPLATNO ŠIŠANJE</span>
+                </button>
+                <button
+                  className="adm-btn adm-btn-secondary"
+                  disabled={pending}
+                  onClick={() => start(async () => {
+                    if (!confirm("Dodeli 20% POPUSTA U SHOP-U? Sledeća porudžbina ima −20%.")) return;
+                    const r = await redeemLoyalty(customer.id, loyaltyTarget, "shop_20");
+                    if (!r.ok) alert(r.error === "REWARD_ALREADY_PENDING" ? "Već ima aktivnu nagradu." : "Greška.");
+                  })}
+                >
+                  🛒 <span data-sr>−20% У SHOP-У</span><span data-lat>−20% U SHOP-U</span>
+                </button>
+              </div>
             </>
           ) : (
             <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(245, 233, 208, 0.6)" }}>

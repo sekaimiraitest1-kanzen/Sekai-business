@@ -44,7 +44,7 @@ export async function submitBooking(input: BookingInput) {
   //    resurrecting one Triša explicitly removed.
   const { data: existingCustomer, error: lookupErr } = await sb
     .from("customers")
-    .select("id, no_show_flag")
+    .select("id, no_show_flag, loyalty_pending_reward")
     .eq("salon_id", data.salonId)
     .eq("phone", data.phone)
     .is("deleted_at", null)
@@ -128,13 +128,15 @@ export async function submitBooking(input: BookingInput) {
   });
   if (overlapsBlock) return { ok: false as const, error: "SLOT_TAKEN" };
 
-  // 3. Insert booking. surcharge_applied is set if the customer has an
-  //    active no_show_flag from a previous late cancel / no-show — the
-  //    next booking automatically gets +30% (visible to the customer in
-  //    the confirmation email and the success screen). Flag is cleared
-  //    once this surcharged booking is marked 'done' so the penalty
-  //    can't double-charge.
-  const surchargeApplied = existingCustomer?.no_show_flag === true;
+  // 3. Insert booking. Two rewards/penalties may apply:
+  //    - surcharge_applied (no-show / late-cancel penalty +30%)
+  //    - is_loyalty_redeem (6th-cut free reward, customer pre-chose this)
+  //    Free cut wins outright over surcharge — the loyalty reward overrides
+  //    the penalty for THIS booking, both flags get cleared, and the
+  //    customer starts fresh. Surcharge resurfaces only if they trigger
+  //    another late-cancel / no-show after this point.
+  const isLoyaltyRedeem = existingCustomer?.loyalty_pending_reward === "free_cut";
+  const surchargeApplied = !isLoyaltyRedeem && existingCustomer?.no_show_flag === true;
 
   const { data: booking, error: bErr } = await sb
     .from("bookings")
@@ -147,6 +149,7 @@ export async function submitBooking(input: BookingInput) {
       status: "confirmed",
       utm_source: data.utmSource ?? "direct",
       surcharge_applied: surchargeApplied,
+      is_loyalty_redeem: isLoyaltyRedeem,
     })
     .select("id")
     .single();
@@ -154,6 +157,20 @@ export async function submitBooking(input: BookingInput) {
   if (bErr || !booking) {
     console.error("[submitBooking] booking insert failed:", bErr);
     return { ok: false as const, error: "BOOKING_CREATE_FAILED" };
+  }
+
+  // Consume the loyalty reward immediately so it can't be double-spent on
+  // a parallel session, and clear the no-show flag too if the redemption
+  // overrode it. Done after a successful booking insert so the customer
+  // doesn't lose their reward to a transient DB failure.
+  if (customerId && (isLoyaltyRedeem || surchargeApplied)) {
+    const updates: Record<string, unknown> = {};
+    if (isLoyaltyRedeem) {
+      updates.loyalty_pending_reward = null;
+      // Free cut also forgives the no-show flag — clean slate.
+      updates.no_show_flag = false;
+    }
+    await sb.from("customers").update(updates).eq("id", customerId);
   }
 
   // Send confirmation email (best-effort, don't block on failure). Pulls
@@ -165,7 +182,9 @@ export async function submitBooking(input: BookingInput) {
       const { data: svc } = await sb.from("services").select("name_lat, price").eq("id", data.serviceId).single();
       const { data: salon } = await sb.from("salons").select("address").eq("id", data.salonId).single();
       const basePrice = svc?.price ?? 0;
-      const finalPrice = surchargeApplied ? Math.round(basePrice * 1.3) : basePrice;
+      const finalPrice = isLoyaltyRedeem
+        ? 0
+        : surchargeApplied ? Math.round(basePrice * 1.3) : basePrice;
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://berbernica-ruby.vercel.app";
       await sendBookingConfirmation({
         to: data.email,
@@ -176,6 +195,7 @@ export async function submitBooking(input: BookingInput) {
         price: finalPrice,
         basePrice,
         surchargeApplied,
+        loyaltyFreeCut: isLoyaltyRedeem,
         salonAddress: salon?.address ?? "",
         bookingId: booking.id,
         cancelUrl: `${baseUrl}/otkazi/${booking.id}?t=${bookingCancelToken(booking.id)}`,
@@ -191,27 +211,32 @@ export async function submitBooking(input: BookingInput) {
     bookingId: booking.id,
     noShowFlag: existingCustomer?.no_show_flag ?? false,
     surchargeApplied,
+    loyaltyFreeCut: isLoyaltyRedeem,
   };
 }
 
 /**
  * Light read-only helper called from the booking flow once the customer
- * types their phone number, so we can warn them BEFORE they submit that a
- * 30% surcharge will apply (because of a prior late cancel / no-show).
- * Returns just the bare flag — no PII beyond what the customer already
- * gave us.
+ * types their phone number, so we can warn / reward them BEFORE they
+ * submit. Returns:
+ *   - flagged: true if no-show / late-cancel penalty (+30%) will apply
+ *   - loyaltyReward: 'free_cut' if the next booking is free, else null
+ *
+ * No PII beyond what the customer already supplied.
  */
-export async function checkCustomerFlag(salonId: string, phone: string): Promise<{ flagged: boolean }> {
-  if (!salonId || !phone || phone.trim().length < 6) return { flagged: false };
+export async function checkCustomerFlag(salonId: string, phone: string): Promise<{ flagged: boolean; loyaltyReward: "free_cut" | null }> {
+  if (!salonId || !phone || phone.trim().length < 6) return { flagged: false, loyaltyReward: null };
   const sb = createAdminClient();
   const { data } = await sb
     .from("customers")
-    .select("no_show_flag")
+    .select("no_show_flag, loyalty_pending_reward")
     .eq("salon_id", salonId)
     .eq("phone", phone.trim())
     .is("deleted_at", null)
     .maybeSingle();
-  return { flagged: data?.no_show_flag === true };
+  const reward = data?.loyalty_pending_reward === "free_cut" ? "free_cut" : null;
+  // Free cut overrides the surcharge for the next booking.
+  return { flagged: !reward && data?.no_show_flag === true, loyaltyReward: reward };
 }
 
 /**
