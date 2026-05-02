@@ -23,21 +23,21 @@ function todayStr() {
 }
 
 /**
- * Generate all 30-minute booking-start slots within a day's working hours,
- * minus the ones taken (with duration overlap consideration).
+ * Generate every 30-minute booking-start within working hours, minus any slot
+ * the server has marked taken. The server (`getMyTakenSlots`) computes overlap
+ * against existing bookings' actual durations and admin blocks, so this filter
+ * is a pure set-difference — no further conflict math needed here.
  */
 function freeSlots(open: string, close: string, durationMin: number, taken: string[]): string[] {
   const [oh, om] = open.split(":").map(Number);
   const [ch, cm] = close.split(":").map(Number);
   const startM = oh * 60 + om;
-  const endM = ch * 60 + cm - durationMin; // last bookable start
+  const endM = ch * 60 + cm - durationMin; // last bookable start that fits within working hours
   const takenSet = new Set(taken);
 
   const slots: string[] = [];
   for (let m = startM; m <= endM; m += 30) {
     const slot = `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-    // simple conflict check: slot itself is not taken
-    // (not checking duration overlap with prior bookings — simple model: each slot is 30min unit)
     if (!takenSet.has(slot)) slots.push(slot);
   }
   return slots;
@@ -82,14 +82,17 @@ export function NewBookingForm({ services, workingHours, recentCustomers }: {
   }, [matchedCustomer, name]);
 
   useEffect(() => {
-    if (!date) return;
+    if (!date || !selectedService) {
+      setTaken([]);
+      return;
+    }
     let cancelled = false;
     (async () => {
-      const slots = await getMyTakenSlots(date);
+      const slots = await getMyTakenSlots(date, selectedService.duration_min);
       if (!cancelled) setTaken(slots);
     })();
     return () => { cancelled = true; };
-  }, [date]);
+  }, [date, selectedService]);
 
   const dateOptions = useMemo(() => {
     const opts: { date: string; dow: number; isClosed: boolean }[] = [];

@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBookingConfirmation } from "@/lib/email/templates";
+import { computeBlockedSlots, rangesOverlap, toMinutes, type Range } from "@/lib/booking/slots";
 
 const bookingSchema = z.object({
   salonId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID format"),
@@ -66,17 +67,53 @@ export async function submitBooking(input: BookingInput) {
       .eq("id", customerId);
   }
 
-  // 2. Verify slot is still free (race-condition guard)
-  const { data: conflict } = await sb
-    .from("bookings")
-    .select("id")
-    .eq("salon_id", data.salonId)
-    .eq("date", data.date)
-    .eq("time_slot", data.timeSlot)
-    .in("status", ["pending", "confirmed"])
+  // 2. Verify slot is still free, accounting for service duration overlap.
+  //    A 90-min booking at 13:00 must not be accepted when a 30-min booking
+  //    already sits at 13:30 — even though `time_slot` differs, the intervals
+  //    overlap. Same reasoning for 30-min admin-blocked slots.
+  const { data: requestedSvc } = await sb
+    .from("services")
+    .select("duration_min")
+    .eq("id", data.serviceId)
     .maybeSingle();
+  if (!requestedSvc) return { ok: false as const, error: "SERVICE_NOT_FOUND" };
 
-  if (conflict) return { ok: false as const, error: "SLOT_TAKEN" };
+  const reqStartMin = toMinutes(data.timeSlot);
+  const reqDur = requestedSvc.duration_min as number;
+
+  const [{ data: dayBookings }, { data: dayBlocks }] = await Promise.all([
+    sb
+      .from("bookings")
+      .select("id, time_slot, services!inner(duration_min)")
+      .eq("salon_id", data.salonId)
+      .eq("date", data.date)
+      .in("status", ["pending", "confirmed"]),
+    sb
+      .from("blocked_slots")
+      .select("time_slot")
+      .eq("salon_id", data.salonId)
+      .eq("date", data.date),
+  ]);
+
+  if ((dayBlocks ?? []).some((b) => b.time_slot === null)) {
+    return { ok: false as const, error: "SLOT_TAKEN" };
+  }
+
+  const overlapsBooking = (dayBookings ?? []).some((b) => {
+    const svc = (b as unknown as { services: { duration_min: number } | { duration_min: number }[] }).services;
+    const dur = Array.isArray(svc) ? svc[0]?.duration_min : svc?.duration_min;
+    if (typeof dur !== "number") return false;
+    const bStart = toMinutes((b.time_slot as string).slice(0, 5));
+    return rangesOverlap(reqStartMin, reqDur, bStart, dur);
+  });
+  if (overlapsBooking) return { ok: false as const, error: "SLOT_TAKEN" };
+
+  const overlapsBlock = (dayBlocks ?? []).some((b) => {
+    if (!b.time_slot) return false;
+    const bStart = toMinutes((b.time_slot as string).slice(0, 5));
+    return rangesOverlap(reqStartMin, reqDur, bStart, 30);
+  });
+  if (overlapsBlock) return { ok: false as const, error: "SLOT_TAKEN" };
 
   // 3. Insert booking
   const { data: booking, error: bErr } = await sb
@@ -122,34 +159,54 @@ export async function submitBooking(input: BookingInput) {
   return { ok: true as const, bookingId: booking.id, noShowFlag: existingCustomer?.no_show_flag ?? false };
 }
 
-export async function getTakenSlots(salonId: string, date: string): Promise<string[]> {
-  if (!salonId || !date) return [];
+/**
+ * Returns every grid slot ("HH:MM") that the picker should mark unavailable,
+ * given the candidate service's duration. Considers BOTH:
+ *   - existing bookings' duration (so a 30-min booking at 13:30 also blocks
+ *     a 90-min candidate at 13:00, since their intervals overlap)
+ *   - admin-blocked 30-min slots
+ *   - whole-day blocks (every grid cell)
+ */
+export async function getTakenSlots(
+  salonId: string,
+  date: string,
+  durationMin: number,
+): Promise<string[]> {
+  if (!salonId || !date || durationMin <= 0) return [];
   const sb = createAdminClient();
   const [bookingsRes, blocksRes] = await Promise.all([
     sb
       .from("bookings")
-      .select("time_slot")
+      .select("time_slot, services!inner(duration_min)")
       .eq("salon_id", salonId)
       .eq("date", date)
       .in("status", ["pending", "confirmed"]),
-    // G5: also exclude admin-blocked slots from public booking picker.
     sb
       .from("blocked_slots")
       .select("time_slot")
       .eq("salon_id", salonId)
       .eq("date", date),
   ]);
-  const taken = new Set<string>();
-  for (const r of bookingsRes.data ?? []) taken.add((r.time_slot as string).slice(0, 5));
-  const wholeDayBlocked = (blocksRes.data ?? []).some((r) => r.time_slot === null);
-  if (wholeDayBlocked) {
-    for (let h = 0; h < 24; h++) {
-      for (const m of ["00", "30"]) taken.add(`${String(h).padStart(2, "0")}:${m}`);
-    }
-  } else {
-    for (const r of blocksRes.data ?? []) {
-      if (r.time_slot) taken.add((r.time_slot as string).slice(0, 5));
+
+  // Whole-day block: every grid cell is unavailable, no overlap math needed.
+  if ((blocksRes.data ?? []).some((r) => r.time_slot === null)) {
+    const all: string[] = [];
+    for (let h = 0; h < 24; h++) for (const m of ["00", "30"]) all.push(`${String(h).padStart(2, "0")}:${m}`);
+    return all;
+  }
+
+  const busy: Range[] = [];
+  for (const b of bookingsRes.data ?? []) {
+    const ts = b.time_slot as string;
+    const svc = (b as unknown as { services: { duration_min: number } | { duration_min: number }[] }).services;
+    const dur = Array.isArray(svc) ? svc[0]?.duration_min : svc?.duration_min;
+    if (typeof dur === "number") {
+      busy.push({ startMin: toMinutes(ts.slice(0, 5)), durationMin: dur });
     }
   }
-  return Array.from(taken);
+  for (const r of blocksRes.data ?? []) {
+    if (r.time_slot) busy.push({ startMin: toMinutes((r.time_slot as string).slice(0, 5)), durationMin: 30 });
+  }
+
+  return Array.from(computeBlockedSlots(durationMin, busy));
 }

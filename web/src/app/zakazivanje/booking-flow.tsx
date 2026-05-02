@@ -86,11 +86,15 @@ export function BookingFlow({
 
   const selectedService = services.find((s) => s.id === serviceId);
 
-  // load taken slots when date or service changes
+  // load taken slots when date or service changes; service duration is part
+  // of the key so switching from 30-min to 90-min re-fetches with overlap math.
   useEffect(() => {
-    if (!date) return;
-    void getTakenSlots(salonId, date).then(setTaken);
-  }, [date, salonId]);
+    if (!date || !selectedService) {
+      setTaken([]);
+      return;
+    }
+    void getTakenSlots(salonId, date, selectedService.duration_min).then(setTaken);
+  }, [date, salonId, selectedService]);
 
   const slots = useMemo(() => {
     if (!date || !selectedService || !workingHours) return [];
