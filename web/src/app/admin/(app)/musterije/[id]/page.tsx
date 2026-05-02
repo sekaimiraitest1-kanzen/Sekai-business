@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/with-admin";
+import { isOwner } from "@/lib/auth/admin-role";
 import { CustomerProfile } from "./customer-profile";
 
 const LOYALTY_VISITS_FOR_REWARD = 6;
@@ -24,7 +25,7 @@ export default async function MusterijaDetail({ params }: { params: { id: string
   const sb = createAdminClient();
 
   const [custRes, bookingsRes, loyaltyRes] = await Promise.all([
-    sb.from("customers").select("*").eq("id", params.id).eq("salon_id", session.salonId).single(),
+    sb.from("customers").select("*").eq("id", params.id).eq("salon_id", session.salonId).is("deleted_at", null).single(),
     sb
       .from("bookings")
       .select("id, date, time_slot, status, services(name_sr, name_lat, price)")
@@ -38,6 +39,8 @@ export default async function MusterijaDetail({ params }: { params: { id: string
       .eq("salon_id", session.salonId),
   ]);
 
+  // 404 covers both nonexistent IDs and soft-deleted rows — `is(deleted_at,null)`
+  // above turns a deleted customer into a not-found at this layer.
   if (custRes.error || !custRes.data) {
     return (
       <div className="adm-empty">
@@ -63,6 +66,7 @@ export default async function MusterijaDetail({ params }: { params: { id: string
       bookings={(bookingsRes.data ?? []) as unknown as BookingRow[]}
       loyaltyProgress={loyaltyProgress}
       loyaltyTarget={LOYALTY_VISITS_FOR_REWARD}
+      canDelete={isOwner(session)}
     />
   );
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { clearNoShowFlag } from "../../termini/actions";
-import { saveCustomerNote, redeemLoyalty } from "./actions";
+import { saveCustomerNote, redeemLoyalty, deleteCustomer } from "./actions";
 
 type Customer = {
   id: string;
@@ -26,15 +26,17 @@ type Booking = {
   services: { name_sr: string | null; name_lat: string | null; price: number | null } | null;
 };
 
-export function CustomerProfile({ customer, bookings, loyaltyProgress, loyaltyTarget }: {
+export function CustomerProfile({ customer, bookings, loyaltyProgress, loyaltyTarget, canDelete }: {
   customer: Customer;
   bookings: Booking[];
   loyaltyProgress: number;
   loyaltyTarget: number;
+  canDelete: boolean;
 }) {
   const [notes, setNotes] = useState(customer.admin_notes ?? "");
   const [pending, start] = useTransition();
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const totalSpent = bookings.filter((b) => b.status === "done").reduce((sum, b) => sum + (b.services?.price ?? 0), 0);
   const visits = bookings.filter((b) => b.status === "done").length;
@@ -176,6 +178,56 @@ export function CustomerProfile({ customer, bookings, loyaltyProgress, loyaltyTa
           </div>
         ))}
       </div>
+
+      {/* Owner-only danger zone — soft-deletes the customer.
+          Two-step confirm to avoid accidental clicks: the destructive button
+          shows a "are you sure?" prompt first; only the second click actually
+          fires the action. */}
+      {canDelete && (
+        <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid rgba(255,80,80,.15)" }}>
+          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, color: "rgba(255,140,140,.7)", letterSpacing: ".15em", textTransform: "uppercase", marginBottom: 8 }}>
+            <span data-sr>ОПАСНА ЗОНА</span><span data-lat>OPASNA ZONA</span>
+          </div>
+          {!confirmDelete ? (
+            <button
+              type="button"
+              className="adm-btn"
+              style={{ background: "rgba(255,80,80,.12)", color: "#ffb0b0", border: "1px solid rgba(255,80,80,.3)" }}
+              onClick={() => setConfirmDelete(true)}
+              disabled={pending}
+            >
+              🗑 <span data-sr>ОБРИШИ МУШТЕРИЈУ</span><span data-lat>OBRIŠI MUŠTERIJU</span>
+            </button>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: 13, color: "rgba(245,233,208,.75)", lineHeight: 1.5 }}>
+                <span data-sr>Сигуран? Муштерија нестаје са листе. Прошли термини остају у статистици.</span>
+                <span data-lat>Siguran? Mušterija nestaje sa liste. Prošli termini ostaju u statistici.</span>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  type="button"
+                  className="adm-btn-secondary"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={pending}
+                  style={{ flex: 1 }}
+                >
+                  <span data-sr>ОТКАЖИ</span><span data-lat>OTKAŽI</span>
+                </button>
+                <button
+                  type="button"
+                  className="adm-btn"
+                  style={{ background: "rgba(255,80,80,.85)", color: "#1A0F05", flex: 1 }}
+                  disabled={pending}
+                  onClick={() => start(async () => { await deleteCustomer(customer.id); })}
+                >
+                  🗑 <span data-sr>ПОТВРДИ БРИСАЊЕ</span><span data-lat>POTVRDI BRISANJE</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 }

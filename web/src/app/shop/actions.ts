@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendOrderEmail } from "@/lib/email/templates";
+import { sendOrderEmail, sendOrderConfirmationToCustomer } from "@/lib/email/templates";
 
 const orderSchema = z.object({
   customerName: z.string().min(2).max(80),
@@ -27,17 +27,19 @@ export async function submitOrder(input: OrderInput) {
   const sb = createAdminClient();
   const { data: salon } = await sb
     .from("salons")
-    .select("id, email, name")
+    .select("id, email, name, address, phone")
     .eq("slug", process.env.NEXT_PUBLIC_DEFAULT_SALON_SLUG ?? "trisa")
     .single();
   if (!salon) return { ok: false as const, error: "NO_SALON" };
 
-  // Upsert customer
+  // Upsert customer (skip soft-deleted rows — same phone re-buying after
+  // delete starts fresh).
   const { data: existing } = await sb
     .from("customers")
     .select("id")
     .eq("salon_id", salon.id)
     .eq("phone", data.customerPhone)
+    .is("deleted_at", null)
     .maybeSingle();
 
   let customerId = existing?.id as string | undefined;
@@ -75,9 +77,14 @@ export async function submitOrder(input: OrderInput) {
     .single();
   if (error || !order) return { ok: false as const, error: "ORDER_FAILED" };
 
-  // Email Triša (best-effort, don't block on failure)
-  try {
-    await sendOrderEmail({
+  // Two emails fired in parallel, both best-effort. Failure of either does
+  // NOT roll the order back — the row is already in DB, Triša can recover
+  // even if email infra is wonky.
+  // 1. Internal: salon owner gets the order alert (existing behaviour).
+  // 2. Customer-facing: confirmation receipt so the buyer doesn't depend on
+  //    keeping the success page open. Skipped silently if no email given.
+  await Promise.allSettled([
+    sendOrderEmail({
       to: salon.email ?? "",
       customerName: data.customerName,
       customerPhone: data.customerPhone,
@@ -86,11 +93,17 @@ export async function submitOrder(input: OrderInput) {
       items: data.items.map((it) => ({ name: it.name, quantity: it.quantity, price: it.price })),
       total,
       orderId: order.id,
-    });
-  } catch (e) {
-    // Log only the message — the error object may serialize the customer email/name passed to sendOrderEmail.
-    console.error("order email failed:", e instanceof Error ? e.message : "unknown");
-  }
+    }).catch((e) => console.error("order email (owner) failed:", e instanceof Error ? e.message : "unknown")),
+    sendOrderConfirmationToCustomer({
+      to: data.customerEmail || "",
+      customerName: data.customerName,
+      items: data.items.map((it) => ({ name: it.name, quantity: it.quantity, price: it.price })),
+      total,
+      orderId: order.id,
+      salonAddress: salon.address ?? "",
+      salonPhone: salon.phone ?? "",
+    }).catch((e) => console.error("order email (customer) failed:", e instanceof Error ? e.message : "unknown")),
+  ]);
 
   return { ok: true as const, orderId: order.id };
 }

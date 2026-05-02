@@ -174,12 +174,14 @@ export async function createWalkInBooking(input: {
   });
   if (overlapsBlock) return { ok: false as const, error: "SLOT_TAKEN" };
 
-  // Upsert customer
+  // Upsert customer (skip soft-deleted — same phone walk-in after delete
+  // creates a fresh row instead of reviving the removed one).
   const { data: existing } = await sb
     .from("customers")
     .select("id")
     .eq("salon_id", session.salonId)
     .eq("phone", input.customerPhone)
+    .is("deleted_at", null)
     .maybeSingle();
 
   let customerId = existing?.id as string | undefined;

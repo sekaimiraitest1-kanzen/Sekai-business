@@ -29,12 +29,15 @@ export async function submitBooking(input: BookingInput) {
   const data = parsed.data;
   const sb = createAdminClient();
 
-  // 1. Upsert customer by (salon_id, phone)
+  // 1. Upsert customer by (salon_id, phone). Soft-deleted rows are treated
+  //    as fresh — same phone re-booking creates a new customer instead of
+  //    resurrecting one Triša explicitly removed.
   const { data: existingCustomer, error: lookupErr } = await sb
     .from("customers")
     .select("id, no_show_flag")
     .eq("salon_id", data.salonId)
     .eq("phone", data.phone)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (lookupErr) {

@@ -30,6 +30,7 @@ export default async function MusterijePage({ searchParams }: { searchParams: { 
     .from("customers")
     .select("id, name, phone, email, no_show_count, no_show_flag, last_visit_date, created_at")
     .eq("salon_id", session.salonId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
   if (allowedIds) query = query.in("id", Array.from(allowedIds));
 
