@@ -126,11 +126,15 @@ async function pinCollidesWithExisting(
   pin: string,
   ignoreUserId?: string,
 ): Promise<boolean> {
+  // Collision check ignores soft-deleted rows — a returning ex-employee
+  // could legitimately re-use their old PIN since the original row no
+  // longer participates in login.
   const { data } = await sb
     .from("admin_users")
     .select("id, pin_hash")
     .eq("salon_id", salonId)
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .is("deleted_at", null);
   for (const row of data ?? []) {
     if (ignoreUserId && row.id === ignoreUserId) continue;
     if (!row.pin_hash) continue;
@@ -139,20 +143,53 @@ async function pinCollidesWithExisting(
   return false;
 }
 
+/**
+ * Active roster — owner row + employees that are neither paused nor archived.
+ * The settings page renders this as the primary list with action buttons.
+ */
 export async function listStaff() {
   const session = await requireOwner();
   const sb = createAdminClient();
   const { data } = await sb
     .from("admin_users")
-    .select("id, display_name, role, is_active, email, created_at")
+    .select("id, display_name, first_name, last_name, phone, role, is_active, email, created_at")
     .eq("salon_id", session.salonId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: true });
   return data ?? [];
 }
 
-export async function createStaff(input: { displayName: string; pin: string }) {
-  const name = input.displayName.trim();
-  if (name.length < 2 || name.length > 40) return { ok: false as const, error: "INVALID_NAME" };
+function nullIfBlank(s: string | undefined | null): string | null {
+  if (!s) return null;
+  const t = s.trim();
+  return t === "" ? null : t;
+}
+
+function deriveDisplayName(firstName: string, lastName: string | null): string {
+  const f = firstName.trim();
+  const l = lastName?.trim() ?? "";
+  return l ? `${f} ${l}` : f;
+}
+
+/**
+ * Create a new staff member. Required: firstName + pin. Optional: lastName,
+ * phone, email — used for the HR archive (still visible after delete).
+ * `display_name` is auto-derived from first+last so the UI doesn't need to
+ * worry about which field to render.
+ */
+export async function createStaff(input: {
+  firstName: string;
+  lastName?: string;
+  phone?: string;
+  email?: string;
+  pin: string;
+}) {
+  const firstName = input.firstName.trim();
+  const lastName = nullIfBlank(input.lastName);
+  const phone = nullIfBlank(input.phone);
+  const userEmail = nullIfBlank(input.email);
+  if (firstName.length < 2 || firstName.length > 40) return { ok: false as const, error: "INVALID_NAME" };
+  if (lastName && lastName.length > 40) return { ok: false as const, error: "INVALID_NAME" };
   if (!PIN_RX.test(input.pin)) return { ok: false as const, error: "INVALID_PIN" };
 
   const session = await requireOwner();
@@ -163,18 +200,21 @@ export async function createStaff(input: { displayName: string; pin: string }) {
   }
 
   const pinHash = await bcrypt.hash(input.pin, 10);
-  // email is required NOT NULL on the schema; auto-derive a unique placeholder
-  // since staff don't need real email accounts. Format: staff-<short>@<salon>.local
-  const placeholderEmail = `staff-${Date.now().toString(36)}@${session.salonId.slice(0, 8)}.local`;
+  // email is NOT NULL on the schema. If the owner gave one, use it. Else
+  // generate a salon-scoped placeholder so login flow has a stable handle.
+  const finalEmail = userEmail ?? `staff-${Date.now().toString(36)}@${session.salonId.slice(0, 8)}.local`;
 
   const { data, error } = await sb
     .from("admin_users")
     .insert({
       salon_id: session.salonId,
-      email: placeholderEmail,
+      email: finalEmail,
       role: "staff",
       pin_hash: pinHash,
-      display_name: name,
+      display_name: deriveDisplayName(firstName, lastName),
+      first_name: firstName,
+      last_name: lastName,
+      phone,
       is_active: true,
     })
     .select("id")
@@ -195,6 +235,7 @@ export async function resetStaffPin(staffId: string, newPin: string) {
     .select("id, role")
     .eq("id", staffId)
     .eq("salon_id", session.salonId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (!target) return { ok: false as const, error: "NOT_FOUND" };
 
@@ -216,8 +257,6 @@ export async function toggleStaffActive(staffId: string) {
   const session = await requireOwner();
   const sb = createAdminClient();
 
-  // Owners cannot disable themselves — would lock them out of the only owner
-  // account on the salon. Block this explicitly.
   if (staffId === session.adminUserId) {
     return { ok: false as const, error: "CANT_DISABLE_SELF" };
   }
@@ -227,11 +266,10 @@ export async function toggleStaffActive(staffId: string) {
     .select("id, role, is_active")
     .eq("id", staffId)
     .eq("salon_id", session.salonId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (!target) return { ok: false as const, error: "NOT_FOUND" };
 
-  // Disabling an owner is also blocked — should only happen if multiple
-  // owners exist, which we don't support yet. Keeps the lockout-foot-gun shut.
   if (target.role !== "staff") return { ok: false as const, error: "CANT_DISABLE_OWNER" };
 
   await sb
@@ -241,4 +279,40 @@ export async function toggleStaffActive(staffId: string) {
     .eq("salon_id", session.salonId);
   revalidatePath("/admin/podesavanja");
   return { ok: true as const, isActive: !target.is_active };
+}
+
+/**
+ * Soft-delete a staff member. Row stays in the table — past bookings keep
+ * their staff_id reference so revenue / customer-count stats remain
+ * computable, and the archive list (`listArchivedStaff`) renders the row
+ * with full HR context for as long as Triša wants.
+ *
+ * Owners cannot delete themselves and the owner role itself can't be
+ * deleted (would orphan the salon). Same guard pattern as toggle.
+ */
+export async function softDeleteStaff(staffId: string) {
+  const session = await requireOwner();
+  const sb = createAdminClient();
+
+  if (staffId === session.adminUserId) {
+    return { ok: false as const, error: "CANT_DELETE_SELF" };
+  }
+
+  const { data: target } = await sb
+    .from("admin_users")
+    .select("id, role")
+    .eq("id", staffId)
+    .eq("salon_id", session.salonId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!target) return { ok: false as const, error: "NOT_FOUND" };
+  if (target.role !== "staff") return { ok: false as const, error: "CANT_DELETE_OWNER" };
+
+  await sb
+    .from("admin_users")
+    .update({ deleted_at: new Date().toISOString(), is_active: false })
+    .eq("id", staffId)
+    .eq("salon_id", session.salonId);
+  revalidatePath("/admin/podesavanja");
+  return { ok: true as const };
 }

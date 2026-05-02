@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { changePin, upsertAnnouncement, deleteAnnouncement, updateSocialLinks, createStaff, resetStaffPin, toggleStaffActive } from "./actions";
+import { changePin, upsertAnnouncement, deleteAnnouncement, updateSocialLinks, createStaff, resetStaffPin, toggleStaffActive, softDeleteStaff } from "./actions";
 import {
   SOCIAL_PLATFORMS,
   PLATFORM_META,
@@ -23,9 +23,23 @@ type Ann = {
 type StaffRow = {
   id: string;
   display_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
   role: string | null;
   is_active: boolean | null;
   email: string | null;
+  created_at: string | null;
+};
+
+type ArchivedStaffRow = {
+  id: string;
+  display_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  email: string | null;
+  deleted_at: string | null;
   created_at: string | null;
 };
 
@@ -35,6 +49,8 @@ export function PodesavanjaClient({
   icalUrl,
   socialLinks,
   staff,
+  archivedStaff,
+  customerCountByStaff,
   currentUserId,
 }: {
   announcements: Ann[];
@@ -42,6 +58,8 @@ export function PodesavanjaClient({
   icalUrl: string;
   socialLinks: SocialLinks;
   staff: StaffRow[];
+  archivedStaff: ArchivedStaffRow[];
+  customerCountByStaff: Record<string, number>;
   currentUserId: string;
 }) {
   const [tab, setTab] = useState<"pin" | "banner" | "social" | "staff" | "info">("pin");
@@ -71,7 +89,14 @@ export function PodesavanjaClient({
       {tab === "pin" && <PinChange />}
       {tab === "banner" && <Announcements list={announcements} />}
       {tab === "social" && <SocialLinksForm initial={socialLinks} />}
-      {tab === "staff" && <StaffManagement initial={staff} currentUserId={currentUserId} />}
+      {tab === "staff" && (
+        <StaffManagement
+          initial={staff}
+          archived={archivedStaff}
+          customerCountByStaff={customerCountByStaff}
+          currentUserId={currentUserId}
+        />
+      )}
       {tab === "info" && (
         <>
           <div className="adm-card" style={{ flexDirection: "column", alignItems: "stretch" }}>
@@ -379,13 +404,25 @@ function IcalCard({ icalUrl }: { icalUrl: string }) {
 
 // ─── Staff management (owner-only tab) ──────────────────────────────────
 //
-// Lists every admin_users row in the salon and lets the owner (Triša) create
-// new staff, reset their PIN, or toggle active. The owner row itself shows
-// up read-only at the top — no disable button (would self-lock-out), no PIN
-// reset (owner uses the PIN tab for self).
-function StaffManagement({ initial, currentUserId }: { initial: StaffRow[]; currentUserId: string }) {
+// Two stacked sections:
+//   1. AKTIVNI — current employees + owner. Owner row has no actions
+//      (avoid self-lock-out); staff rows get pause / reset-PIN / delete.
+//   2. ARHIVA — soft-deleted ex-employees with their captured HR record
+//      (full name, phone, email) + lifetime customer count for reference.
+function StaffManagement({
+  initial,
+  archived,
+  customerCountByStaff,
+  currentUserId,
+}: {
+  initial: StaffRow[];
+  archived: ArchivedStaffRow[];
+  customerCountByStaff: Record<string, number>;
+  currentUserId: string;
+}) {
   const [rows, setRows] = useState<StaffRow[]>(initial);
   const [resetFor, setResetFor] = useState<string | null>(null);
+  const [confirmDeleteFor, setConfirmDeleteFor] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [pending, start] = useTransition();
   const [errMsg, setErrMsg] = useState<string | null>(null);
@@ -399,6 +436,8 @@ function StaffManagement({ initial, currentUserId }: { initial: StaffRow[]; curr
       NOT_FOUND: "Nalog nije pronađen.",
       CANT_DISABLE_SELF: "Ne možeš isključiti sebe.",
       CANT_DISABLE_OWNER: "Vlasnički nalog se ne može isključiti.",
+      CANT_DELETE_SELF: "Ne možeš obrisati sebe.",
+      CANT_DELETE_OWNER: "Vlasnički nalog se ne može obrisati.",
       FORBIDDEN_STAFF: "Samo vlasnik.",
     };
     setErrMsg(map[code] ?? code);
@@ -406,15 +445,17 @@ function StaffManagement({ initial, currentUserId }: { initial: StaffRow[]; curr
   }
 
   async function handleCreate(formData: FormData) {
-    const displayName = String(formData.get("displayName") ?? "");
+    const firstName = String(formData.get("firstName") ?? "");
+    const lastName = String(formData.get("lastName") ?? "");
+    const phone = String(formData.get("phone") ?? "");
+    const emailValue = String(formData.get("email") ?? "");
     const pin = String(formData.get("pin") ?? "");
     start(async () => {
-      const res = await createStaff({ displayName, pin });
+      const res = await createStaff({ firstName, lastName, phone, email: emailValue, pin });
       if (!res.ok) {
         flashError(res.error);
         return;
       }
-      // Optimistic: reload page so server-rendered list re-fetches with the new row.
       setCreateOpen(false);
       window.location.reload();
     });
@@ -444,6 +485,19 @@ function StaffManagement({ initial, currentUserId }: { initial: StaffRow[]; curr
     });
   }
 
+  async function handleDelete(id: string) {
+    start(async () => {
+      const res = await softDeleteStaff(id);
+      if (!res.ok) {
+        flashError(res.error);
+        return;
+      }
+      // Reload so the row migrates from active to archived without
+      // duplicating it in client state.
+      window.location.reload();
+    });
+  }
+
   return (
     <div className="adm-card" style={{ flexDirection: "column", alignItems: "stretch", gap: 12 }}>
       {errMsg && (
@@ -452,10 +506,11 @@ function StaffManagement({ initial, currentUserId }: { initial: StaffRow[]; curr
         </div>
       )}
 
+      {/* ── Active roster ─────────────────────────────────────────── */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "var(--mustard)", letterSpacing: ".1em", textTransform: "uppercase" }}>
-          <span data-sr>ЗАПОСЛЕНИ</span>
-          <span data-lat>ZAPOSLENI</span>
+          <span data-sr>АКТИВНИ</span>
+          <span data-lat>AKTIVNI</span>
         </div>
         <button type="button" className="adm-btn-primary" onClick={() => setCreateOpen(true)} style={{ fontSize: 12 }}>
           + <span data-sr>ДОДАЈ</span><span data-lat>DODAJ</span>
@@ -472,55 +527,78 @@ function StaffManagement({ initial, currentUserId }: { initial: StaffRow[]; curr
           {rows.map((r) => {
             const isOwnerRow = r.role !== "staff";
             const isMe = r.id === currentUserId;
+            const customerCount = customerCountByStaff[r.id] ?? 0;
+            const fullName = r.display_name || [r.first_name, r.last_name].filter(Boolean).join(" ") || r.email || "—";
             return (
-              <div key={r.id} className="adm-row" style={{ alignItems: "center", paddingTop: 10, paddingBottom: 10, opacity: r.is_active ? 1 : 0.4 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: "var(--cream)", fontWeight: 600, display: "flex", gap: 8, alignItems: "center" }}>
-                    {r.display_name || r.email || "—"}
-                    {isOwnerRow && <span style={{ background: "var(--mustard)", color: "var(--brown-950)", fontSize: 9, padding: "1px 5px", borderRadius: 3, fontWeight: 700 }}>ВЛАСНИК</span>}
-                    {!isOwnerRow && !r.is_active && <span style={{ background: "rgba(255,80,80,.18)", color: "#ffb0b0", fontSize: 9, padding: "1px 5px", borderRadius: 3 }}>ИСКЉУЧЕН</span>}
-                    {isMe && <span style={{ opacity: 0.4, fontSize: 10 }}>(ja)</span>}
+              <div key={r.id} className="adm-row" style={{ flexDirection: "column", alignItems: "stretch", paddingTop: 10, paddingBottom: 10, opacity: r.is_active ? 1 : 0.4, gap: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ color: "var(--cream)", fontWeight: 600, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                      {fullName}
+                      {isOwnerRow && <span style={{ background: "var(--mustard)", color: "var(--brown-950)", fontSize: 9, padding: "1px 5px", borderRadius: 3, fontWeight: 700 }}>ВЛАСНИК</span>}
+                      {!isOwnerRow && !r.is_active && <span style={{ background: "rgba(255,80,80,.18)", color: "#ffb0b0", fontSize: 9, padding: "1px 5px", borderRadius: 3 }}>ПАУЗА</span>}
+                      {isMe && <span style={{ opacity: 0.4, fontSize: 10 }}>(ja)</span>}
+                    </div>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.4)", marginTop: 2, display: "flex", gap: 12, flexWrap: "wrap" }}>
+                      {r.phone && <span>📞 {r.phone}</span>}
+                      {!isOwnerRow && customerCount > 0 && <span>👤 {customerCount} muš.</span>}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {!isOwnerRow && (
+                      <>
+                        <button type="button" className="adm-btn-secondary" disabled={pending} onClick={() => setResetFor(r.id)} style={{ fontSize: 11, padding: "6px 10px" }}>
+                          🔑 PIN
+                        </button>
+                        <button type="button" className="adm-btn-secondary" disabled={pending || isMe} onClick={() => handleToggle(r.id)} style={{ fontSize: 11, padding: "6px 10px" }}>
+                          {r.is_active ? "⏸" : "▶"}
+                        </button>
+                        <button type="button" className="adm-btn-secondary" disabled={pending || isMe} onClick={() => setConfirmDeleteFor(r.id)} style={{ fontSize: 11, padding: "6px 10px", color: "#ffb0b0" }}>
+                          🗑
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  {!isOwnerRow && (
-                    <>
-                      <button type="button" className="adm-btn-secondary" disabled={pending} onClick={() => setResetFor(r.id)} style={{ fontSize: 11, padding: "6px 10px" }}>
-                        🔑 PIN
+                {confirmDeleteFor === r.id && (
+                  <div style={{ background: "rgba(255,80,80,.08)", padding: 10, borderRadius: 6, fontSize: 12, color: "rgba(245,233,208,.8)", lineHeight: 1.5 }}>
+                    <div style={{ marginBottom: 8 }}>
+                      <span data-sr>Сигуран да бришеш {fullName}? Прешао у архиву, прошли термини остају.</span>
+                      <span data-lat>Siguran da brišeš {fullName}? Prelazi u arhivu, prošli termini ostaju.</span>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button type="button" className="adm-btn-secondary" onClick={() => setConfirmDeleteFor(null)} disabled={pending} style={{ flex: 1, fontSize: 11 }}>
+                        <span data-sr>ОТКАЖИ</span><span data-lat>OTKAŽI</span>
                       </button>
-                      <button type="button" className="adm-btn-secondary" disabled={pending || isMe} onClick={() => handleToggle(r.id)} style={{ fontSize: 11, padding: "6px 10px" }}>
-                        {r.is_active ? "⏸" : "▶"}
+                      <button type="button" className="adm-btn" style={{ background: "rgba(255,80,80,.85)", color: "#1A0F05", flex: 1, fontSize: 11 }} disabled={pending} onClick={() => handleDelete(r.id)}>
+                        🗑 <span data-sr>ОБРИШИ</span><span data-lat>OBRIŠI</span>
                       </button>
-                    </>
-                  )}
-                </div>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       )}
 
+      {/* ── Create form ───────────────────────────────────────────── */}
       {createOpen && (
         <form action={handleCreate} style={{ borderTop: "1px solid rgba(245,233,208,.1)", paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ fontSize: 12, color: "var(--mustard)", letterSpacing: ".1em", textTransform: "uppercase" }}>
             <span data-sr>НОВИ ЗАПОСЛЕНИ</span>
             <span data-lat>NOVI ZAPOSLENI</span>
           </div>
-          <input
-            type="text"
-            name="displayName"
-            placeholder="Ime (npr. Marko)"
-            className="adm-input"
-            minLength={2}
-            maxLength={40}
-            required
-          />
+          <input type="text" name="firstName" placeholder="Ime (obavezno)" className="adm-input" minLength={2} maxLength={40} required />
+          <input type="text" name="lastName" placeholder="Prezime" className="adm-input" maxLength={40} />
+          <input type="tel" name="phone" placeholder="Telefon" className="adm-input" maxLength={30} />
+          <input type="email" name="email" placeholder="Email" className="adm-input" maxLength={120} />
           <input
             type="text"
             name="pin"
             inputMode="numeric"
             pattern="\d{4,8}"
-            placeholder="PIN (4-8 cifara)"
+            placeholder="PIN za login (4-8 cifara, obavezno)"
             className="adm-input"
             required
           />
@@ -562,6 +640,38 @@ function StaffManagement({ initial, currentUserId }: { initial: StaffRow[]; curr
             </button>
           </div>
         </form>
+      )}
+
+      {/* ── Archive of ex-employees ───────────────────────────────── */}
+      {archived.length > 0 && (
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(245,233,208,.1)" }}>
+          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "rgba(245,233,208,.5)", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 10 }}>
+            <span data-sr>АРХИВА</span>
+            <span data-lat>ARHIVA</span>
+            <span style={{ marginLeft: 6, opacity: 0.6 }}>· {archived.length}</span>
+          </div>
+          {archived.map((a) => {
+            const fullName = [a.first_name, a.last_name].filter(Boolean).join(" ") || a.display_name || "—";
+            const customerCount = customerCountByStaff[a.id] ?? 0;
+            const deletedDate = a.deleted_at ? new Date(a.deleted_at).toLocaleDateString("sr-RS") : "—";
+            const isPlaceholderEmail = (a.email ?? "").includes("@") && (a.email ?? "").endsWith(".local");
+            return (
+              <div key={a.id} className="adm-row" style={{ flexDirection: "column", alignItems: "stretch", paddingTop: 10, paddingBottom: 10, gap: 4, opacity: 0.65 }}>
+                <div style={{ color: "var(--cream)", fontWeight: 600, display: "flex", gap: 8, alignItems: "center" }}>
+                  {fullName}
+                  <span style={{ background: "rgba(245,233,208,.08)", color: "rgba(245,233,208,.55)", fontSize: 9, padding: "1px 5px", borderRadius: 3 }}>
+                    ОБРИСАН · {deletedDate}
+                  </span>
+                </div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.5)", display: "flex", gap: 14, flexWrap: "wrap" }}>
+                  {a.phone && <span>📞 {a.phone}</span>}
+                  {a.email && !isPlaceholderEmail && <span>✉ {a.email}</span>}
+                  <span>👤 {customerCount} muš.</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

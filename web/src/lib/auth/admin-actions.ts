@@ -28,10 +28,12 @@ export async function unlockAdmin(pin: string): Promise<UnlockResult> {
 
   const sb = createAdminClient();
 
+  // Login eligibility: must be active AND not soft-deleted.
   const { data: admins, error } = await sb
     .from("admin_users")
     .select("id, salon_id, email, role, pin_hash, display_name")
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .is("deleted_at", null);
 
   if (error || !admins || admins.length === 0) return { ok: false, error: "NO_ADMIN" };
 
