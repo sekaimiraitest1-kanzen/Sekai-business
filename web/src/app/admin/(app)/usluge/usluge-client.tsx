@@ -181,8 +181,10 @@ function SortableServiceRow({
 function ServiceEditor({ service, onClose }: { service: Service | null; onClose: () => void }) {
   const [name_sr, setNameSr] = useState(service?.name_sr ?? "");
   const [name_lat, setNameLat] = useState(service?.name_lat ?? "");
-  const [price, setPrice] = useState(service?.price.toString() ?? "");
-  const [duration_min, setDuration] = useState(service?.duration_min.toString() ?? "30");
+  // Optional chains all the way through — older rows where price/duration
+  // came back as null don't crash the editor with .toString() on undefined.
+  const [price, setPrice] = useState(service?.price?.toString() ?? "");
+  const [duration_min, setDuration] = useState(service?.duration_min?.toString() ?? "30");
   const [active, setActive] = useState(service?.active ?? true);
   const [featured, setFeatured] = useState(service?.featured ?? false);
   const [descSr, setDescSr] = useState(service?.description_sr ?? "");
@@ -192,20 +194,30 @@ function ServiceEditor({ service, onClose }: { service: Service | null; onClose:
   const [pending, start] = useTransition();
 
   function save() {
+    // Cyrillic name is optional — if Triša leaves it blank we copy the
+    // Latin one. Same for description / meta tag (used only by featured
+    // services). Saves the form from being a "type the same thing twice"
+    // chore for everyday service edits.
+    const finalNameLat = name_lat.trim();
+    const finalNameSr = name_sr.trim() || finalNameLat;
+    const finalDescLat = descLat.trim();
+    const finalDescSr = descSr.trim() || finalDescLat;
+    const finalMetaLat = metaLat.trim();
+    const finalMetaSr = metaSr.trim() || finalMetaLat;
     start(async () => {
       await upsertService({
         id: service?.id,
-        name_sr: name_sr.trim(),
-        name_lat: name_lat.trim(),
+        name_sr: finalNameSr,
+        name_lat: finalNameLat,
         price: parseInt(price) || 0,
         duration_min: parseInt(duration_min) || 30,
         active,
         sort_order: service?.sort_order,
         featured,
-        description_sr: descSr.trim() || undefined,
-        description_lat: descLat.trim() || undefined,
-        meta_sr: metaSr.trim() || undefined,
-        meta_lat: metaLat.trim() || undefined,
+        description_sr: finalDescSr || undefined,
+        description_lat: finalDescLat || undefined,
+        meta_sr: finalMetaSr || undefined,
+        meta_lat: finalMetaLat || undefined,
       });
       onClose();
     });
@@ -239,14 +251,27 @@ function ServiceEditor({ service, onClose }: { service: Service | null; onClose:
         </div>
         <div style={{ padding: "0 20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
           <div>
-            <label className="adm-form-label" data-sr>НАЗИВ (ЋИРИЛИЦА)</label>
-            <label className="adm-form-label" data-lat>NAZIV (ĆIRILICA)</label>
-            <input className="adm-input" value={name_sr} onChange={(e) => setNameSr(e.target.value)} placeholder="Шишање" />
+            <label className="adm-form-label">
+              <span data-sr>НАЗИВ (ЛАТИНИЦА)</span>
+              <span data-lat>NAZIV (LATINICA)</span>
+              <span style={{ color: "var(--mustard)", marginLeft: 4 }}>*</span>
+            </label>
+            <input className="adm-input" value={name_lat} onChange={(e) => setNameLat(e.target.value)} placeholder="Šišanje" />
           </div>
           <div>
-            <label className="adm-form-label" data-sr>НАЗИВ (ЛАТИНИЦА)</label>
-            <label className="adm-form-label" data-lat>NAZIV (LATINICA)</label>
-            <input className="adm-input" value={name_lat} onChange={(e) => setNameLat(e.target.value)} placeholder="Šišanje" />
+            <label className="adm-form-label">
+              <span data-sr>НАЗИВ (ЋИРИЛИЦА)</span>
+              <span data-lat>NAZIV (ĆIRILICA)</span>
+              <span style={{ opacity: 0.45, fontWeight: 400, marginLeft: 6 }}>
+                <span data-sr>опционо</span>
+                <span data-lat>opciono</span>
+              </span>
+            </label>
+            <input className="adm-input" value={name_sr} onChange={(e) => setNameSr(e.target.value)} placeholder="Шишање" />
+            <p style={{ fontSize: 11, color: "rgba(245,233,208,.4)", margin: "4px 0 0", fontFamily: "'JetBrains Mono', monospace" }}>
+              <span data-sr>Ако оставиш празно, користи се латиница.</span>
+              <span data-lat>Ako ostaviš prazno, koristi se latinica.</span>
+            </p>
           </div>
           <div style={{ display: "flex", gap: 12 }}>
             <div style={{ flex: 1 }}>
@@ -293,7 +318,7 @@ function ServiceEditor({ service, onClose }: { service: Service | null; onClose:
             </>
           )}
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button className="adm-btn adm-btn-block" disabled={pending || !name_sr || !name_lat || !price} onClick={save}>
+            <button className="adm-btn adm-btn-block" disabled={pending || !name_lat.trim() || !price.trim() || parseInt(price) <= 0} onClick={save}>
               <span data-sr>САЧУВАЈ</span>
               <span data-lat>SAČUVAJ</span>
             </button>
