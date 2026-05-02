@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { compressToWebP } from "@/lib/storage/compress-client";
 import { upsertProduct, deleteProduct, uploadProductImage } from "./actions";
+import { upsertCategory } from "../kategorije/actions";
 
 type Product = {
   id: string;
@@ -87,7 +88,40 @@ function slugify(s: string): string {
   return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-function ProductEditor({ product, categories, onClose }: { product: Product | null; categories: Category[]; onClose: () => void }) {
+function ProductEditor({ product, categories: initialCategories, onClose }: { product: Product | null; categories: Category[]; onClose: () => void }) {
+  // Local copy of categories so the inline "+ NOVA" mini-form can append a
+  // newly-created row and auto-select it without forcing a page reload that
+  // would lose unsaved product-form input.
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [newCatOpen, setNewCatOpen] = useState(false);
+  const [newCatNameLat, setNewCatNameLat] = useState("");
+  const [newCatNameSr, setNewCatNameSr] = useState("");
+  const [newCatErr, setNewCatErr] = useState<string | null>(null);
+  const [creatingCat, startCatCreate] = useTransition();
+
+  function createCategoryInline() {
+    setNewCatErr(null);
+    const nameLat = newCatNameLat.trim();
+    const nameSr = newCatNameSr.trim() || nameLat;
+    if (nameLat.length < 2) { setNewCatErr("Ime mora imati bar 2 znaka."); return; }
+    const slug = slugify(nameLat);
+    if (!slug) { setNewCatErr("Neispravan naziv."); return; }
+    if (categories.some((c) => c.slug === slug)) { setNewCatErr("Kategorija sa tim slug-om već postoji."); return; }
+    startCatCreate(async () => {
+      const res = await upsertCategory({ slug, name_sr: nameSr, name_lat: nameLat, active: true });
+      if (!res.ok) {
+        setNewCatErr(res.error === "SLUG_TAKEN" ? "Kategorija sa tim slug-om već postoji." : "Greška pri snimanju.");
+        return;
+      }
+      const newCat: Category = { slug, name_sr: nameSr, name_lat: nameLat };
+      setCategories((prev) => [...prev, newCat]);
+      setCategory(slug);
+      setNewCatNameLat("");
+      setNewCatNameSr("");
+      setNewCatOpen(false);
+    });
+  }
+
   const [nameSr, setNameSr] = useState(product?.name_sr ?? "");
   const [nameLat, setNameLat] = useState(product?.name_lat ?? "");
   const [brand, setBrand] = useState(product?.brand ?? "");
@@ -191,10 +225,52 @@ function ProductEditor({ product, categories, onClose }: { product: Product | nu
           </div>
 
           <label className="adm-form-label">KATEGORIJA</label>
-          <select className="adm-input" value={category} onChange={(e) => setCategory(e.target.value)}>
-            <option value="">— bez kategorije —</option>
-            {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name_lat}</option>)}
-          </select>
+          <div style={{ display: "flex", gap: 6 }}>
+            <select className="adm-input" value={category} onChange={(e) => setCategory(e.target.value)} style={{ flex: 1 }}>
+              <option value="">— bez kategorije —</option>
+              {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name_lat}</option>)}
+            </select>
+            <button
+              type="button"
+              className="adm-btn-secondary"
+              onClick={() => { setNewCatOpen((v) => !v); setNewCatErr(null); }}
+              disabled={creatingCat}
+              style={{ fontSize: 12, padding: "0 12px", whiteSpace: "nowrap" }}
+              title="Dodaj novu kategoriju (vidljiva odmah na sajtu)"
+            >
+              {newCatOpen ? "✕" : "+ NOVA"}
+            </button>
+          </div>
+          {newCatOpen && (
+            <div style={{ marginTop: 8, padding: 12, background: "rgba(212,165,58,.06)", border: "1px solid rgba(212,165,58,.2)", borderRadius: 4, display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "var(--mustard)", letterSpacing: ".1em", textTransform: "uppercase" }}>
+                Nova kategorija
+              </div>
+              <input
+                className="adm-input"
+                placeholder="Naziv (latinica, npr. Brijanje)"
+                value={newCatNameLat}
+                onChange={(e) => setNewCatNameLat(e.target.value)}
+                disabled={creatingCat}
+                maxLength={40}
+              />
+              <input
+                className="adm-input"
+                placeholder="Naziv (ćirilica, opciono — kopira latinicu ako prazno)"
+                value={newCatNameSr}
+                onChange={(e) => setNewCatNameSr(e.target.value)}
+                disabled={creatingCat}
+                maxLength={40}
+              />
+              {newCatErr && <div style={{ color: "#ffb0b0", fontSize: 12 }}>{newCatErr}</div>}
+              <button type="button" className="adm-btn" onClick={createCategoryInline} disabled={creatingCat || !newCatNameLat.trim()} style={{ fontSize: 12 }}>
+                {creatingCat ? "..." : "DODAJ KATEGORIJU"}
+              </button>
+              <div style={{ fontSize: 10, color: "rgba(245,233,208,.5)" }}>
+                Slug se generiše automatski. Kategorija se odmah prikaže na sajtu.
+              </div>
+            </div>
+          )}
 
           <label className="adm-form-label">BADGE</label>
           <select className="adm-input" value={badge} onChange={(e) => setBadge(e.target.value)}>
