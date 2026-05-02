@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { changePin, upsertAnnouncement, deleteAnnouncement, updateSocialLinks } from "./actions";
+import { changePin, upsertAnnouncement, deleteAnnouncement, updateSocialLinks, createStaff, resetStaffPin, toggleStaffActive } from "./actions";
 import {
   SOCIAL_PLATFORMS,
   PLATFORM_META,
@@ -20,18 +20,31 @@ type Ann = {
   ends_at: string | null;
 };
 
+type StaffRow = {
+  id: string;
+  display_name: string | null;
+  role: string | null;
+  is_active: boolean | null;
+  email: string | null;
+  created_at: string | null;
+};
+
 export function PodesavanjaClient({
   announcements,
   email,
   icalUrl,
   socialLinks,
+  staff,
+  currentUserId,
 }: {
   announcements: Ann[];
   email: string;
   icalUrl: string;
   socialLinks: SocialLinks;
+  staff: StaffRow[];
+  currentUserId: string;
 }) {
-  const [tab, setTab] = useState<"pin" | "banner" | "social" | "info">("pin");
+  const [tab, setTab] = useState<"pin" | "banner" | "social" | "staff" | "info">("pin");
   return (
     <>
       <div className="adm-page-header">
@@ -43,11 +56,14 @@ export function PodesavanjaClient({
         </div>
       </div>
 
-      <div className="adm-toggle" style={{ marginBottom: 16 }}>
+      <div className="adm-toggle" style={{ marginBottom: 16, flexWrap: "wrap" }}>
         <button className={`adm-toggle-opt ${tab === "pin" ? "active" : ""}`} onClick={() => setTab("pin")} type="button">PIN</button>
         <button className={`adm-toggle-opt ${tab === "banner" ? "active" : ""}`} onClick={() => setTab("banner")} type="button">BANNER</button>
         <button className={`adm-toggle-opt ${tab === "social" ? "active" : ""}`} onClick={() => setTab("social")} type="button">
           <span data-sr>ДРУШТВЕНЕ</span><span data-lat>DRUŠTVENE</span>
+        </button>
+        <button className={`adm-toggle-opt ${tab === "staff" ? "active" : ""}`} onClick={() => setTab("staff")} type="button">
+          <span data-sr>ЗАПОСЛЕНИ</span><span data-lat>ZAPOSLENI</span>
         </button>
         <button className={`adm-toggle-opt ${tab === "info" ? "active" : ""}`} onClick={() => setTab("info")} type="button">INFO</button>
       </div>
@@ -55,6 +71,7 @@ export function PodesavanjaClient({
       {tab === "pin" && <PinChange />}
       {tab === "banner" && <Announcements list={announcements} />}
       {tab === "social" && <SocialLinksForm initial={socialLinks} />}
+      {tab === "staff" && <StaffManagement initial={staff} currentUserId={currentUserId} />}
       {tab === "info" && (
         <>
           <div className="adm-card" style={{ flexDirection: "column", alignItems: "stretch" }}>
@@ -356,6 +373,196 @@ function IcalCard({ icalUrl }: { icalUrl: string }) {
         ⚠ <span data-sr>Свако са линком може видети термине. Не дели.</span>
         <span data-lat>Svako sa linkom može videti termine. Ne deli.</span>
       </div>
+    </div>
+  );
+}
+
+// ─── Staff management (owner-only tab) ──────────────────────────────────
+//
+// Lists every admin_users row in the salon and lets the owner (Triša) create
+// new staff, reset their PIN, or toggle active. The owner row itself shows
+// up read-only at the top — no disable button (would self-lock-out), no PIN
+// reset (owner uses the PIN tab for self).
+function StaffManagement({ initial, currentUserId }: { initial: StaffRow[]; currentUserId: string }) {
+  const [rows, setRows] = useState<StaffRow[]>(initial);
+  const [resetFor, setResetFor] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [pending, start] = useTransition();
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  function flashError(code: string) {
+    const map: Record<string, string> = {
+      INVALID_NAME: "Ime mora imati 2-40 znakova.",
+      INVALID_PIN: "PIN mora biti 4-8 cifara.",
+      PIN_COLLISION: "Taj PIN već koristi drugi nalog. Izaberi drugi.",
+      DB_FAILED: "Greška pri snimanju.",
+      NOT_FOUND: "Nalog nije pronađen.",
+      CANT_DISABLE_SELF: "Ne možeš isključiti sebe.",
+      CANT_DISABLE_OWNER: "Vlasnički nalog se ne može isključiti.",
+      FORBIDDEN_STAFF: "Samo vlasnik.",
+    };
+    setErrMsg(map[code] ?? code);
+    setTimeout(() => setErrMsg(null), 4000);
+  }
+
+  async function handleCreate(formData: FormData) {
+    const displayName = String(formData.get("displayName") ?? "");
+    const pin = String(formData.get("pin") ?? "");
+    start(async () => {
+      const res = await createStaff({ displayName, pin });
+      if (!res.ok) {
+        flashError(res.error);
+        return;
+      }
+      // Optimistic: reload page so server-rendered list re-fetches with the new row.
+      setCreateOpen(false);
+      window.location.reload();
+    });
+  }
+
+  async function handleResetPin(formData: FormData) {
+    const id = String(formData.get("id") ?? "");
+    const newPin = String(formData.get("newPin") ?? "");
+    start(async () => {
+      const res = await resetStaffPin(id, newPin);
+      if (!res.ok) {
+        flashError(res.error);
+        return;
+      }
+      setResetFor(null);
+    });
+  }
+
+  async function handleToggle(id: string) {
+    start(async () => {
+      const res = await toggleStaffActive(id);
+      if (!res.ok) {
+        flashError(res.error);
+        return;
+      }
+      setRows((prev) => prev.map((r) => (r.id === id ? { ...r, is_active: res.isActive } : r)));
+    });
+  }
+
+  return (
+    <div className="adm-card" style={{ flexDirection: "column", alignItems: "stretch", gap: 12 }}>
+      {errMsg && (
+        <div className="adm-banner" style={{ background: "rgba(255,80,80,.12)", color: "#ffb0b0", padding: 10, borderRadius: 6 }}>
+          {errMsg}
+        </div>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "var(--mustard)", letterSpacing: ".1em", textTransform: "uppercase" }}>
+          <span data-sr>ЗАПОСЛЕНИ</span>
+          <span data-lat>ZAPOSLENI</span>
+        </div>
+        <button type="button" className="adm-btn-primary" onClick={() => setCreateOpen(true)} style={{ fontSize: 12 }}>
+          + <span data-sr>ДОДАЈ</span><span data-lat>DODAJ</span>
+        </button>
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="adm-empty" style={{ padding: 16 }}>
+          <span data-sr>Још нема запослених.</span>
+          <span data-lat>Još nema zaposlenih.</span>
+        </div>
+      ) : (
+        <div>
+          {rows.map((r) => {
+            const isOwnerRow = r.role !== "staff";
+            const isMe = r.id === currentUserId;
+            return (
+              <div key={r.id} className="adm-row" style={{ alignItems: "center", paddingTop: 10, paddingBottom: 10, opacity: r.is_active ? 1 : 0.4 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: "var(--cream)", fontWeight: 600, display: "flex", gap: 8, alignItems: "center" }}>
+                    {r.display_name || r.email || "—"}
+                    {isOwnerRow && <span style={{ background: "var(--mustard)", color: "var(--brown-950)", fontSize: 9, padding: "1px 5px", borderRadius: 3, fontWeight: 700 }}>ВЛАСНИК</span>}
+                    {!isOwnerRow && !r.is_active && <span style={{ background: "rgba(255,80,80,.18)", color: "#ffb0b0", fontSize: 9, padding: "1px 5px", borderRadius: 3 }}>ИСКЉУЧЕН</span>}
+                    {isMe && <span style={{ opacity: 0.4, fontSize: 10 }}>(ja)</span>}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {!isOwnerRow && (
+                    <>
+                      <button type="button" className="adm-btn-secondary" disabled={pending} onClick={() => setResetFor(r.id)} style={{ fontSize: 11, padding: "6px 10px" }}>
+                        🔑 PIN
+                      </button>
+                      <button type="button" className="adm-btn-secondary" disabled={pending || isMe} onClick={() => handleToggle(r.id)} style={{ fontSize: 11, padding: "6px 10px" }}>
+                        {r.is_active ? "⏸" : "▶"}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {createOpen && (
+        <form action={handleCreate} style={{ borderTop: "1px solid rgba(245,233,208,.1)", paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ fontSize: 12, color: "var(--mustard)", letterSpacing: ".1em", textTransform: "uppercase" }}>
+            <span data-sr>НОВИ ЗАПОСЛЕНИ</span>
+            <span data-lat>NOVI ZAPOSLENI</span>
+          </div>
+          <input
+            type="text"
+            name="displayName"
+            placeholder="Ime (npr. Marko)"
+            className="adm-input"
+            minLength={2}
+            maxLength={40}
+            required
+          />
+          <input
+            type="text"
+            name="pin"
+            inputMode="numeric"
+            pattern="\d{4,8}"
+            placeholder="PIN (4-8 cifara)"
+            className="adm-input"
+            required
+          />
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" className="adm-btn-secondary" onClick={() => setCreateOpen(false)} disabled={pending} style={{ flex: 1 }}>
+              <span data-sr>ОТКАЖИ</span><span data-lat>OTKAŽI</span>
+            </button>
+            <button type="submit" className="adm-btn-primary" disabled={pending} style={{ flex: 1 }}>
+              <span data-sr>САЧУВАЈ</span><span data-lat>SAČUVAJ</span>
+            </button>
+          </div>
+        </form>
+      )}
+
+      {resetFor && (
+        <form action={handleResetPin} style={{ borderTop: "1px solid rgba(245,233,208,.1)", paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ fontSize: 12, color: "var(--mustard)", letterSpacing: ".1em", textTransform: "uppercase" }}>
+            <span data-sr>НОВИ PIN ЗА: </span>
+            <span data-lat>NOVI PIN ZA: </span>
+            <span style={{ color: "var(--cream)" }}>{rows.find((r) => r.id === resetFor)?.display_name ?? "—"}</span>
+          </div>
+          <input type="hidden" name="id" value={resetFor} />
+          <input
+            type="text"
+            name="newPin"
+            inputMode="numeric"
+            pattern="\d{4,8}"
+            placeholder="PIN (4-8 cifara)"
+            className="adm-input"
+            required
+            autoFocus
+          />
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" className="adm-btn-secondary" onClick={() => setResetFor(null)} disabled={pending} style={{ flex: 1 }}>
+              <span data-sr>ОТКАЖИ</span><span data-lat>OTKAŽI</span>
+            </button>
+            <button type="submit" className="adm-btn-primary" disabled={pending} style={{ flex: 1 }}>
+              <span data-sr>САЧУВАЈ</span><span data-lat>SAČUVAJ</span>
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

@@ -4,16 +4,24 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { lockAdmin } from "@/lib/auth/admin-actions";
-import type { AdminSession } from "@/lib/auth/admin-session";
+import { isStaff, type AdminSession } from "@/lib/auth/admin-role";
 
-const TABS = [
+const TABS_OWNER = [
   { href: "/admin/termini", icon: "📅", label_sr: "ТЕРМИНИ", label_lat: "TERMINI" },
   { href: "/admin/usluge", icon: "✂", label_sr: "УСЛУГЕ", label_lat: "USLUGE" },
   { href: "/admin/shop", icon: "🛒", label_sr: "SHOP", label_lat: "SHOP" },
   { href: "/admin/musterije", icon: "👤", label_sr: "МУШT.", label_lat: "MUŠT." },
 ] as const;
 
-const MORE_LINKS = [
+// Staff: termini + statistike + musterije only. No shop / usluge / sajt /
+// galerija / blokirano / podesavanja — those are owner-only.
+const TABS_STAFF = [
+  { href: "/admin/termini", icon: "📅", label_sr: "ТЕРМИНИ", label_lat: "TERMINI" },
+  { href: "/admin/statistike", icon: "📊", label_sr: "СТАТ.", label_lat: "STAT." },
+  { href: "/admin/musterije", icon: "👤", label_sr: "МУШT.", label_lat: "MUŠT." },
+] as const;
+
+const MORE_OWNER = [
   { href: "/admin/galerija", icon: "🖼", label_sr: "ГАЛЕРИЈА", label_lat: "GALERIJA" },
   { href: "/admin/sajt", icon: "📝", label_sr: "САЈТ", label_lat: "SAJT" },
   { href: "/admin/blokirano", icon: "🚫", label_sr: "БЛОКИРАНО", label_lat: "BLOKIRANO" },
@@ -25,6 +33,10 @@ export function AdminShell({ session, children }: { session: AdminSession; child
   const path = usePathname();
   const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
+
+  const staff = isStaff(session);
+  const TABS = staff ? TABS_STAFF : TABS_OWNER;
+  const MORE_LINKS = staff ? [] : MORE_OWNER;
 
   const titleMap: Record<string, { sr: string; lat: string }> = {
     "/admin/termini": { sr: "ТЕРМИНИ", lat: "TERMINI" },
@@ -76,6 +88,7 @@ export function AdminShell({ session, children }: { session: AdminSession; child
             </Link>
           );
         })}
+        {/* Staff has no extras menu; the … button shows only logout */}
         <button type="button" className="adm-tab-item" onClick={() => setMoreOpen(true)}>
           <div className="adm-tab-icon">⋯</div>
           <div className="adm-tab-label">
@@ -112,7 +125,8 @@ export function AdminShell({ session, children }: { session: AdminSession; child
                 </button>
               </li>
               <li className="adm-sheet-meta">
-                <span style={{ opacity: 0.4 }}>{session.email}</span>
+                <span style={{ opacity: 0.6, fontWeight: 600 }}>{session.displayName}</span>
+                <span style={{ opacity: 0.35 }}> · {staff ? "Запослен / Zaposlen" : "Власник / Vlasnik"}</span>
               </li>
             </ul>
           </div>

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/with-admin";
+import { isStaff } from "@/lib/auth/admin-session";
 import { todayKey } from "@/lib/datetime";
 import { sendBookingConfirmation } from "@/lib/email/templates";
 import { computeBlockedSlots, rangesOverlap, toMinutes, type Range } from "@/lib/booking/slots";
@@ -58,16 +59,31 @@ type Status = "confirmed" | "done" | "no_show" | "cancelled" | "pending";
 export async function updateBookingStatus(bookingId: string, status: Status) {
   const session = await requireAdmin();
   const sb = createAdminClient();
+  const staffMode = isStaff(session);
 
   const { data: booking, error: bErr } = await sb
     .from("bookings")
-    .select("id, customer_id")
+    .select("id, customer_id, staff_id")
     .eq("id", bookingId)
     .eq("salon_id", session.salonId)
     .single();
   if (bErr || !booking) return { ok: false as const, error: "NOT_FOUND" };
 
-  await sb.from("bookings").update({ status }).eq("id", bookingId);
+  // Staff visibility scope: can only mutate unclaimed bookings or own.
+  // Owner can mutate anything (no extra check needed).
+  if (staffMode && booking.staff_id !== null && booking.staff_id !== session.adminUserId) {
+    return { ok: false as const, error: "FORBIDDEN_NOT_YOURS" };
+  }
+
+  // Stamping rule: when a booking transitions to 'done', credit the user
+  // who is finishing it — but only if it has no staff_id yet. If it's
+  // already stamped (e.g. walk-in by Marko), don't overwrite. Owner
+  // re-marking somebody else's done booking does NOT change the credit.
+  const updates: Record<string, unknown> = { status };
+  if (status === "done" && booking.staff_id === null) {
+    updates.staff_id = session.adminUserId;
+  }
+  await sb.from("bookings").update(updates).eq("id", bookingId);
 
   if (status === "no_show" && booking.customer_id) {
     const { data: c } = await sb
@@ -186,6 +202,12 @@ export async function createWalkInBooking(input: {
   }
   if (!customerId) return { ok: false as const, error: "CUSTOMER_FAILED" };
 
+  // When a staff member creates a walk-in, they're literally claiming the
+  // customer at the chair right now — stamp staff_id immediately. Owner
+  // walk-ins stay unassigned (Triša may pass the customer to staff later;
+  // DONE click will stamp whoever finishes).
+  const initialStaffId = isStaff(session) ? session.adminUserId : null;
+
   const { data: booking, error } = await sb
     .from("bookings")
     .insert({
@@ -197,6 +219,7 @@ export async function createWalkInBooking(input: {
       status: "confirmed",
       notes: input.notes ?? null,
       utm_source: "walk-in",
+      staff_id: initialStaffId,
     })
     .select("id")
     .single();

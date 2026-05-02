@@ -158,6 +158,35 @@
   text-overflow: ellipsis;
 }
 
+/* Multi-staff: small inline badge under the booking row meta showing who
+   the booking is assigned to. Three states are colour-coded:
+     unassigned (no staff_id) — neutral grey + "СЛОБОДНО"
+     own        (staff_id = me) — mustard accent + "ЈА"
+     other      (staff_id = colleague) — cream tone + display_name
+*/
+.trm-row-assignee {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-left: 2px;
+}
+.trm-row-assignee.unassigned {
+  background: rgba(245, 233, 208, 0.08);
+  color: rgba(245, 233, 208, 0.55);
+}
+.trm-row-assignee.own {
+  background: var(--mustard);
+  color: var(--brown-950);
+}
+.trm-row-assignee.other {
+  background: rgba(245, 233, 208, 0.12);
+  color: var(--cream);
+}
+
 .trm-row-side {
   display: flex;
   flex-direction: column;

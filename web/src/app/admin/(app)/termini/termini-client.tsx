@@ -19,17 +19,20 @@ type Service = {
   duration_min?: number | null;
   price?: number | null;
 };
+type Staff = { id?: string | null; display_name?: string | null };
 type Booking = {
   id: string;
   time_slot: string;
   status: string;
   surcharge_applied?: boolean | null;
   notes?: string | null;
+  staff_id?: string | null;
+  staff?: Staff | Staff[] | null;
   customers?: Customer | Customer[] | null;
   services?: Service | Service[] | null;
 };
-type WeekBooking = { id: string; date: string; time_slot: string; status: string; services?: Service | Service[] | null };
-type MonthBooking = { date: string; status: string };
+type WeekBooking = { id: string; date: string; time_slot: string; status: string; staff_id?: string | null; services?: Service | Service[] | null };
+type MonthBooking = { date: string; status: string; staff_id?: string | null };
 type WH = Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", { open: string; close: string } | null>;
 
 const SR_DAYS_SHORT = ["ПН", "УТ", "СР", "ЧТ", "ПТ", "СУ", "НД"];
@@ -52,6 +55,8 @@ export function TerminiClient({
   monthFrom,
   workingHours,
   visitCounts,
+  currentUserId,
+  isStaffView,
 }: {
   todayBookings: Booking[];
   weekBookings: WeekBooking[];
@@ -62,6 +67,8 @@ export function TerminiClient({
   monthFrom: string;
   workingHours: WH | null;
   visitCounts: Record<string, number>;
+  currentUserId: string;
+  isStaffView: boolean;
 }) {
   const [view, setView] = useState<"today" | "week">("today");
   const [selected, setSelected] = useState<Booking | null>(null);
@@ -148,7 +155,7 @@ export function TerminiClient({
           ) : (
             <div className="trm-timeline">
               {todayBookings.map((b) => (
-                <TimelineRow key={b.id} booking={b} isNext={b.id === nextId} onSelect={() => setSelected(b)} />
+                <TimelineRow key={b.id} booking={b} isNext={b.id === nextId} currentUserId={currentUserId} onSelect={() => setSelected(b)} />
               ))}
             </div>
           )}
@@ -192,10 +199,25 @@ export function TerminiClient({
 }
 
 // ── TIMELINE ROW ──────────────────────────────────
-function TimelineRow({ booking, isNext, onSelect }: { booking: Booking; isNext: boolean; onSelect: () => void }) {
+function TimelineRow({ booking, isNext, currentUserId, onSelect }: { booking: Booking; isNext: boolean; currentUserId: string; onSelect: () => void }) {
   const customer = unwrap(booking.customers);
   const service = unwrap(booking.services);
+  const staff = unwrap(booking.staff);
   const isDone = booking.status === "done" || booking.status === "no_show" || booking.status === "cancelled";
+
+  // Three assignee states drive a small inline badge under the row meta:
+  //   null staff_id → unassigned (anyone can claim by marking DONE)
+  //   own           → "Ja" highlighted in mustard
+  //   other         → display_name of the assigned barber
+  const assigneeBadge = (() => {
+    if (!booking.staff_id) {
+      return <span className="trm-row-assignee unassigned"><span data-sr>СЛОБОДНО</span><span data-lat>SLOBODNO</span></span>;
+    }
+    if (booking.staff_id === currentUserId) {
+      return <span className="trm-row-assignee own"><span data-sr>ЈА</span><span data-lat>JA</span></span>;
+    }
+    return <span className="trm-row-assignee other">{staff?.display_name ?? "—"}</span>;
+  })();
 
   return (
     <div className={`trm-row ${isNext ? "next" : ""} ${isDone ? "done" : ""}`} onClick={onSelect}>
@@ -212,6 +234,8 @@ function TimelineRow({ booking, isNext, onSelect }: { booking: Booking; isNext: 
           <span data-sr>{service?.name_sr ?? ""}</span>
           <span data-lat>{service?.name_lat ?? ""}</span>
           <span style={{ opacity: 0.5 }}> · {service?.price ?? 0} RSD</span>
+          <span style={{ opacity: 0.4 }}> · </span>
+          {assigneeBadge}
         </div>
       </div>
       <div className="trm-row-side">

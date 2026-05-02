@@ -5,6 +5,7 @@ import Link from "next/link";
 type Series = { label: string; value: number; key: string; isToday: boolean };
 type TopService = { name_sr: string; name_lat: string; count: number; revenue: number };
 type Retention = { active: number; atRisk: number; churned: number };
+type StaffBreakdownRow = { id: string; display_name: string; revenue: number; count: number };
 
 export function StatistikeClient(props: {
   period: "day" | "week" | "month";
@@ -20,8 +21,10 @@ export function StatistikeClient(props: {
   topServices: TopService[];
   retention: Retention;
   ordersCount: number;
+  isStaffView: boolean;
+  staffBreakdown: StaffBreakdownRow[] | null;
 }) {
-  const { period, totalRevenue, change, doneCount, cancelledCount, cancelledPct, avgPerBooking, newCustomers, series, topServices, retention, ordersCount } = props;
+  const { period, totalRevenue, change, doneCount, cancelledCount, cancelledPct, avgPerBooking, newCustomers, series, topServices, retention, ordersCount, isStaffView, staffBreakdown } = props;
   const max = Math.max(1, ...series.map((s) => s.value));
 
   const periodLabelSr = period === "day" ? "ДАНАС" : period === "week" ? "ОВА НЕДЕЉА" : "ОВАЈ МЕСЕЦ";
@@ -35,9 +38,15 @@ export function StatistikeClient(props: {
       <div className="adm-page-header">
         <div>
           <div className="adm-page-title">
-            <span data-sr>СТАТИСТИКА</span>
-            <span data-lat>STATISTIKA</span>
+            <span data-sr>{isStaffView ? "МОЈА СТАТИСТИКА" : "СТАТИСТИКА"}</span>
+            <span data-lat>{isStaffView ? "MOJA STATISTIKA" : "STATISTIKA"}</span>
           </div>
+          {isStaffView && (
+            <div className="adm-page-subtitle">
+              <span data-sr>Само термини које си завршио.</span>
+              <span data-lat>Samo termini koje si završio.</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -168,10 +177,32 @@ export function StatistikeClient(props: {
         </div>
       </div>
 
-      {ordersCount > 0 && (
+      {ordersCount > 0 && !isStaffView && (
         <div className="adm-banner info" style={{ marginTop: 12 }}>
           🛒 <span data-sr>{ordersCount} порудж. у овом периоду — види /admin/shop/porudzbine</span>
           <span data-lat>{ordersCount} porudž. u ovom periodu — vidi /admin/shop/porudzbine</span>
+        </div>
+      )}
+
+      {/* Owner-only: how revenue split across staff members in this period.
+          Hidden when there's no breakdown (single-staff or no done bookings). */}
+      {!isStaffView && staffBreakdown && staffBreakdown.length > 0 && (
+        <div className="stat-card-block">
+          <div className="stat-card-title">
+            <span data-sr>ЗАРАДА ПО ОСОБИ</span>
+            <span data-lat>ZARADA PO OSOBI</span>
+          </div>
+          <div>
+            {staffBreakdown.map((row) => (
+              <div key={row.id} className="top-service-row">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="top-service-name">{row.display_name}</div>
+                </div>
+                <div className="top-service-count">{row.count}×</div>
+                <div className="top-service-revenue">{row.revenue.toLocaleString("sr-RS")} <span>RSD</span></div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </>

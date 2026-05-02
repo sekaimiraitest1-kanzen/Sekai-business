@@ -1,5 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import type { AdminRole, AdminSession } from "./admin-role";
+
+export type { AdminRole, AdminSession } from "./admin-role";
+export { isOwner, isStaff } from "./admin-role";
 
 const COOKIE_NAME = "trisha_admin";
 const SESSION_TTL_HOURS = 24;
@@ -9,13 +13,6 @@ function getSecret(): Uint8Array {
   if (!raw) throw new Error("SUPABASE_SERVICE_ROLE_KEY required for admin session signing");
   return new TextEncoder().encode(raw);
 }
-
-export type AdminSession = {
-  adminUserId: string;
-  salonId: string;
-  email: string;
-  role: "admin" | "superadmin";
-};
 
 export async function createSession(session: AdminSession): Promise<string> {
   const token = await new SignJWT({ ...session })
@@ -33,7 +30,8 @@ export async function verifyToken(token: string): Promise<AdminSession | null> {
       adminUserId: payload.adminUserId as string,
       salonId: payload.salonId as string,
       email: payload.email as string,
-      role: payload.role as "admin" | "superadmin",
+      role: payload.role as AdminRole,
+      displayName: (payload.displayName as string) ?? (payload.email as string) ?? "Admin",
     };
   } catch {
     return null;

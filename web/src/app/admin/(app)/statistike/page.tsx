@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/with-admin";
+import { isStaff } from "@/lib/auth/admin-session";
 import { periodRange, previousRange, formatDateKey, todayKey, nowBelgrade } from "@/lib/datetime";
 import { StatistikeClient } from "./statistike-client";
 
@@ -12,21 +13,31 @@ const fmt = formatDateKey;
 export default async function StatistikePage({ searchParams }: { searchParams: { period?: string } }) {
   const session = await requireAdmin();
   const sb = createAdminClient();
+  const staffMode = isStaff(session);
 
   const period: Period = searchParams.period === "day" ? "day" : searchParams.period === "month" ? "month" : "week";
 
   const cur = periodRange(period);
   const prev = previousRange(period, cur);
 
+  // For staff: scope every booking aggregate by `staff_id = me`. Only their
+  // own completions count toward "moja zarada" / "moji termini".
+  let curBookingsQ = sb.from("bookings")
+    .select("status, date, time_slot, staff_id, services(name_sr, name_lat, price)")
+    .eq("salon_id", session.salonId)
+    .gte("date", fmt(cur.from)).lte("date", fmt(cur.to));
+  let prevBookingsQ = sb.from("bookings")
+    .select("status, staff_id, services(price)")
+    .eq("salon_id", session.salonId)
+    .gte("date", fmt(prev.from)).lte("date", fmt(prev.to));
+  if (staffMode) {
+    curBookingsQ = curBookingsQ.eq("staff_id", session.adminUserId);
+    prevBookingsQ = prevBookingsQ.eq("staff_id", session.adminUserId);
+  }
+
   const [curBookings, prevBookings, newCustomers, allCustomers, orders] = await Promise.all([
-    sb.from("bookings")
-      .select("status, date, time_slot, services(name_sr, name_lat, price)")
-      .eq("salon_id", session.salonId)
-      .gte("date", fmt(cur.from)).lte("date", fmt(cur.to)),
-    sb.from("bookings")
-      .select("status, services(price)")
-      .eq("salon_id", session.salonId)
-      .gte("date", fmt(prev.from)).lte("date", fmt(prev.to)),
+    curBookingsQ,
+    prevBookingsQ,
     sb.from("customers")
       .select("id")
       .eq("salon_id", session.salonId)
@@ -37,6 +48,41 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
       .gte("created_at", cur.from.toISOString())
       .lte("created_at", new Date(cur.to.getTime() + 86400000).toISOString()),
   ]);
+
+  // Owner-only: per-staff revenue breakdown for the current period. Lets
+  // Triša see "I made 60K, Marko made 45K this week" at a glance. Only
+  // computed when role is owner — staff already see their own number.
+  let staffBreakdown: { id: string; display_name: string; revenue: number; count: number }[] | null = null;
+  if (!staffMode) {
+    const [bookingsForBreakdown, staffRows] = await Promise.all([
+      sb.from("bookings")
+        .select("staff_id, services(price)")
+        .eq("salon_id", session.salonId)
+        .eq("status", "done")
+        .not("staff_id", "is", null)
+        .gte("date", fmt(cur.from)).lte("date", fmt(cur.to)),
+      sb.from("admin_users")
+        .select("id, display_name")
+        .eq("salon_id", session.salonId),
+    ]);
+    const idToName = new Map<string, string>(
+      (staffRows.data ?? []).map((r) => [r.id as string, (r.display_name as string) ?? "—"])
+    );
+    const agg = new Map<string, { revenue: number; count: number }>();
+    type BR = { staff_id: string | null; services: { price?: number | null } | { price?: number | null }[] | null };
+    for (const b of (bookingsForBreakdown.data ?? []) as BR[]) {
+      if (!b.staff_id) continue;
+      const svc = b.services;
+      const p = (Array.isArray(svc) ? svc[0]?.price : svc?.price) ?? 0;
+      const cur = agg.get(b.staff_id) ?? { revenue: 0, count: 0 };
+      cur.revenue += p;
+      cur.count += 1;
+      agg.set(b.staff_id, cur);
+    }
+    staffBreakdown = Array.from(agg.entries())
+      .map(([id, v]) => ({ id, display_name: idToName.get(id) ?? "—", revenue: v.revenue, count: v.count }))
+      .sort((a, b) => b.revenue - a.revenue);
+  }
 
   const bookings = curBookings.data ?? [];
   const prevB = prevBookings.data ?? [];
@@ -152,6 +198,8 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
       topServices={topServices}
       retention={{ active, atRisk, churned }}
       ordersCount={ordersData.length}
+      isStaffView={staffMode}
+      staffBreakdown={staffBreakdown}
     />
   );
 }
