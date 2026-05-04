@@ -349,7 +349,27 @@
   border: 1px solid rgba(245, 233, 208, 0.04);
   position: relative;
   font-family: 'JetBrains Mono', monospace;
-  transition: transform 0.1s;
+  transition: transform 0.1s, box-shadow 0.15s;
+  /* Buttons inherit font/color from form defaults; reset so heatmap reads
+     the same whether a cell is rendered as <div> (legacy) or <button>. */
+  padding: 0;
+  color: inherit;
+}
+.trm-cal-cell.clickable {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.trm-cal-cell.clickable:hover {
+  transform: translateY(-1px);
+}
+.trm-cal-cell.clickable:active {
+  transform: scale(0.96);
+}
+.trm-cal-cell.selected {
+  outline: 2px solid var(--mustard);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 4px rgba(212, 165, 58, 0.18);
+  z-index: 1;
 }
 .trm-cal-cell.empty {
   background: transparent;
@@ -402,6 +422,56 @@
   color: rgba(245, 233, 208, 0.3);
   letter-spacing: 0.04em;
   text-align: center;
+}
+
+/* ── DAY DRILL-IN (week view → tap a day) ─────────── */
+.trm-day-drill {
+  margin-top: 18px;
+  border-top: 1px solid rgba(245, 233, 208, 0.08);
+  padding-top: 14px;
+  animation: trmDayDrillIn 0.18s ease-out;
+}
+@keyframes trmDayDrillIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.trm-day-drill-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.trm-day-drill-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-style: italic;
+  color: var(--cream);
+}
+.trm-day-drill-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-style: normal;
+  color: rgba(245, 233, 208, 0.5);
+  letter-spacing: 0.04em;
+}
+.trm-day-drill-close {
+  background: transparent;
+  border: 1px solid rgba(245, 233, 208, 0.15);
+  color: rgba(245, 233, 208, 0.6);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.trm-day-drill-close:hover {
+  color: var(--cream);
+  border-color: rgba(245, 233, 208, 0.3);
 }
 
 /* ── DETAIL SHEET ─────────────────────────────────── */

@@ -11,6 +11,40 @@ import { bookingCancelToken } from "@/lib/booking/cancel-token";
 import { normalizePhone } from "@/lib/phone";
 
 /**
+ * Returns every booking for a single date, in the same shape the TODAY
+ * view uses, so the week-view calendar can drill into any day. Honors
+ * staff-vs-owner scope (staff sees own + unassigned, owner sees all).
+ */
+export async function getDayBookings(date: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return { ok: false as const, error: "INVALID_DATE" as const };
+  }
+  const session = await requireAdmin();
+  const sb = createAdminClient();
+  const staffMode = isStaff(session);
+  const staffOr = staffMode
+    ? `staff_id.is.null,staff_id.eq.${session.adminUserId}`
+    : null;
+
+  let q = sb
+    .from("bookings")
+    .select(
+      "id, time_slot, status, surcharge_applied, notes, staff_id, staff:admin_users!bookings_staff_id_fkey(id, display_name), customers(id, name, phone, no_show_flag, no_show_count, created_at), services(name_sr, name_lat, duration_min, price)"
+    )
+    .eq("salon_id", session.salonId)
+    .eq("date", date)
+    .order("time_slot", { ascending: true });
+  if (staffOr) q = q.or(staffOr);
+
+  const { data, error } = await q;
+  if (error) {
+    console.error("[getDayBookings] failed:", error.message);
+    return { ok: false as const, error: "DB_FAILED" as const };
+  }
+  return { ok: true as const, bookings: data ?? [] };
+}
+
+/**
  * Same semantics as the public `getTakenSlots`: returns every grid slot that
  * would conflict with an existing booking, an admin block, or a whole-day
  * block — accounting for the candidate service's duration so a 30-min booking

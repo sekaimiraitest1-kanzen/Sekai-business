@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { updateBookingStatus } from "./actions";
+import { updateBookingStatus, getDayBookings } from "./actions";
 import { todayKey } from "@/lib/datetime";
 
 type Customer = {
@@ -73,6 +73,37 @@ export function TerminiClient({
   const [view, setView] = useState<"today" | "week">("today");
   const [selected, setSelected] = useState<Booking | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // Week-view drill-in: clicking any cell in the month heatmap loads that
+  // date's bookings on demand and shows them inline below the calendar.
+  // We keep the calendar mounted so Triša can hop between days without
+  // collapsing the month view.
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [dayBookings, setDayBookings] = useState<Booking[] | null>(null);
+  const [dayLoading, setDayLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedDay) {
+      setDayBookings(null);
+      return;
+    }
+    let cancelled = false;
+    setDayLoading(true);
+    getDayBookings(selectedDay).then((res) => {
+      if (cancelled) return;
+      setDayBookings(res.ok ? (res.bookings as Booking[]) : []);
+      setDayLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDay]);
+
+  // Switching back to TODAY clears any drill-in so it doesn't reappear next
+  // time the user re-enters week view.
+  useEffect(() => {
+    if (view === "today") setSelectedDay(null);
+  }, [view]);
 
   // Today stats
   const nowStr = new Date().toTimeString().slice(0, 5);
@@ -171,7 +202,25 @@ export function TerminiClient({
             <span data-sr>{weekLabel.srShort} · {weekBookings.length} термина</span>
             <span data-lat>{weekLabel.latShort} · {weekBookings.length} termina</span>
           </div>
-          <MonthHeatmap monthFrom={monthFrom} monthBookings={monthBookings} weekFrom={weekFrom} weekTo={weekTo} workingHours={workingHours} />
+          <MonthHeatmap
+            monthFrom={monthFrom}
+            monthBookings={monthBookings}
+            weekFrom={weekFrom}
+            weekTo={weekTo}
+            workingHours={workingHours}
+            selectedDay={selectedDay}
+            onDayClick={(key) => setSelectedDay((cur) => (cur === key ? null : key))}
+          />
+          {selectedDay && (
+            <DayDrillIn
+              date={selectedDay}
+              bookings={dayBookings}
+              loading={dayLoading}
+              currentUserId={currentUserId}
+              onSelect={(b) => setSelected(b)}
+              onClose={() => setSelectedDay(null)}
+            />
+          )}
         </>
       )}
 
@@ -262,12 +311,14 @@ function StatPill({ value, labelSr, labelLat, small = false }: { value: string; 
 }
 
 // ── MONTH HEATMAP ─────────────────────────────────
-function MonthHeatmap({ monthFrom, monthBookings, weekFrom, weekTo, workingHours }: {
+function MonthHeatmap({ monthFrom, monthBookings, weekFrom, weekTo, workingHours, selectedDay, onDayClick }: {
   monthFrom: string;
   monthBookings: MonthBooking[];
   weekFrom: string;
   weekTo: string;
   workingHours: WH | null;
+  selectedDay: string | null;
+  onDayClick: (key: string) => void;
 }) {
   const first = new Date(monthFrom + "T00:00:00");
   const monthName = first.getMonth();
@@ -335,27 +386,90 @@ function MonthHeatmap({ monthFrom, monthBookings, weekFrom, weekTo, workingHours
         {Array.from({ length: startDow }, (_, i) => <div key={`e${i}`} className="trm-cal-cell empty" />)}
         {days.map((d) => {
           const intensity = Math.round((d.count / max) * 100);
+          const isSelected = d.key === selectedDay;
           const cls = [
             "trm-cal-cell",
+            "clickable",
             d.count > 0 ? "filled" : "",
             d.isClosed ? "closed" : "",
             d.isInWeek ? "in-week" : "",
             d.isToday ? "today" : "",
+            isSelected ? "selected" : "",
           ].filter(Boolean).join(" ");
           const bg = d.count > 0 ? `rgba(212,165,58,${0.18 + (intensity / 100) * 0.6})` : "";
           return (
-            <div key={d.key} className={cls} style={d.count > 0 ? { background: bg } : undefined}>
+            <button
+              key={d.key}
+              type="button"
+              className={cls}
+              style={d.count > 0 ? { background: bg } : undefined}
+              onClick={() => onDayClick(d.key)}
+              aria-pressed={isSelected}
+              aria-label={`${d.day}. — ${d.count} ${d.count === 1 ? "termin" : "termina"}`}
+            >
               <div className="trm-cal-day">{d.day}</div>
               {d.count > 0 && <div className="trm-cal-count">{d.count}</div>}
-            </div>
+            </button>
           );
         })}
       </div>
 
       <div className="trm-cal-legend">
-        <span data-sr>Гушће боје → виши број резервација</span>
-        <span data-lat>Gušće boje → veći broj rezervacija</span>
+        <span data-sr>Тапни дан да видиш термине · гушће боје → виши број</span>
+        <span data-lat>Tapni dan da vidiš termine · gušće boje → veći broj</span>
       </div>
+    </div>
+  );
+}
+
+// ── DAY DRILL-IN (week view → tap-a-day) ──────────
+//
+// Inline panel that appears below the month heatmap when Triša taps a
+// day cell. Mirrors the TODAY view's TimelineRow rendering so any day
+// reads at a glance and clicking a row opens the same detail sheet
+// with status-change actions.
+function DayDrillIn({ date, bookings, loading, currentUserId, onSelect, onClose }: {
+  date: string;
+  bookings: Booking[] | null;
+  loading: boolean;
+  currentUserId: string;
+  onSelect: (b: Booking) => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="trm-day-drill">
+      <div className="trm-day-drill-header">
+        <div className="trm-day-drill-title">
+          <span data-sr>{formatLongDate(date, "sr")}</span>
+          <span data-lat>{formatLongDate(date, "lat")}</span>
+          {bookings && (
+            <span className="trm-day-drill-count">
+              {" · "}
+              {bookings.length}
+              <span data-sr> термина</span>
+              <span data-lat> termina</span>
+            </span>
+          )}
+        </div>
+        <button type="button" className="trm-day-drill-close" onClick={onClose} aria-label="Zatvori">×</button>
+      </div>
+      {loading ? (
+        <div className="adm-empty" style={{ padding: 16, fontSize: 12, color: "rgba(245,233,208,.5)" }}>
+          <span data-sr>Учитавам…</span>
+          <span data-lat>Učitavam…</span>
+        </div>
+      ) : !bookings || bookings.length === 0 ? (
+        <div className="adm-empty" style={{ padding: 16 }}>
+          <span data-sr>Нема термина.</span>
+          <span data-lat>Nema termina.</span>
+        </div>
+      ) : (
+        <div className="trm-timeline">
+          {bookings.map((b) => (
+            <TimelineRow key={b.id} booking={b} isNext={false} currentUserId={currentUserId} onSelect={() => onSelect(b)} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
