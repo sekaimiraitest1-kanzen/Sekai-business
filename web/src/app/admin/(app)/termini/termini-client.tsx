@@ -337,7 +337,11 @@ function MonthHeatmap({ monthFrom, monthBookings, weekFrom, weekTo, workingHours
   const todayStr = todayKey();
   for (let d = 1; d <= daysInMonth; d++) {
     const dt = new Date(year, monthName, d);
-    const key = dt.toISOString().split("T")[0];
+    // TZ-safe key: never go through .toISOString(), which converts to UTC and
+    // shifts the date back one day in any positive-offset timezone (Belgrade
+    // UTC+2 → cell labeled "7" was queried as "2026-05-06"). Build the key
+    // from the literal y/m/d the cell represents.
+    const key = `${year}-${String(monthName + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     const dow = dt.getDay();
     const dayKey = (["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const)[dow];
     const isClosed = workingHours ? workingHours[dayKey] === null : false;

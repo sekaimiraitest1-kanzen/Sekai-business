@@ -58,7 +58,7 @@ export async function sendBookingConfirmation(input: {
     html: `
       <div style="font-family: Inter, sans-serif; max-width: 540px; margin: 0 auto; color: #1A0F05; background: #FAF3E3; padding: 32px 24px;">
         <div style="text-align: center; margin-bottom: 24px;">
-          <div style="width: 56px; height: 56px; background: #D4A53A; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, serif; font-size: 28px; font-weight: 900; font-style: italic; color: #1A0F05;">Т</div>
+          <img src="https://berbernicatrisa.com/logo-120.png" alt="Berbernica Triša" width="64" height="64" style="display: inline-block; width: 64px; height: 64px; border-radius: 50%; border: 0;" />
           <div style="font-family: Georgia, serif; font-size: 18px; font-style: italic; color: #5C3A22; margin-top: 8px;">Berbernica Triša · Batajnica</div>
         </div>
 
@@ -118,6 +118,9 @@ export async function sendOwnerNewBookingEmail(input: {
     subject: `Nov termin · ${input.date} ${input.timeSlot} · ${input.customerName}`,
     html: `
       <div style="font-family: Inter, sans-serif; max-width: 480px; margin: 0 auto; color: #1A0F05; background: #FAF3E3; padding: 24px;">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <img src="https://berbernicatrisa.com/logo-120.png" alt="Berbernica Triša" width="48" height="48" style="display: inline-block; width: 48px; height: 48px; border-radius: 50%; border: 0;" />
+        </div>
         <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5C3A22; letter-spacing: .15em; text-transform: uppercase; margin-bottom: 8px;">${input.source === "WEB" ? "novi termin · sajt" : "novi termin · walk-in"}</div>
         <h1 style="font-family: Georgia, serif; font-style: italic; font-size: 22px; margin: 0 0 16px 0;">${input.customerName}</h1>
         <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 16px;">
@@ -163,7 +166,8 @@ export async function sendOrderEmail(input: {
     html: `
       <div style="font-family: Inter, sans-serif; max-width: 540px; margin: 0 auto; color: #1A0F05; background: #FAF3E3; padding: 32px 24px;">
         <div style="text-align: center; margin-bottom: 16px;">
-          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .15em; color: #D4A53A;">▸ NOVA PORUDŽBINA</div>
+          <img src="https://berbernicatrisa.com/logo-120.png" alt="Berbernica Triša" width="48" height="48" style="display: inline-block; width: 48px; height: 48px; border-radius: 50%; border: 0;" />
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .15em; color: #D4A53A; margin-top: 8px;">▸ NOVA PORUDŽBINA</div>
         </div>
 
         <h2 style="font-family: Georgia, serif; font-style: italic; font-size: 24px; text-align: center; margin: 16px 0;">${input.customerName}</h2>
@@ -247,7 +251,7 @@ export async function sendOrderConfirmationToCustomer(input: {
     html: `
       <div style="font-family: Inter, sans-serif; max-width: 540px; margin: 0 auto; color: #1A0F05; background: #FAF3E3; padding: 32px 24px;">
         <div style="text-align: center; margin-bottom: 24px;">
-          <div style="width: 56px; height: 56px; background: #D4A53A; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, serif; font-size: 28px; font-weight: 900; font-style: italic; color: #1A0F05;">Т</div>
+          <img src="https://berbernicatrisa.com/logo-120.png" alt="Berbernica Triša" width="64" height="64" style="display: inline-block; width: 64px; height: 64px; border-radius: 50%; border: 0;" />
           <div style="font-family: Georgia, serif; font-size: 18px; font-style: italic; color: #5C3A22; margin-top: 8px;">Berbernica Triša · Batajnica</div>
         </div>
 
@@ -302,7 +306,7 @@ export async function sendOrderReadyEmail(input: {
     html: `
       <div style="font-family: Inter, sans-serif; max-width: 540px; margin: 0 auto; color: #1A0F05; background: #FAF3E3; padding: 32px 24px;">
         <div style="text-align: center; margin-bottom: 16px;">
-          <div style="width: 56px; height: 56px; background: #D4A53A; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, serif; font-size: 28px; font-weight: 900; font-style: italic; color: #1A0F05;">Т</div>
+          <img src="https://berbernicatrisa.com/logo-120.png" alt="Berbernica Triša" width="64" height="64" style="display: inline-block; width: 64px; height: 64px; border-radius: 50%; border: 0;" />
           <div style="font-family: Georgia, serif; font-size: 18px; font-style: italic; color: #5C3A22; margin-top: 8px;">Berbernica Triša · Batajnica</div>
         </div>
 
