@@ -194,42 +194,64 @@ export async function submitBooking(input: BookingInput) {
       : surchargeApplied ? Math.round(basePrice * 1.3) : basePrice;
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://berbernica-ruby.vercel.app";
 
-    await Promise.allSettled([
-      data.email
-        ? sendBookingConfirmation({
-            to: data.email,
-            customerName: data.name,
-            serviceName: svc?.name_lat ?? "—",
-            date: data.date,
-            timeSlot: data.timeSlot,
-            price: finalPrice,
-            basePrice,
-            surchargeApplied,
-            loyaltyFreeCut: isLoyaltyRedeem,
-            salonAddress: salon?.address ?? "",
-            bookingId: booking.id,
-            cancelUrl: `${baseUrl}/otkazi/${booking.id}?t=${bookingCancelToken(booking.id)}`,
-          })
-        : Promise.resolve(),
-      salon?.email
-        ? sendOwnerNewBookingEmail({
-            to: salon.email,
-            customerName: data.name,
-            customerPhone: phone,
-            serviceName: svc?.name_lat ?? "—",
-            date: data.date,
-            timeSlot: data.timeSlot,
-            price: finalPrice,
-            source: "WEB",
-          })
-        : Promise.resolve(),
-      sendPushToSalon(data.salonId, {
-        title: `Nov termin · ${data.timeSlot}`,
-        body: `${data.name} · ${svc?.name_lat ?? "—"} · ${data.date}`,
-        url: "/admin/termini",
-        tag: `booking-${booking.id}`,
-      }),
-    ]);
+    const channels: { name: string; run: () => Promise<unknown> }[] = [
+      {
+        name: "customer-email",
+        run: () =>
+          data.email
+            ? sendBookingConfirmation({
+                to: data.email,
+                customerName: data.name,
+                serviceName: svc?.name_lat ?? "—",
+                date: data.date,
+                timeSlot: data.timeSlot,
+                price: finalPrice,
+                basePrice,
+                surchargeApplied,
+                loyaltyFreeCut: isLoyaltyRedeem,
+                salonAddress: salon?.address ?? "",
+                bookingId: booking.id,
+                cancelUrl: `${baseUrl}/otkazi/${booking.id}?t=${bookingCancelToken(booking.id)}`,
+              })
+            : Promise.resolve(),
+      },
+      {
+        name: "owner-email",
+        run: () =>
+          salon?.email
+            ? sendOwnerNewBookingEmail({
+                to: salon.email,
+                customerName: data.name,
+                customerPhone: phone,
+                serviceName: svc?.name_lat ?? "—",
+                date: data.date,
+                timeSlot: data.timeSlot,
+                price: finalPrice,
+                source: "WEB",
+              })
+            : Promise.resolve(),
+      },
+      {
+        name: "owner-push",
+        run: () =>
+          sendPushToSalon(data.salonId, {
+            title: `Nov termin · ${data.timeSlot}`,
+            body: `${data.name} · ${svc?.name_lat ?? "—"} · ${data.date}`,
+            url: "/admin/termini",
+            tag: `booking-${booking.id}`,
+          }),
+      },
+    ];
+    // Surface per-channel failures in Vercel logs so silent rejections
+    // (Resend sandbox 403, expired push subscription, etc.) don't keep
+    // hiding under Promise.allSettled.
+    const results = await Promise.allSettled(channels.map((c) => c.run()));
+    results.forEach((r, i) => {
+      if (r.status === "rejected") {
+        const err = r.reason instanceof Error ? r.reason.message : String(r.reason);
+        console.error(`[booking ${booking.id}] ${channels[i].name} failed:`, err);
+      }
+    });
   } catch (e) {
     console.error("booking notify failed:", e instanceof Error ? e.message : "unknown");
   }
