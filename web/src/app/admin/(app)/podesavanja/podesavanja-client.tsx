@@ -8,6 +8,7 @@ import {
   type SocialLinks,
   type SocialPlatform,
 } from "@/lib/social-links";
+import { InstallAppCard } from "@/components/install-app-card";
 
 type Ann = {
   id: string;
@@ -108,6 +109,9 @@ export function PodesavanjaClient({
 
           {/* G6 — iCal feed */}
           <IcalCard icalUrl={icalUrl} />
+
+          {/* Manual PWA install — pairs with the auto-bar from admin layout. */}
+          <InstallAppCard />
         </>
       )}
     </>
