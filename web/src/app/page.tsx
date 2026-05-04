@@ -307,12 +307,6 @@ export default async function HomePage() {
           </div>
 
           <div className="services-footer">
-            <p className="services-disclaimer" data-sr>
-              * Цене су оквирне · потврди са Тришом пре лаунча
-            </p>
-            <p className="services-disclaimer" data-lat>
-              * Cene su okvirne · potvrdi sa Trišom pre launča
-            </p>
             <a href="/zakazivanje" className="btn-primary">
               <span data-sr>ЗАКАЖИ ТЕРМИН →</span>
               <span data-lat>ZAKAŽI TERMIN →</span>
