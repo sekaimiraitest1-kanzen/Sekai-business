@@ -1,27 +1,40 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 /**
- * One-shot scroll-reveal runner. Mounted once at the layout level; finds
- * every element with a `data-reveal` attribute and toggles `.is-revealed`
- * the first time it enters the viewport. After firing, the element is
- * unobserved — scrolling back up shows it as already-revealed (no
- * blink, no double-firing, no listener overhead on long pages).
+ * One-shot scroll-reveal runner. Mounted once at the layout level (so
+ * it survives soft navigation), but the effect rebinds on every route
+ * change — Next App Router replaces page DOM under the layout without
+ * remounting the layout itself, so an observer captured on first mount
+ * holds dead references to the previous page's elements while the new
+ * page's elements stay un-observed at opacity:0 forever.
  *
- * Respects `prefers-reduced-motion`: if the user has it on, every reveal
- * element is marked immediately so the page lays out as if the animation
- * had already run.
+ * `usePathname` in the dep array forces the effect to re-query every
+ * `[data-reveal]:not(.is-revealed)` element after each route change.
+ * Already-revealed elements are skipped so we don't pay an observer
+ * subscription on content the user has already seen.
  *
- * Trigger threshold: 12% of the element visible OR top edge clearing
- * the bottom 8% of viewport — fires slightly before the element is
- * fully on-screen so the motion lands as the user reads, not after.
+ * After firing for a given element we unobserve it — scrolling back up
+ * (or visiting a section twice) won't blink. Respects
+ * `prefers-reduced-motion`: under that pref every fresh reveal element
+ * is marked immediately so the page lays out as if the motion had
+ * already run.
  */
 export function ScrollRevealRunner() {
+  const pathname = usePathname();
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const targets = document.querySelectorAll<HTMLElement>("[data-reveal]");
+    // Only target elements that haven't been revealed yet — important
+    // when the same layout is reused across routes, since previously-
+    // revealed elements (from another page or another visit) shouldn't
+    // get re-observed nor reset.
+    const targets = document.querySelectorAll<HTMLElement>(
+      "[data-reveal]:not(.is-revealed)",
+    );
     if (targets.length === 0) return;
 
     const reduce =
@@ -50,7 +63,7 @@ export function ScrollRevealRunner() {
     targets.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();
-  }, []);
+  }, [pathname]);
 
   return null;
 }
