@@ -97,6 +97,73 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
     return s.price ?? 0;
   };
 
+  // ── Insight window: last ~100 days of done bookings, used for two
+  // independent computations the StatistikeClient needs:
+  //   1. weekday pattern ("Triša najviše zarađuje subotom" — last 90d)
+  //   2. monthly totals — current calendar month + 2 previous, for the
+  //      monthly view comparison row.
+  // Single query covers both — cheaper than two round-trips.
+  const insightWindowStart = new Date(cur.to);
+  insightWindowStart.setDate(insightWindowStart.getDate() - 100);
+  let insightQ = sb.from("bookings")
+    .select("date, staff_id, services(price)")
+    .eq("salon_id", session.salonId)
+    .eq("status", "done")
+    .gte("date", fmt(insightWindowStart))
+    .lte("date", fmt(cur.to));
+  if (staffMode) insightQ = insightQ.eq("staff_id", session.adminUserId);
+  const { data: insightRowsRaw } = await insightQ;
+  const insightRows = insightRowsRaw ?? [];
+
+  // Weekday avg over last 90 days. Numerator = revenue on that weekday;
+  // denominator = number of distinct dates of that weekday that had at
+  // least one done booking. Closed/zero days don't drag the avg down,
+  // so the answer is "kad radim subotom, prosečno zaradim X RSD".
+  const ninetyAgo = new Date(cur.to);
+  ninetyAgo.setDate(ninetyAgo.getDate() - 90);
+  const ninetyKey = fmt(ninetyAgo);
+  const dowAgg = new Map<number, { sum: number; days: Set<string> }>();
+  for (const b of insightRows) {
+    const dKey = b.date as string;
+    if (dKey < ninetyKey) continue;
+    const dt = new Date(dKey);
+    if (isNaN(dt.getTime())) continue;
+    const wd = dt.getDay();
+    const cell = dowAgg.get(wd) ?? { sum: 0, days: new Set<string>() };
+    cell.sum += priceOf(b);
+    cell.days.add(dKey);
+    dowAgg.set(wd, cell);
+  }
+  const weekdayPattern = Array.from(dowAgg.entries())
+    .map(([wd, v]) => ({
+      weekday: wd,
+      avgPerDay: Math.round(v.sum / Math.max(1, v.days.size)),
+      dayCount: v.days.size,
+    }))
+    .sort((a, b) => b.avgPerDay - a.avgPerDay);
+  const bestWeekday = weekdayPattern.length > 0 ? weekdayPattern[0] : null;
+
+  // Monthly totals — current calendar month + 2 previous. Built off the
+  // same insight window. Months with no bookings still appear (total 0).
+  const monthSums = new Map<string, number>();
+  for (const b of insightRows) {
+    const dt = new Date(b.date as string);
+    if (isNaN(dt.getTime())) continue;
+    const key = `${dt.getFullYear()}-${dt.getMonth()}`;
+    monthSums.set(key, (monthSums.get(key) ?? 0) + priceOf(b));
+  }
+  const monthlyTotals: { year: number; month: number; total: number }[] = [];
+  const monthRef = new Date(cur.to);
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(monthRef.getFullYear(), monthRef.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    monthlyTotals.push({
+      year: d.getFullYear(),
+      month: d.getMonth(),
+      total: monthSums.get(key) ?? 0,
+    });
+  }
+
   const doneBookings = bookings.filter((b) => b.status === "done");
   const revenueBookings = doneBookings.reduce((sum, b) => sum + priceOf(b), 0);
   const revenueOrders = ordersData.filter((o) => o.status === "picked_up").reduce((s, o) => s + (o.total ?? 0), 0);
@@ -200,6 +267,8 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
       ordersCount={ordersData.length}
       isStaffView={staffMode}
       staffBreakdown={staffBreakdown}
+      bestWeekday={bestWeekday}
+      monthlyTotals={monthlyTotals}
     />
   );
 }

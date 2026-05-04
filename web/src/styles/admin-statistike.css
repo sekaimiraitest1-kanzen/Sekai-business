@@ -176,63 +176,22 @@
   background: rgba(212, 165, 58, 0.18);
 }
 
-/* ── REVENUE — PEAK + RHYTHM + COUNTS ──
-   Replaces the old bar chart and the previous list+dist layout.
-   Hierarchy:
-     1. Peak callout — single most important moment of the period
-     2. Rhythm — period-aware: day-of-week (month) or ranked list
-     3. Counts — one-line summary of distribution
-   Every value is in its own grid cell so labels never collide.   */
+/* ── REVENUE — period-specific layouts ──
+   Per Triša's spec: no cross-day comparison clutter. Each period gets a
+   layout that matches what he'd actually want to know.
+     day   → .rev-day (just today's headline + bookings count)
+     week  → .rev-rhythm reused (chronological 7-day list)
+     month → .rev-months (3 monthly totals with % delta)
+   Plus .rev-insight for the historical weekday pattern below.    */
 
-/* PEAK callout — hero card, dominant visual on this card-block */
-.rev-peak {
-  position: relative;
-  padding: 18px 16px 16px;
-  margin: 14px 0 4px;
-  background: linear-gradient(
-    180deg,
-    rgba(212,165,58,.08) 0%,
-    rgba(212,165,58,.02) 100%
-  );
-  border: 1px solid rgba(212,165,58,.22);
+/* DAY — clean today summary, no breakdown */
+.rev-day {
+  padding: 18px 4px 6px;
   text-align: center;
-  overflow: hidden;
 }
-.rev-peak::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, var(--mustard) 50%, transparent);
-}
-.rev-peak-eyebrow {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(212,165,58,.7);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-}
-.rev-peak-star {
-  color: var(--mustard);
-  font-size: 13px;
-  line-height: 1;
-}
-.rev-peak-label {
-  font-family: 'Oswald', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: rgba(245,233,208,.85);
-  margin-bottom: 6px;
-  text-transform: uppercase;
-}
-.rev-peak-value {
+.rev-day-value {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 38px;
+  font-size: 44px;
   font-style: italic;
   font-weight: 700;
   color: var(--mustard);
@@ -240,45 +199,185 @@
   font-variant-numeric: tabular-nums;
   line-height: 1.05;
 }
-.rev-peak-currency {
+.rev-day-currency {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-size: 13px;
   font-style: normal;
   letter-spacing: 0.1em;
   color: rgba(212,165,58,.55);
   margin-left: 6px;
 }
-.rev-peak-delta {
+.rev-day-meta {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  color: var(--success);
-  margin-top: 8px;
-  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: rgba(245,233,208,.55);
+  margin-top: 10px;
+  line-height: 1.6;
+}
+.rev-day-meta strong {
+  color: var(--cream);
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 14px;
+  font-weight: 700;
+  margin-right: 2px;
+}
+.rev-day-sep {
+  margin: 0 6px;
+  color: rgba(212,165,58,.3);
 }
 
-/* AVG sub-line — quietly anchors the peak delta in context */
-.rev-avg-line {
-  text-align: center;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  color: rgba(245,233,208,.4);
-  margin: 10px 0 18px;
-  text-transform: uppercase;
+/* MONTH — three calendar months stacked with % delta on the rightmost
+   column. Each row has the same intensity-bar visual vocabulary as week
+   rows so the page feels cohesive. */
+.rev-months {
+  margin-top: 4px;
 }
-.rev-avg-line strong {
-  color: var(--mustard);
+.rev-month-row {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(245,233,208,.05);
+}
+.rev-month-row:last-child { border-bottom: none; }
+.rev-month-row.current {
+  background: linear-gradient(90deg, rgba(212,165,58,.06) 0%, transparent 75%);
+  margin-left: -8px;
+  padding-left: 8px;
+  border-left: 2px solid var(--mustard);
+}
+.rev-month-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(245,233,208,.85);
+  line-height: 1.1;
+}
+.rev-month-row.current .rev-month-name { color: var(--mustard); }
+.rev-month-year {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(245,233,208,.35);
+  font-weight: 400;
+}
+.rev-month-bar {
+  position: relative;
+  height: 4px;
+  background: rgba(245,233,208,.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.rev-month-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: var(--rhythm-fill, 0%);
+  background: rgba(212,165,58,.45);
+  border-radius: 2px;
+}
+.rev-month-row.current .rev-month-bar::before {
+  background: var(--mustard);
+  box-shadow: 0 0 8px rgba(212,165,58,.3);
+}
+.rev-month-val {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 14px;
+  font-size: 18px;
   font-style: italic;
   font-weight: 700;
+  color: var(--mustard);
+  font-feature-settings: "kern" 1;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: right;
+  min-width: 56px;
+}
+.rev-month-row.current .rev-month-val { color: var(--mustard-bright); }
+.rev-month-pct {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  min-width: 48px;
+  text-align: right;
+}
+.rev-month-pct.up   { color: var(--success); }
+.rev-month-pct.down { color: var(--danger); }
+
+/* INSIGHT — separate card-block. Single sentence + big mustard number. */
+.rev-insight {
+  text-align: center;
+  padding-top: 22px;
+  padding-bottom: 22px;
+  background: linear-gradient(180deg, rgba(212,165,58,.04) 0%, transparent 100%);
+}
+.rev-insight-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(212,165,58,.55);
+  margin-bottom: 12px;
+}
+.rev-insight-body {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: rgba(245,233,208,.75);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.rev-insight-body strong {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--mustard);
   letter-spacing: 0;
-  margin: 0 4px;
-  text-transform: none;
+}
+.rev-insight-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--mustard);
+  font-feature-settings: "kern" 1;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  margin-top: 4px;
+}
+.rev-insight-num-suffix {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-style: normal;
+  letter-spacing: 0.1em;
+  color: rgba(212,165,58,.55);
+}
+.rev-insight-num-unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  color: rgba(245,233,208,.4);
+  text-transform: uppercase;
+}
+.rev-insight-foot {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: rgba(245,233,208,.3);
+  margin-top: 10px;
 }
 
-/* RHYTHM — period-aware ranked rows with intensity bar */
+/* RHYTHM — ranked rows with intensity bar (used by week view) */
 .rev-rhythm-head {
   font-family: 'Oswald', sans-serif;
   font-size: 10px;
@@ -494,21 +593,16 @@
 }
 
 /* ── NARROW PHONES (iPhone 11/13 Pro range) ──────
-   Tighter spacing + smaller type so PEAK and rhythm rows breathe at 375px. */
+   Tighter spacing + smaller type so all three period views fit at 375px. */
 @media (max-width: 390px) {
-  .rev-peak { padding: 16px 12px 14px; }
-  .rev-peak-value { font-size: 32px; }
-  .rev-peak-label { font-size: 12px; }
-  .rev-peak-delta { font-size: 9px; }
-  .rev-avg-line { font-size: 9px; margin: 8px 0 14px; }
-  .rev-avg-line strong { font-size: 13px; }
+  .rev-day-value { font-size: 38px; }
+  .rev-day-meta { font-size: 10px; }
+
   .rev-rhythm-row {
     grid-template-columns: 44px 1fr auto;
     gap: 8px;
     padding: 6px 0;
   }
-  /* On narrow widths the per-row meta (count/today tag) is the first
-     thing we trim — reading-priority is day/value, not meta. */
   .rev-rhythm-meta { display: none; }
   .rev-rhythm-row.today .rev-rhythm-meta.tag {
     display: inline;
@@ -519,9 +613,21 @@
   }
   .rev-rhythm-day { font-size: 12px; }
   .rev-rhythm-val { font-size: 16px; min-width: 48px; }
-  .rev-counts { font-size: 10px; }
-  .rev-counts strong { font-size: 14px; }
-  .rev-counts-sep { margin: 0 5px; }
+
+  /* Month rows: drop the year subline + collapse name column tighter */
+  .rev-month-row {
+    grid-template-columns: minmax(80px, auto) 1fr auto auto;
+    gap: 8px;
+    padding: 9px 0;
+  }
+  .rev-month-name { font-size: 11px; }
+  .rev-month-year { font-size: 8px; }
+  .rev-month-val { font-size: 16px; min-width: 48px; }
+  .rev-month-pct { font-size: 9px; min-width: 42px; }
+
+  .rev-insight-num { font-size: 28px; }
+  .rev-insight-body { font-size: 13px; }
+  .rev-insight-body strong { font-size: 20px; }
 }
 @media (max-width: 380px) {
   .stat-hero-value { font-size: clamp(36px, 10vw, 48px); }

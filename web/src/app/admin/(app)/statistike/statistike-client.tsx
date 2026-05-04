@@ -23,6 +23,13 @@ type Series = { label: string; value: number; key: string; isToday: boolean };
 type TopService = { name_sr: string; name_lat: string; count: number; revenue: number };
 type Retention = { active: number; atRisk: number; churned: number };
 type StaffBreakdownRow = { id: string; display_name: string; revenue: number; count: number };
+type BestWeekday = { weekday: number; avgPerDay: number; dayCount: number } | null;
+type MonthRow = { year: number; month: number; total: number };
+
+const WEEKDAY_NAMES_SR = ["недељом", "понедељком", "уторком", "средом", "четвртком", "петком", "суботом"];
+const WEEKDAY_NAMES_LAT = ["nedeljom", "ponedeljkom", "utorkom", "sredom", "četvrtkom", "petkom", "subotom"];
+const MONTH_NAMES_SR = ["ЈАНУАР", "ФЕБРУАР", "МАРТ", "АПРИЛ", "МАЈ", "ЈУН", "ЈУЛ", "АВГУСТ", "СЕПТЕМБАР", "ОКТОБАР", "НОВЕМБАР", "ДЕЦЕМБАР"];
+const MONTH_NAMES_LAT = ["JANUAR", "FEBRUAR", "MART", "APRIL", "MAJ", "JUN", "JUL", "AVGUST", "SEPTEMBAR", "OKTOBAR", "NOVEMBAR", "DECEMBAR"];
 
 export function StatistikeClient(props: {
   period: "day" | "week" | "month";
@@ -40,8 +47,10 @@ export function StatistikeClient(props: {
   ordersCount: number;
   isStaffView: boolean;
   staffBreakdown: StaffBreakdownRow[] | null;
+  bestWeekday: BestWeekday;
+  monthlyTotals: MonthRow[];
 }) {
-  const { period, totalRevenue, change, doneCount, cancelledCount, cancelledPct, avgPerBooking, newCustomers, series, topServices, retention, ordersCount, isStaffView, staffBreakdown } = props;
+  const { period, totalRevenue, change, doneCount, cancelledCount, cancelledPct, avgPerBooking, newCustomers, series, topServices, retention, ordersCount, isStaffView, staffBreakdown, bestWeekday, monthlyTotals } = props;
 
   const periodLabelSr = period === "day" ? "ДАНАС" : period === "week" ? "ОВА НЕДЕЉА" : "ОВАЈ МЕСЕЦ";
   const periodLabelLat = period === "day" ? "DANAS" : period === "week" ? "OVA NEDELJA" : "OVAJ MESEC";
@@ -104,179 +113,189 @@ export function StatistikeClient(props: {
         <StatBox labelSr="ОТКАЗАНО" labelLat="OTKAZANO" value={String(cancelledCount)} unit={`${cancelledPct}%`} tone={cancelledPct > 10 ? "danger" : undefined} />
       </div>
 
-      {/* PRIHODI block — period-aware narrative. Each period asks a
-          different question and gets its own primary view:
-            day   → which hours were busiest? (top 5 hours)
-            week  → which days were strongest? (all 7 days ranked)
-            month → which weekday is consistently strongest? (DOW pattern)
-          Always shown: PEAK callout (single big "best moment" card) and
-          a counts band at the bottom (above/below/closed). */}
+      {/* PRIHODI block — period-specific, no cross-day comparison clutter:
+            day   → just today's headline + bookings count
+            week  → 7-day chronological list (today highlighted)
+            month → current + 2 previous monthly totals with % delta
+          Insight ("najviše zarađuješ subotom") lives in its own card-block
+          below this one. */}
       <div className="stat-card-block">
         <div className="stat-card-title">
           <span data-sr>ПРИХОДИ</span>
           <span data-lat>PRIHODI</span>
-          <span style={{ marginLeft: 6, opacity: 0.5 }} data-sr>· {period === "day" ? "по сату" : period === "week" ? "по данима" : "по датуму"}</span>
-          <span style={{ marginLeft: 6, opacity: 0.5 }} data-lat>· {period === "day" ? "po satu" : period === "week" ? "po danima" : "po datumu"}</span>
-        </div>
-        {(() => {
-          const earning = series.filter((s) => s.value > 0);
-          if (earning.length === 0) {
-            return (
-              <div className="adm-empty" style={{ padding: 32 }}>
-                <span data-sr>Нема прихода у овом периоду.</span>
-                <span data-lat>Nema prihoda u ovom periodu.</span>
-              </div>
-            );
-          }
-          const avg = Math.round(earning.reduce((acc, s) => acc + s.value, 0) / earning.length);
-          const peak = earning.reduce((p, s) => (s.value > p.value ? s : p), earning[0]);
-          const peakDeltaPct = avg > 0 ? Math.round(((peak.value - avg) / avg) * 100) : 0;
-          const sortedDesc = [...earning].sort((a, b) => b.value - a.value);
-          const aboveCount = earning.filter((s) => s.value >= avg).length;
-          const belowCount = earning.filter((s) => s.value < avg).length;
-          const closedCount = series.length - earning.length;
-
-          // Day-of-week aggregation — only meaningful for monthly view
-          // because that's where multiple Mondays/Tuesdays/etc. exist.
-          // Empty for week/day periods.
-          const dowLabelsSr = ["НЕД", "ПОН", "УТО", "СРЕ", "ЧЕТ", "ПЕТ", "СУБ"];
-          const dowLabelsLat = ["NED", "PON", "UTO", "SRE", "ČET", "PET", "SUB"];
-          type DowRow = { weekday: number; sr: string; lat: string; avg: number; count: number };
-          let dowBreakdown: DowRow[] = [];
-          if (period === "month") {
-            const dowMap = new Map<number, { sum: number; count: number }>();
-            for (const s of earning) {
-              const d = new Date(s.key);
-              if (isNaN(d.getTime())) continue;
-              const wd = d.getDay();
-              const cur = dowMap.get(wd) ?? { sum: 0, count: 0 };
-              cur.sum += s.value;
-              cur.count += 1;
-              dowMap.set(wd, cur);
-            }
-            dowBreakdown = Array.from(dowMap.entries())
-              .map(([wd, v]) => ({
-                weekday: wd,
-                sr: dowLabelsSr[wd],
-                lat: dowLabelsLat[wd],
-                avg: Math.round(v.sum / v.count),
-                count: v.count,
-              }))
-              .sort((a, b) => b.avg - a.avg);
-          }
-          const dowMax = dowBreakdown[0]?.avg ?? 0;
-
-          // Period-specific ranked entries (when dow breakdown isn't used)
-          const rankedCap = period === "day" ? 5 : 7;
-          const ranked = sortedDesc.slice(0, rankedCap);
-
-          return (
+          {period === "day" && (
             <>
-              {/* PEAK CALLOUT — the standout "best moment" card, hero-styled */}
-              <div className="rev-peak">
-                <div className="rev-peak-eyebrow">
-                  <span className="rev-peak-star" aria-hidden="true">★</span>
-                  <span data-sr>{period === "day" ? "НАЈЈАЧИ САТ" : "НАЈЈАЧИ ДАН"}</span>
-                  <span data-lat>{period === "day" ? "NAJJAČI SAT" : "NAJJAČI DAN"}</span>
-                </div>
-                <div className="rev-peak-label">{peak.label}</div>
-                <div className="rev-peak-value">
-                  {peak.value.toLocaleString("sr-RS")}
-                  <span className="rev-peak-currency">RSD</span>
-                </div>
-                {peakDeltaPct > 0 && (
-                  <div className="rev-peak-delta">
-                    ↑ {peakDeltaPct}% <span data-sr>изнад просека</span><span data-lat>iznad proseka</span>
-                  </div>
-                )}
+              <span style={{ marginLeft: 6, opacity: 0.5 }} data-sr>· данас</span>
+              <span style={{ marginLeft: 6, opacity: 0.5 }} data-lat>· danas</span>
+            </>
+          )}
+          {period === "week" && (
+            <>
+              <span style={{ marginLeft: 6, opacity: 0.5 }} data-sr>· по данима</span>
+              <span style={{ marginLeft: 6, opacity: 0.5 }} data-lat>· po danima</span>
+            </>
+          )}
+          {period === "month" && (
+            <>
+              <span style={{ marginLeft: 6, opacity: 0.5 }} data-sr>· по месецу</span>
+              <span style={{ marginLeft: 6, opacity: 0.5 }} data-lat>· po mesecu</span>
+            </>
+          )}
+        </div>
+
+        {/* DAY: just today, no per-hour breakdown */}
+        {period === "day" && (
+          totalRevenue > 0 ? (
+            <div className="rev-day">
+              <div className="rev-day-value">
+                {totalRevenue.toLocaleString("sr-RS")}
+                <span className="rev-day-currency">RSD</span>
               </div>
-
-              {/* AVG sub-line — sets context for the peak delta */}
-              <div className="rev-avg-line">
-                <span data-sr>Просек </span>
-                <span data-lat>Prosek </span>
-                <strong>{formatCompactRsd(avg)}</strong>
-                <span data-sr> по {period === "day" ? "сату" : "дану"}</span>
-                <span data-lat> po {period === "day" ? "satu" : "danu"}</span>
-              </div>
-
-              {/* RHYTHM section — different shape per period */}
-              {period === "month" && dowBreakdown.length > 0 ? (
-                <div className="rev-rhythm">
-                  <div className="rev-rhythm-head">
-                    <span data-sr>ПО ДАНИМА У НЕДЕЉИ</span>
-                    <span data-lat>PO DANIMA U NEDELJI</span>
-                  </div>
-                  {dowBreakdown.map((d, i) => {
-                    // Ratio used for a CSS variable we drive an inline
-                    // intensity bar with — purely typographic, no SVG.
-                    const ratio = dowMax > 0 ? d.avg / dowMax : 0;
-                    return (
-                      <div key={d.weekday} className={`rev-rhythm-row ${i === 0 ? "best" : ""}`} style={{ "--rhythm-fill": `${Math.round(ratio * 100)}%` } as React.CSSProperties}>
-                        <span className="rev-rhythm-day">
-                          <span data-sr>{d.sr}</span><span data-lat>{d.lat}</span>
-                        </span>
-                        <span className="rev-rhythm-bar" aria-hidden="true" />
-                        <span className="rev-rhythm-meta">
-                          {d.count}× <span data-sr>у месецу</span><span data-lat>u mesecu</span>
-                        </span>
-                        <span className="rev-rhythm-val">{formatCompactRsd(d.avg)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="rev-rhythm">
-                  <div className="rev-rhythm-head">
-                    <span data-sr>{period === "day" ? "НАЈБОЉИХ 5 САТИ" : "ПО ДАНИМА"}</span>
-                    <span data-lat>{period === "day" ? "NAJBOLJIH 5 SATI" : "PO DANIMA"}</span>
-                  </div>
-                  {ranked.map((s, i) => {
-                    const ratio = peak.value > 0 ? s.value / peak.value : 0;
-                    return (
-                      <div
-                        key={s.key}
-                        className={`rev-rhythm-row ${i === 0 ? "best" : ""} ${s.isToday ? "today" : ""}`}
-                        style={{ "--rhythm-fill": `${Math.round(ratio * 100)}%` } as React.CSSProperties}
-                      >
-                        <span className="rev-rhythm-day">{s.label}</span>
-                        <span className="rev-rhythm-bar" aria-hidden="true" />
-                        {s.isToday ? (
-                          <span className="rev-rhythm-meta tag">
-                            <span data-sr>ДАНАС</span><span data-lat>DANAS</span>
-                          </span>
-                        ) : (
-                          <span className="rev-rhythm-meta" />
-                        )}
-                        <span className="rev-rhythm-val">{formatCompactRsd(s.value)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* COUNTS — single sentence, sums up the period */}
-              <div className="rev-counts">
-                <strong>{aboveCount}</strong>
-                <span data-sr> изнад просека</span>
-                <span data-lat> iznad proseka</span>
-                <span className="rev-counts-sep">·</span>
-                <strong>{belowCount}</strong>
-                <span data-sr> испод</span>
-                <span data-lat> ispod</span>
-                {closedCount > 0 && (
+              <div className="rev-day-meta">
+                <strong>{doneCount}</strong>
+                <span data-sr> {doneCount === 1 ? "термин обављен" : "термина обављено"}</span>
+                <span data-lat> {doneCount === 1 ? "termin obavljen" : "termina obavljeno"}</span>
+                {avgPerBooking > 0 && (
                   <>
-                    <span className="rev-counts-sep">·</span>
-                    <strong>{closedCount}</strong>
-                    <span data-sr> {period === "day" ? "без прихода" : "затворено"}</span>
-                    <span data-lat> {period === "day" ? "bez prihoda" : "zatvoreno"}</span>
+                    <span className="rev-day-sep">·</span>
+                    <span data-sr>просек </span><span data-lat>prosek </span>
+                    <strong>{avgPerBooking.toLocaleString("sr-RS")}</strong>
+                    <span> RSD</span>
                   </>
                 )}
               </div>
-            </>
+            </div>
+          ) : (
+            <div className="adm-empty" style={{ padding: 24 }}>
+              <span data-sr>Још нема прихода данас.</span>
+              <span data-lat>Još nema prihoda danas.</span>
+            </div>
+          )
+        )}
+
+        {/* WEEK: 7 days in calendar order. Each row gets an intensity bar
+            relative to the week's peak so Triša immediately sees which
+            days carried the week. */}
+        {period === "week" && (() => {
+          const weekMax = Math.max(0, ...series.map((s) => s.value));
+          if (weekMax === 0) {
+            return (
+              <div className="adm-empty" style={{ padding: 24 }}>
+                <span data-sr>Нема прихода у овој недељи.</span>
+                <span data-lat>Nema prihoda u ovoj nedelji.</span>
+              </div>
+            );
+          }
+          return (
+            <div className="rev-rhythm">
+              {series.map((s) => {
+                const ratio = weekMax > 0 ? s.value / weekMax : 0;
+                const isBest = s.value === weekMax && s.value > 0;
+                return (
+                  <div
+                    key={s.key}
+                    className={`rev-rhythm-row ${isBest ? "best" : ""} ${s.isToday ? "today" : ""}`}
+                    style={{ "--rhythm-fill": `${Math.round(ratio * 100)}%` } as React.CSSProperties}
+                  >
+                    <span className="rev-rhythm-day">{s.label}</span>
+                    <span className="rev-rhythm-bar" aria-hidden="true" />
+                    {s.isToday ? (
+                      <span className="rev-rhythm-meta tag">
+                        <span data-sr>ДАНАС</span><span data-lat>DANAS</span>
+                      </span>
+                    ) : (
+                      <span className="rev-rhythm-meta" />
+                    )}
+                    <span className="rev-rhythm-val">
+                      {s.value > 0 ? formatCompactRsd(s.value) : "—"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        {/* MONTH: current + 2 previous monthly totals. % delta on every
+            month except the oldest (no anchor to compare against). */}
+        {period === "month" && (() => {
+          const hasAnyRevenue = monthlyTotals.some((m) => m.total > 0);
+          if (!hasAnyRevenue) {
+            return (
+              <div className="adm-empty" style={{ padding: 24 }}>
+                <span data-sr>Нема прихода у последња 3 месеца.</span>
+                <span data-lat>Nema prihoda u poslednja 3 meseca.</span>
+              </div>
+            );
+          }
+          const monthMax = Math.max(1, ...monthlyTotals.map((m) => m.total));
+          return (
+            <div className="rev-months">
+              {monthlyTotals.map((m, i) => {
+                const prev = monthlyTotals[i + 1];
+                const pct = prev && prev.total > 0
+                  ? Math.round(((m.total - prev.total) / prev.total) * 100)
+                  : null;
+                const ratio = m.total / monthMax;
+                return (
+                  <div
+                    key={`${m.year}-${m.month}`}
+                    className={`rev-month-row ${i === 0 ? "current" : ""}`}
+                    style={{ "--rhythm-fill": `${Math.round(ratio * 100)}%` } as React.CSSProperties}
+                  >
+                    <div className="rev-month-name">
+                      <span data-sr>{MONTH_NAMES_SR[m.month]}</span>
+                      <span data-lat>{MONTH_NAMES_LAT[m.month]}</span>
+                      <span className="rev-month-year">{m.year}</span>
+                    </div>
+                    <div className="rev-month-bar" aria-hidden="true" />
+                    <div className="rev-month-val">
+                      {m.total > 0 ? formatCompactRsd(m.total) : "—"}
+                    </div>
+                    {pct !== null && (
+                      <div className={`rev-month-pct ${pct >= 0 ? "up" : "down"}`}>
+                        {pct >= 0 ? "↑" : "↓"} {Math.abs(pct)}%
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           );
         })()}
       </div>
+
+      {/* INSIGHT — historical weekday pattern (last 90 days). Same data
+          shown regardless of period filter — gives Triša a consistent
+          "u proseku najviše zarađuješ subotom" answer. */}
+      {bestWeekday && bestWeekday.avgPerDay > 0 && (
+        <div className="stat-card-block rev-insight">
+          <div className="rev-insight-eyebrow">
+            <span data-sr>У ПРОСЕКУ · 90 ДАНА</span>
+            <span data-lat>U PROSEKU · 90 DANA</span>
+          </div>
+          <div className="rev-insight-body">
+            <span data-sr>Највише зарађујеш </span>
+            <span data-lat>Najviše zarađuješ </span>
+            <strong>
+              <span data-sr>{WEEKDAY_NAMES_SR[bestWeekday.weekday]}</span>
+              <span data-lat>{WEEKDAY_NAMES_LAT[bestWeekday.weekday]}</span>
+            </strong>
+          </div>
+          <div className="rev-insight-num">
+            ~{formatCompactRsd(bestWeekday.avgPerDay)}
+            <span className="rev-insight-num-suffix"> RSD</span>
+            <span className="rev-insight-num-unit">
+              <span data-sr> по дану</span>
+              <span data-lat> po danu</span>
+            </span>
+          </div>
+          <div className="rev-insight-foot">
+            <span data-sr>{bestWeekday.dayCount}× у последња три месеца</span>
+            <span data-lat>{bestWeekday.dayCount}× u poslednja tri meseca</span>
+          </div>
+        </div>
+      )}
 
       {/* Top services */}
       <div className="stat-card-block">
