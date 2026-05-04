@@ -18,19 +18,34 @@ type BookingRow = {
   services: { name_sr: string | null; name_lat: string | null; price: number | null } | null;
 };
 
+type OrderRow = {
+  id: string;
+  total: number | null;
+  status: string;
+  items: { name?: string; quantity?: number; price?: number }[] | null;
+  created_at: string;
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function MusterijaDetail({ params }: { params: { id: string } }) {
   const session = await requireAdmin();
   const sb = createAdminClient();
 
-  const [custRes, bookingsRes, loyaltyRes] = await Promise.all([
+  const [custRes, bookingsRes, ordersRes, loyaltyRes] = await Promise.all([
     sb.from("customers").select("*").eq("id", params.id).eq("salon_id", session.salonId).is("deleted_at", null).single(),
     sb
       .from("bookings")
       .select("id, date, time_slot, status, services(name_sr, name_lat, price)")
       .eq("customer_id", params.id)
       .order("date", { ascending: false })
+      .limit(50),
+    sb
+      .from("orders")
+      .select("id, total, status, items, created_at")
+      .eq("customer_id", params.id)
+      .eq("salon_id", session.salonId)
+      .order("created_at", { ascending: false })
       .limit(50),
     sb
       .from("loyalty_events")
@@ -64,6 +79,7 @@ export default async function MusterijaDetail({ params }: { params: { id: string
     <CustomerProfile
       customer={custRes.data}
       bookings={(bookingsRes.data ?? []) as unknown as BookingRow[]}
+      orders={(ordersRes.data ?? []) as unknown as OrderRow[]}
       loyaltyProgress={loyaltyProgress}
       loyaltyTarget={LOYALTY_VISITS_FOR_REWARD}
       canDelete={isOwner(session)}

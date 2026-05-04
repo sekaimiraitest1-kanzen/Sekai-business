@@ -27,9 +27,18 @@ type Booking = {
   services: { name_sr: string | null; name_lat: string | null; price: number | null } | null;
 };
 
-export function CustomerProfile({ customer, bookings, loyaltyProgress, loyaltyTarget, canDelete }: {
+type Order = {
+  id: string;
+  total: number | null;
+  status: string;
+  items: { name?: string; quantity?: number; price?: number }[] | null;
+  created_at: string;
+};
+
+export function CustomerProfile({ customer, bookings, orders, loyaltyProgress, loyaltyTarget, canDelete }: {
   customer: Customer;
   bookings: Booking[];
+  orders: Order[];
   loyaltyProgress: number;
   loyaltyTarget: number;
   canDelete: boolean;
@@ -39,7 +48,12 @@ export function CustomerProfile({ customer, bookings, loyaltyProgress, loyaltyTa
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const totalSpent = bookings.filter((b) => b.status === "done").reduce((sum, b) => sum + (b.services?.price ?? 0), 0);
+  // Spend split: completed haircuts ('done') + picked-up shop orders.
+  // Cancelled and pending statuses don't count — money only moves when
+  // the customer actually receives the thing.
+  const spentBookings = bookings.filter((b) => b.status === "done").reduce((sum, b) => sum + (b.services?.price ?? 0), 0);
+  const spentOrders = orders.filter((o) => o.status === "picked_up").reduce((sum, o) => sum + (o.total ?? 0), 0);
+  const totalSpent = spentBookings + spentOrders;
   const visits = bookings.filter((b) => b.status === "done").length;
   const canRedeem = loyaltyProgress >= loyaltyTarget;
 
@@ -82,6 +96,11 @@ export function CustomerProfile({ customer, bookings, loyaltyProgress, loyaltyTa
             <span data-sr>укупно</span>
             <span data-lat>ukupno</span>
           </div>
+          {spentBookings > 0 && spentOrders > 0 && (
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: "rgba(245,233,208,.45)", marginTop: 4, letterSpacing: ".04em" }}>
+              ✂ {spentBookings} · 🛒 {spentOrders}
+            </div>
+          )}
         </div>
       </div>
 
@@ -181,32 +200,57 @@ export function CustomerProfile({ customer, bookings, loyaltyProgress, loyaltyTa
 
       <div style={{ marginTop: 16 }}>
         <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, color: "var(--mustard)", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 8 }}>
-          <span data-sr>ИСТОРИЈА ТЕРМИНА</span>
-          <span data-lat>ISTORIJA TERMINA</span>
+          <span data-sr>ИСТОРИЈА</span>
+          <span data-lat>ISTORIJA</span>
         </div>
 
-        {bookings.length === 0 && (
+        {bookings.length === 0 && orders.length === 0 && (
           <div className="adm-empty">
-            <span data-sr>Без термина.</span>
-            <span data-lat>Bez termina.</span>
+            <span data-sr>Без активности.</span>
+            <span data-lat>Bez aktivnosti.</span>
           </div>
         )}
 
-        {bookings.map((b) => (
-          <div key={b.id} className="adm-card">
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "var(--mustard)" }}>
-                {b.date} · {b.time_slot.slice(0, 5)}
+        {mergeTimeline(bookings, orders).map((row) => (
+          row.kind === "booking" ? (
+            <div key={`b-${row.id}`} className="adm-card">
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "var(--mustard)" }}>
+                  ✂ {row.date} · {row.time.slice(0, 5)}
+                </div>
+                <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "var(--cream)", marginTop: 2 }}>
+                  <span data-sr>{row.serviceNameSr}</span><span data-lat>{row.serviceNameLat}</span>
+                  {row.price != null && (
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.5)", marginLeft: 8 }}>
+                      {row.price} RSD
+                    </span>
+                  )}
+                </div>
               </div>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "var(--cream)", marginTop: 2 }}>
-                <span data-sr>{b.services?.name_sr}</span><span data-lat>{b.services?.name_lat}</span>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.5)", textTransform: "uppercase" }}>
+                <span data-sr>{statusLabel(row.status, "sr")}</span>
+                <span data-lat>{statusLabel(row.status, "lat")}</span>
               </div>
             </div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.5)", textTransform: "uppercase" }}>
-              <span data-sr>{statusLabel(b.status, "sr")}</span>
-              <span data-lat>{statusLabel(b.status, "lat")}</span>
+          ) : (
+            <div key={`o-${row.id}`} className="adm-card">
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "var(--mustard)" }}>
+                  🛒 {row.date}
+                </div>
+                <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, color: "var(--cream)", marginTop: 2 }}>
+                  {row.itemSummary}
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.5)", marginLeft: 8 }}>
+                    {row.total ?? 0} RSD
+                  </span>
+                </div>
+              </div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.5)", textTransform: "uppercase" }}>
+                <span data-sr>{orderStatusLabel(row.status, "sr")}</span>
+                <span data-lat>{orderStatusLabel(row.status, "lat")}</span>
+              </div>
             </div>
-          </div>
+          )
         ))}
       </div>
 
@@ -272,4 +316,74 @@ function statusLabel(status: string, lang: "sr" | "lat"): string {
     cancelled: { sr: "ОТКАЗАНО", lat: "OTKAZANO" },
   };
   return map[status]?.[lang] ?? status.toUpperCase();
+}
+
+function orderStatusLabel(status: string, lang: "sr" | "lat"): string {
+  const map: Record<string, { sr: string; lat: string }> = {
+    pending: { sr: "ЧЕКА", lat: "ČEKA" },
+    ready: { sr: "СПРЕМНО", lat: "SPREMNO" },
+    picked_up: { sr: "ПОДИГНУТО", lat: "PODIGNUTO" },
+    cancelled: { sr: "ОТКАЗАНО", lat: "OTKAZANO" },
+  };
+  return map[status]?.[lang] ?? status.toUpperCase();
+}
+
+type TimelineRow =
+  | {
+      kind: "booking";
+      id: string;
+      sortKey: string;
+      date: string;
+      time: string;
+      status: string;
+      serviceNameSr: string | null;
+      serviceNameLat: string | null;
+      price: number | null;
+    }
+  | {
+      kind: "order";
+      id: string;
+      sortKey: string;
+      date: string;
+      status: string;
+      total: number | null;
+      itemSummary: string;
+    };
+
+function mergeTimeline(bookings: Booking[], orders: Order[]): TimelineRow[] {
+  const rows: TimelineRow[] = [];
+  for (const b of bookings) {
+    rows.push({
+      kind: "booking",
+      id: b.id,
+      // Bookings sort by date+time so same-day rows stay deterministic.
+      sortKey: `${b.date}T${b.time_slot}`,
+      date: b.date,
+      time: b.time_slot,
+      status: b.status,
+      serviceNameSr: b.services?.name_sr ?? null,
+      serviceNameLat: b.services?.name_lat ?? null,
+      price: b.services?.price ?? null,
+    });
+  }
+  for (const o of orders) {
+    const items = o.items ?? [];
+    const itemSummary = items.length === 0
+      ? "—"
+      : items.length === 1
+        ? `${items[0].quantity ?? 1}× ${items[0].name ?? "—"}`
+        : `${items.reduce((s, it) => s + (it.quantity ?? 0), 0)} stavki`;
+    rows.push({
+      kind: "order",
+      id: o.id,
+      sortKey: o.created_at,
+      date: o.created_at.slice(0, 10),
+      status: o.status,
+      total: o.total,
+      itemSummary,
+    });
+  }
+  // Newest first.
+  rows.sort((a, b) => (a.sortKey < b.sortKey ? 1 : a.sortKey > b.sortKey ? -1 : 0));
+  return rows;
 }
