@@ -104,11 +104,13 @@ export function StatistikeClient(props: {
         <StatBox labelSr="ОТКАЗАНО" labelLat="OTKAZANO" value={String(cancelledCount)} unit={`${cancelledPct}%`} tone={cancelledPct > 10 ? "danger" : undefined} />
       </div>
 
-      {/* PRIHODI block — list-based, no chart. Three sections under the
-          summary band: top earners, weakest earners (when there are
-          enough data points), and a 3-bucket distribution triplet. The
-          aim is "scannable in 3 seconds on iPhone 11" — every value sits
-          in its own row, so nothing can ever overlap. */}
+      {/* PRIHODI block — period-aware narrative. Each period asks a
+          different question and gets its own primary view:
+            day   → which hours were busiest? (top 5 hours)
+            week  → which days were strongest? (all 7 days ranked)
+            month → which weekday is consistently strongest? (DOW pattern)
+          Always shown: PEAK callout (single big "best moment" card) and
+          a counts band at the bottom (above/below/closed). */}
       <div className="stat-card-block">
         <div className="stat-card-title">
           <span data-sr>ПРИХОДИ</span>
@@ -128,99 +130,148 @@ export function StatistikeClient(props: {
           }
           const avg = Math.round(earning.reduce((acc, s) => acc + s.value, 0) / earning.length);
           const peak = earning.reduce((p, s) => (s.value > p.value ? s : p), earning[0]);
+          const peakDeltaPct = avg > 0 ? Math.round(((peak.value - avg) / avg) * 100) : 0;
           const sortedDesc = [...earning].sort((a, b) => b.value - a.value);
-          const top = sortedDesc.slice(0, 3);
-          // Only show "weakest" list when there's enough variance to be
-          // meaningful — fewer than 4 earning entries means top + bottom
-          // would overlap and the section would just repeat itself.
-          const weakest = earning.length >= 4 ? [...sortedDesc].reverse().slice(0, 3) : [];
           const aboveCount = earning.filter((s) => s.value >= avg).length;
           const belowCount = earning.filter((s) => s.value < avg).length;
-          const zeroCount = series.length - earning.length;
-          // For day-period the time buckets are hours so the third bucket
-          // is "no revenue" rather than "closed".
-          const zeroLabelSr = period === "day" ? "БЕЗ ПРИХОДА" : "ЗАТВОРЕНО";
-          const zeroLabelLat = period === "day" ? "BEZ PRIHODA" : "ZATVORENO";
-          const unitSr = period === "day" ? "САТИ" : "ДАНИ";
-          const unitLat = period === "day" ? "SATI" : "DANI";
+          const closedCount = series.length - earning.length;
+
+          // Day-of-week aggregation — only meaningful for monthly view
+          // because that's where multiple Mondays/Tuesdays/etc. exist.
+          // Empty for week/day periods.
+          const dowLabelsSr = ["НЕД", "ПОН", "УТО", "СРЕ", "ЧЕТ", "ПЕТ", "СУБ"];
+          const dowLabelsLat = ["NED", "PON", "UTO", "SRE", "ČET", "PET", "SUB"];
+          type DowRow = { weekday: number; sr: string; lat: string; avg: number; count: number };
+          let dowBreakdown: DowRow[] = [];
+          if (period === "month") {
+            const dowMap = new Map<number, { sum: number; count: number }>();
+            for (const s of earning) {
+              const d = new Date(s.key);
+              if (isNaN(d.getTime())) continue;
+              const wd = d.getDay();
+              const cur = dowMap.get(wd) ?? { sum: 0, count: 0 };
+              cur.sum += s.value;
+              cur.count += 1;
+              dowMap.set(wd, cur);
+            }
+            dowBreakdown = Array.from(dowMap.entries())
+              .map(([wd, v]) => ({
+                weekday: wd,
+                sr: dowLabelsSr[wd],
+                lat: dowLabelsLat[wd],
+                avg: Math.round(v.sum / v.count),
+                count: v.count,
+              }))
+              .sort((a, b) => b.avg - a.avg);
+          }
+          const dowMax = dowBreakdown[0]?.avg ?? 0;
+
+          // Period-specific ranked entries (when dow breakdown isn't used)
+          const rankedCap = period === "day" ? 5 : 7;
+          const ranked = sortedDesc.slice(0, rankedCap);
+
           return (
             <>
-              <div className="stat-summary-band">
-                <div className="stat-summary-cell">
-                  <span className="stat-summary-lbl"><span data-sr>ПРОСЕК</span><span data-lat>PROSEK</span></span>
-                  <span className="stat-summary-val">{formatCompactRsd(avg)}</span>
+              {/* PEAK CALLOUT — the standout "best moment" card, hero-styled */}
+              <div className="rev-peak">
+                <div className="rev-peak-eyebrow">
+                  <span className="rev-peak-star" aria-hidden="true">★</span>
+                  <span data-sr>{period === "day" ? "НАЈЈАЧИ САТ" : "НАЈЈАЧИ ДАН"}</span>
+                  <span data-lat>{period === "day" ? "NAJJAČI SAT" : "NAJJAČI DAN"}</span>
                 </div>
-                <div className="stat-summary-sep" aria-hidden="true" />
-                <div className="stat-summary-cell">
-                  <span className="stat-summary-lbl"><span data-sr>ПИК</span><span data-lat>PIK</span></span>
-                  <span className="stat-summary-val">
-                    <span className="stat-summary-peak-day">{peak.label}</span>{" "}
-                    {formatCompactRsd(peak.value)}
-                  </span>
+                <div className="rev-peak-label">{peak.label}</div>
+                <div className="rev-peak-value">
+                  {peak.value.toLocaleString("sr-RS")}
+                  <span className="rev-peak-currency">RSD</span>
                 </div>
+                {peakDeltaPct > 0 && (
+                  <div className="rev-peak-delta">
+                    ↑ {peakDeltaPct}% <span data-sr>изнад просека</span><span data-lat>iznad proseka</span>
+                  </div>
+                )}
               </div>
 
-              <div className="rev-list">
-                <div className="rev-list-head">
-                  <span data-sr>{period === "day" ? "ТОП САТИ" : "ТОП ДАНИ"}</span>
-                  <span data-lat>{period === "day" ? "TOP SATI" : "TOP DANI"}</span>
-                </div>
-                {top.map((s, i) => (
-                  <div key={s.key} className={`rev-list-row top ${s.isToday ? "today" : ""}`}>
-                    <span className="rev-list-rank">{i + 1}</span>
-                    <span className="rev-list-label">{s.label}{s.isToday ? " ·" : ""}</span>
-                    {s.isToday && (
-                      <>
-                        <span className="rev-list-tag" data-sr>ДАНАС</span>
-                        <span className="rev-list-tag" data-lat>DANAS</span>
-                      </>
-                    )}
-                    <span className="rev-list-val">{formatCompactRsd(s.value)}</span>
-                  </div>
-                ))}
+              {/* AVG sub-line — sets context for the peak delta */}
+              <div className="rev-avg-line">
+                <span data-sr>Просек </span>
+                <span data-lat>Prosek </span>
+                <strong>{formatCompactRsd(avg)}</strong>
+                <span data-sr> по {period === "day" ? "сату" : "дану"}</span>
+                <span data-lat> po {period === "day" ? "satu" : "danu"}</span>
               </div>
 
-              {weakest.length > 0 && (
-                <div className="rev-list">
-                  <div className="rev-list-head">
-                    <span data-sr>{period === "day" ? "СЛАБИЈИ САТИ" : "СЛАБИЈИ ДАНИ"}</span>
-                    <span data-lat>{period === "day" ? "SLABIJI SATI" : "SLABIJI DANI"}</span>
+              {/* RHYTHM section — different shape per period */}
+              {period === "month" && dowBreakdown.length > 0 ? (
+                <div className="rev-rhythm">
+                  <div className="rev-rhythm-head">
+                    <span data-sr>ПО ДАНИМА У НЕДЕЉИ</span>
+                    <span data-lat>PO DANIMA U NEDELJI</span>
                   </div>
-                  {weakest.map((s) => (
-                    <div key={s.key} className={`rev-list-row weak ${s.isToday ? "today" : ""}`}>
-                      <span className="rev-list-bullet" aria-hidden="true">·</span>
-                      <span className="rev-list-label">{s.label}</span>
-                      <span className="rev-list-val">{formatCompactRsd(s.value)}</span>
-                    </div>
-                  ))}
+                  {dowBreakdown.map((d, i) => {
+                    // Ratio used for a CSS variable we drive an inline
+                    // intensity bar with — purely typographic, no SVG.
+                    const ratio = dowMax > 0 ? d.avg / dowMax : 0;
+                    return (
+                      <div key={d.weekday} className={`rev-rhythm-row ${i === 0 ? "best" : ""}`} style={{ "--rhythm-fill": `${Math.round(ratio * 100)}%` } as React.CSSProperties}>
+                        <span className="rev-rhythm-day">
+                          <span data-sr>{d.sr}</span><span data-lat>{d.lat}</span>
+                        </span>
+                        <span className="rev-rhythm-bar" aria-hidden="true" />
+                        <span className="rev-rhythm-meta">
+                          {d.count}× <span data-sr>у месецу</span><span data-lat>u mesecu</span>
+                        </span>
+                        <span className="rev-rhythm-val">{formatCompactRsd(d.avg)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rev-rhythm">
+                  <div className="rev-rhythm-head">
+                    <span data-sr>{period === "day" ? "НАЈБОЉИХ 5 САТИ" : "ПО ДАНИМА"}</span>
+                    <span data-lat>{period === "day" ? "NAJBOLJIH 5 SATI" : "PO DANIMA"}</span>
+                  </div>
+                  {ranked.map((s, i) => {
+                    const ratio = peak.value > 0 ? s.value / peak.value : 0;
+                    return (
+                      <div
+                        key={s.key}
+                        className={`rev-rhythm-row ${i === 0 ? "best" : ""} ${s.isToday ? "today" : ""}`}
+                        style={{ "--rhythm-fill": `${Math.round(ratio * 100)}%` } as React.CSSProperties}
+                      >
+                        <span className="rev-rhythm-day">{s.label}</span>
+                        <span className="rev-rhythm-bar" aria-hidden="true" />
+                        {s.isToday ? (
+                          <span className="rev-rhythm-meta tag">
+                            <span data-sr>ДАНАС</span><span data-lat>DANAS</span>
+                          </span>
+                        ) : (
+                          <span className="rev-rhythm-meta" />
+                        )}
+                        <span className="rev-rhythm-val">{formatCompactRsd(s.value)}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
-              <div className="rev-dist">
-                <div className="rev-dist-cell good">
-                  <div className="rev-dist-num">{aboveCount}</div>
-                  <div className="rev-dist-unit"><span data-sr>{unitSr}</span><span data-lat>{unitLat}</span></div>
-                  <div className="rev-dist-lbl">
-                    <span data-sr>ИЗНАД ПРОСЕКА</span>
-                    <span data-lat>IZNAD PROSEKA</span>
-                  </div>
-                </div>
-                <div className="rev-dist-cell mid">
-                  <div className="rev-dist-num">{belowCount}</div>
-                  <div className="rev-dist-unit"><span data-sr>{unitSr}</span><span data-lat>{unitLat}</span></div>
-                  <div className="rev-dist-lbl">
-                    <span data-sr>ИСПОД ПРОСЕКА</span>
-                    <span data-lat>ISPOD PROSEKA</span>
-                  </div>
-                </div>
-                <div className="rev-dist-cell zero">
-                  <div className="rev-dist-num">{zeroCount}</div>
-                  <div className="rev-dist-unit"><span data-sr>{unitSr}</span><span data-lat>{unitLat}</span></div>
-                  <div className="rev-dist-lbl">
-                    <span data-sr>{zeroLabelSr}</span>
-                    <span data-lat>{zeroLabelLat}</span>
-                  </div>
-                </div>
+              {/* COUNTS — single sentence, sums up the period */}
+              <div className="rev-counts">
+                <strong>{aboveCount}</strong>
+                <span data-sr> изнад просека</span>
+                <span data-lat> iznad proseka</span>
+                <span className="rev-counts-sep">·</span>
+                <strong>{belowCount}</strong>
+                <span data-sr> испод</span>
+                <span data-lat> ispod</span>
+                {closedCount > 0 && (
+                  <>
+                    <span className="rev-counts-sep">·</span>
+                    <strong>{closedCount}</strong>
+                    <span data-sr> {period === "day" ? "без прихода" : "затворено"}</span>
+                    <span data-lat> {period === "day" ? "bez prihoda" : "zatvoreno"}</span>
+                  </>
+                )}
               </div>
             </>
           );

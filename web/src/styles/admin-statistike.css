@@ -176,77 +176,177 @@
   background: rgba(212, 165, 58, 0.18);
 }
 
-/* ── REVENUE LIST (replaces the old bar chart) ── */
-/* Editorial list of top + weak entries. Three layers of hierarchy:
-   ranked top with mustard digit + numeric value, weak with bullet + dim
-   value, distribution triplet at the bottom. No SVG, no positioned bars
-   — values can never collide because each lives in its own grid row. */
-.rev-list {
-  margin-top: 16px;
+/* ── REVENUE — PEAK + RHYTHM + COUNTS ──
+   Replaces the old bar chart and the previous list+dist layout.
+   Hierarchy:
+     1. Peak callout — single most important moment of the period
+     2. Rhythm — period-aware: day-of-week (month) or ranked list
+     3. Counts — one-line summary of distribution
+   Every value is in its own grid cell so labels never collide.   */
+
+/* PEAK callout — hero card, dominant visual on this card-block */
+.rev-peak {
+  position: relative;
+  padding: 18px 16px 16px;
+  margin: 14px 0 4px;
+  background: linear-gradient(
+    180deg,
+    rgba(212,165,58,.08) 0%,
+    rgba(212,165,58,.02) 100%
+  );
+  border: 1px solid rgba(212,165,58,.22);
+  text-align: center;
+  overflow: hidden;
 }
-.rev-list-head {
+.rev-peak::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--mustard) 50%, transparent);
+}
+.rev-peak-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(212,165,58,.7);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.rev-peak-star {
+  color: var(--mustard);
+  font-size: 13px;
+  line-height: 1;
+}
+.rev-peak-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(245,233,208,.85);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.rev-peak-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 38px;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--mustard);
+  font-feature-settings: "kern" 1;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+.rev-peak-currency {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-style: normal;
+  letter-spacing: 0.1em;
+  color: rgba(212,165,58,.55);
+  margin-left: 6px;
+}
+.rev-peak-delta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--success);
+  margin-top: 8px;
+  text-transform: uppercase;
+}
+
+/* AVG sub-line — quietly anchors the peak delta in context */
+.rev-avg-line {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(245,233,208,.4);
+  margin: 10px 0 18px;
+  text-transform: uppercase;
+}
+.rev-avg-line strong {
+  color: var(--mustard);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 0;
+  margin: 0 4px;
+  text-transform: none;
+}
+
+/* RHYTHM — period-aware ranked rows with intensity bar */
+.rev-rhythm-head {
   font-family: 'Oswald', sans-serif;
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(212, 165, 58, 0.7);
-  margin-bottom: 8px;
+  color: rgba(212,165,58,.7);
+  margin-bottom: 10px;
 }
-.rev-list-row {
+.rev-rhythm-row {
   display: grid;
-  grid-template-columns: 24px 1fr auto;
-  align-items: baseline;
+  grid-template-columns: 56px 1fr auto auto;
+  align-items: center;
   gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(245, 233, 208, 0.06);
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(245,233,208,.05);
 }
-.rev-list-row:last-child { border-bottom: none; }
-.rev-list-row.today {
-  background: linear-gradient(
-    90deg,
-    rgba(212, 165, 58, 0.06) 0%,
-    transparent 100%
-  );
+.rev-rhythm-row:last-child { border-bottom: none; }
+.rev-rhythm-row.today {
+  background: linear-gradient(90deg, rgba(212,165,58,.06) 0%, transparent 75%);
   margin-left: -8px;
   padding-left: 8px;
   border-left: 2px solid var(--mustard);
 }
-.rev-list-rank {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 22px;
-  font-weight: 700;
-  font-style: italic;
-  color: var(--mustard);
-  font-feature-settings: "kern" 1;
-  line-height: 1;
-  text-align: left;
-}
-.rev-list-bullet {
-  color: rgba(245, 233, 208, 0.35);
-  text-align: center;
-  font-size: 18px;
-  line-height: 1;
-}
-.rev-list-label {
+.rev-rhythm-day {
   font-family: 'Oswald', sans-serif;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.06em;
+  color: rgba(245,233,208,.85);
   text-transform: uppercase;
-  color: var(--cream);
-  white-space: nowrap;
+}
+.rev-rhythm-row.best .rev-rhythm-day { color: var(--mustard); }
+
+/* Intensity bar — pure CSS, driven by --rhythm-fill set inline. Reads as
+   a typographic accent (single mustard line), not a chart axis. */
+.rev-rhythm-bar {
+  position: relative;
+  height: 4px;
+  background: rgba(245,233,208,.06);
+  border-radius: 2px;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
-.rev-list-tag {
+.rev-rhythm-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: var(--rhythm-fill, 0%);
+  background: rgba(212,165,58,.45);
+  border-radius: 2px;
+  transition: width .25s ease;
+}
+.rev-rhythm-row.best .rev-rhythm-bar::before {
+  background: var(--mustard);
+  box-shadow: 0 0 8px rgba(212,165,58,.35);
+}
+.rev-rhythm-meta {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  color: var(--mustard);
-  margin-left: -4px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: rgba(245,233,208,.4);
+  white-space: nowrap;
 }
-.rev-list-val {
+.rev-rhythm-meta.tag {
+  color: var(--mustard);
+  letter-spacing: 0.12em;
+}
+.rev-rhythm-val {
   font-family: 'Cormorant Garamond', serif;
   font-size: 18px;
   font-style: italic;
@@ -254,63 +354,36 @@
   color: var(--mustard);
   font-feature-settings: "kern" 1;
   font-variant-numeric: tabular-nums;
-  line-height: 1.1;
+  line-height: 1;
   white-space: nowrap;
+  text-align: right;
+  min-width: 56px;
 }
-.rev-list-row.weak .rev-list-val {
-  color: rgba(245, 233, 208, 0.6);
-  font-size: 16px;
-}
-.rev-list-row.weak .rev-list-label {
-  color: rgba(245, 233, 208, 0.7);
-}
+.rev-rhythm-row.best .rev-rhythm-val { color: var(--mustard-bright); }
 
-/* Distribution triplet — same visual vocabulary as .retention-row so the
-   page stays cohesive. Three coloured cells answering "kakav je period". */
-.rev-dist {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
+/* COUNTS — one-sentence summary at the bottom */
+.rev-counts {
   margin-top: 18px;
-}
-.rev-dist-cell {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(245, 233, 208, 0.06);
-  padding: 14px 10px 12px;
-  text-align: center;
-  position: relative;
-}
-.rev-dist-cell.good { border-top: 2px solid var(--success); }
-.rev-dist-cell.mid  { border-top: 2px solid var(--mustard); }
-.rev-dist-cell.zero { border-top: 2px solid rgba(245, 233, 208, 0.15); }
-.rev-dist-num {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 32px;
-  font-weight: 700;
-  font-style: italic;
-  line-height: 1.05;
-  font-feature-settings: "kern" 1;
-}
-.rev-dist-cell.good .rev-dist-num { color: var(--success); }
-.rev-dist-cell.mid  .rev-dist-num { color: var(--mustard); }
-.rev-dist-cell.zero .rev-dist-num { color: rgba(245, 233, 208, 0.45); }
-.rev-dist-unit {
+  padding-top: 14px;
+  border-top: 1px dashed rgba(212,165,58,.18);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  color: rgba(245, 233, 208, 0.4);
-  margin-top: 2px;
-  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: rgba(245,233,208,.5);
+  text-align: center;
+  line-height: 1.7;
 }
-.rev-dist-lbl {
-  font-family: 'Oswald', sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(245, 233, 208, 0.55);
-  margin-top: 6px;
-  line-height: 1.2;
+.rev-counts strong {
+  color: var(--cream);
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 16px;
+  font-weight: 700;
+  margin-right: 2px;
+}
+.rev-counts-sep {
+  color: rgba(212,165,58,.3);
+  margin: 0 8px;
 }
 .bar-labels {
   display: flex;
@@ -419,21 +492,33 @@
 }
 
 /* ── NARROW PHONES (iPhone 11/13 Pro range) ──────
-   At ≤390px the summary band + dist triplet need tighter type so the
-   3-column row doesn't break into two lines per cell. */
+   Tighter spacing + smaller type so PEAK and rhythm rows breathe at 375px. */
 @media (max-width: 390px) {
-  .stat-summary-band { gap: 8px; padding: 8px 0 10px; }
-  .stat-summary-val { font-size: 16px; }
-  .stat-summary-lbl { font-size: 8px; letter-spacing: 0.14em; }
-  .stat-summary-peak-day { font-size: 10px; }
-  .rev-list-rank { font-size: 20px; }
-  .rev-list-label { font-size: 12px; }
-  .rev-list-val { font-size: 16px; }
-  .rev-list-row.weak .rev-list-val { font-size: 14px; }
-  .rev-dist-cell { padding: 12px 6px 10px; }
-  .rev-dist-num { font-size: 28px; }
-  .rev-dist-lbl { font-size: 9px; letter-spacing: 0.08em; }
-  .rev-dist-unit { font-size: 8px; }
+  .rev-peak { padding: 16px 12px 14px; }
+  .rev-peak-value { font-size: 32px; }
+  .rev-peak-label { font-size: 12px; }
+  .rev-peak-delta { font-size: 9px; }
+  .rev-avg-line { font-size: 9px; margin: 8px 0 14px; }
+  .rev-avg-line strong { font-size: 13px; }
+  .rev-rhythm-row {
+    grid-template-columns: 48px 1fr auto;
+    gap: 8px;
+  }
+  /* On narrow widths the per-row meta (count/today tag) is the first
+     thing we trim — reading-priority is day/value, not meta. */
+  .rev-rhythm-meta { display: none; }
+  .rev-rhythm-row.today .rev-rhythm-meta.tag {
+    display: inline;
+    grid-column: 1 / 4;
+    margin-top: -4px;
+    margin-bottom: -2px;
+    font-size: 9px;
+  }
+  .rev-rhythm-day { font-size: 12px; }
+  .rev-rhythm-val { font-size: 16px; min-width: 48px; }
+  .rev-counts { font-size: 10px; }
+  .rev-counts strong { font-size: 14px; }
+  .rev-counts-sep { margin: 0 5px; }
 }
 @media (max-width: 380px) {
   .stat-hero-value { font-size: clamp(36px, 10vw, 48px); }
