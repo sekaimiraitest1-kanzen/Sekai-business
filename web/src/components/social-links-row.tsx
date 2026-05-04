@@ -27,7 +27,7 @@ export function SocialLinksRow({ links }: { links: SocialLinks }) {
             aria-label={PLATFORM_META[platform].label}
             className="footer-social-icon"
           >
-            <SocialIcon platform={platform} size={22} />
+            <SocialIcon platform={platform} size={44} />
           </a>
         ))}
       </div>
