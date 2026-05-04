@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { updateOrderStatus } from "./actions";
 
 type Order = {
@@ -19,6 +20,7 @@ const STATUSES = [
   { value: "picked_up", sr: "ПОДИГНУТО", lat: "PODIGNUTO" },
   { value: "cancelled", sr: "ОТКАЗАНО", lat: "OTKAZANO" },
 ] as const;
+type StatusValue = (typeof STATUSES)[number]["value"];
 
 // L8: enforce a sane state machine on the buttons.
 // pending → ready / cancelled
@@ -33,7 +35,10 @@ const ALLOWED_TRANSITIONS: Record<string, ReadonlySet<string>> = {
 };
 
 export function PorudzbineClient({ orders }: { orders: Order[] }) {
-  const [selected, setSelected] = useState<Order | null>(null);
+  // Track selection by id rather than by row reference so the open sheet always
+  // reflects the freshest server data after `router.refresh()`.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = selectedId ? orders.find((o) => o.id === selectedId) ?? null : null;
 
   const pending = orders.filter((o) => o.status === "pending").length;
 
@@ -61,7 +66,7 @@ export function PorudzbineClient({ orders }: { orders: Order[] }) {
       {orders.map((o) => {
         const status = STATUSES.find((s) => s.value === o.status);
         return (
-          <div key={o.id} className="adm-card" onClick={() => setSelected(o)}>
+          <div key={o.id} className="adm-card" onClick={() => setSelectedId(o.id)}>
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, fontWeight: 600, color: "var(--cream)" }}>
                 {o.customers?.name ?? "—"}
@@ -80,13 +85,36 @@ export function PorudzbineClient({ orders }: { orders: Order[] }) {
         );
       })}
 
-      {selected && <OrderDetail order={selected} onClose={() => setSelected(null)} />}
+      {selected && <OrderDetail order={selected} onClose={() => setSelectedId(null)} />}
     </>
   );
 }
 
 function OrderDetail({ order, onClose }: { order: Order; onClose: () => void }) {
+  const router = useRouter();
   const [pending, start] = useTransition();
+  const [errMsg, setErrMsg] = useState<{ sr: string; lat: string } | null>(null);
+
+  function changeStatus(next: StatusValue) {
+    setErrMsg(null);
+    start(async () => {
+      const res = await updateOrderStatus(order.id, next);
+      if (!res.ok) {
+        const msg: Record<typeof res.error, { sr: string; lat: string }> = {
+          NOT_FOUND: { sr: "Поруџбина није пронађена.", lat: "Porudžbina nije pronađena." },
+          FORBIDDEN: { sr: "Сесија истекла. Пријави се поново.", lat: "Sesija istekla. Prijavi se ponovo." },
+          DB_FAILED: { sr: "Грешка при чувању. Покушај поново.", lat: "Greška pri čuvanju. Pokušaj ponovo." },
+        };
+        setErrMsg(msg[res.error]);
+        return;
+      }
+      // Pull fresh data from the server before closing so the list shows the
+      // new status without requiring a manual refresh.
+      router.refresh();
+      onClose();
+    });
+  }
+
   return (
     <div className="adm-sheet-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="adm-sheet">
@@ -134,13 +162,29 @@ function OrderDetail({ order, onClose }: { order: Order; onClose: () => void }) 
                   className={`adm-btn ${isCurrent ? "" : "adm-btn-secondary"}`}
                   disabled={disabled}
                   style={!allowed && !isCurrent ? { opacity: 0.3 } : undefined}
-                  onClick={() => start(async () => { await updateOrderStatus(order.id, s.value); onClose(); })}
+                  onClick={() => changeStatus(s.value)}
                 >
                   <span data-sr>{s.sr}</span><span data-lat>{s.lat}</span>
                 </button>
               );
             })}
           </div>
+
+          {errMsg && (
+            <div
+              style={{
+                marginTop: 10,
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 11,
+                color: "var(--danger)",
+                textAlign: "center",
+              }}
+            >
+              <span data-sr>⚠ {errMsg.sr}</span>
+              <span data-lat>⚠ {errMsg.lat}</span>
+            </div>
+          )}
+
           {(order.status === "picked_up" || order.status === "cancelled") && (
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.4)", marginTop: 8, textAlign: "center" }}>
               <span data-sr>Поруџбина је затворена.</span>
