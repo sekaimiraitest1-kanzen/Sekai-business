@@ -423,31 +423,33 @@ export default async function HomePage() {
           </h2>
 
           <div className="lokacija-grid">
-            <div className="map-placeholder">
-              <div className="map-placeholder-inner">
-                <div className="map-pin"></div>
-                <div className="map-label">
-                  {salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica"}
-                </div>
-                <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica")}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: "11px",
-                    letterSpacing: ".1em",
-                    color: "var(--mustard)",
-                    textTransform: "uppercase",
-                    textDecoration: "none",
-                    marginTop: "8px",
-                  }}
-                >
-                  <span data-sr>ОТВОРИ У GOOGLE MAPS →</span>
-                  <span data-lat>OTVORI U GOOGLE MAPS →</span>
-                </a>
+            <a
+              className="map-card"
+              href={`https://maps.google.com/?q=${encodeURIComponent(salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica")}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Otvori ${salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica"} u Google Maps`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/mapa-lokacija.webp"
+                alt="Mapa lokacije Berbernice Triša u Batajnici"
+                className="map-card-img"
+                width={1200}
+                height={675}
+                loading="lazy"
+              />
+              <div className="map-card-overlay" aria-hidden="true" />
+              <div className="map-card-address">
+                <span>📍</span>
+                <span>{salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica"}</span>
               </div>
-            </div>
+              <span className="map-card-cta">
+                <span data-sr>ОТВОРИ У GOOGLE MAPS</span>
+                <span data-lat>OTVORI U GOOGLE MAPS</span>
+                <span className="map-card-cta-arrow" aria-hidden="true">→</span>
+              </span>
+            </a>
 
             <div>
               <HoursCard workingHours={salon?.working_hours} />
