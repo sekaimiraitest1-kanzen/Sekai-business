@@ -9,6 +9,8 @@ import { sendBookingConfirmation } from "@/lib/email/templates";
 import { computeBlockedSlots, rangesOverlap, toMinutes, type Range } from "@/lib/booking/slots";
 import { bookingCancelToken } from "@/lib/booking/cancel-token";
 import { normalizePhone } from "@/lib/phone";
+import { sendPushToSalon } from "@/lib/push/server";
+import { sendOwnerNewBookingEmail } from "@/lib/email/templates";
 
 /**
  * Returns every booking for a single date, in the same shape the TODAY
@@ -294,32 +296,57 @@ export async function createWalkInBooking(input: {
     return { ok: false as const, error: "BOOKING_FAILED" };
   }
 
-  // G3: send confirmation email if walk-in customer left an email. Best-effort.
-  if (input.customerEmail) {
-    try {
-      const [{ data: svc }, { data: salon }] = await Promise.all([
-        sb.from("services").select("name_lat, price").eq("id", input.serviceId).single(),
-        sb.from("salons").select("address").eq("id", session.salonId).single(),
-      ]);
-      const basePrice = svc?.price ?? 0;
-      const finalPrice = surchargeApplied ? Math.round(basePrice * 1.3) : basePrice;
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://berbernica-ruby.vercel.app";
-      await sendBookingConfirmation({
-        to: input.customerEmail,
-        customerName: input.customerName,
-        serviceName: svc?.name_lat ?? "—",
-        date: input.date,
-        timeSlot: input.timeSlot,
-        price: finalPrice,
-        basePrice,
-        surchargeApplied,
-        salonAddress: salon?.address ?? "",
-        bookingId: booking.id,
-        cancelUrl: `${baseUrl}/otkazi/${booking.id}?t=${bookingCancelToken(booking.id)}`,
-      });
-    } catch (e) {
-      console.error("walk-in confirmation email failed:", e instanceof Error ? e.message : "unknown");
-    }
+  // G3: notifications. Customer confirmation email (only if she gave one),
+  // owner email (when a STAFF member created the walk-in — no need to email
+  // the owner about her own walk-in), owner push (always — same logic, but
+  // push is also useful for the owner across multiple devices).
+  try {
+    const [{ data: svc }, { data: salon }] = await Promise.all([
+      sb.from("services").select("name_lat, price").eq("id", input.serviceId).single(),
+      sb.from("salons").select("address, email").eq("id", session.salonId).single(),
+    ]);
+    const basePrice = svc?.price ?? 0;
+    const finalPrice = surchargeApplied ? Math.round(basePrice * 1.3) : basePrice;
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://berbernica-ruby.vercel.app";
+    const isStaffCreated = isStaff(session);
+
+    await Promise.allSettled([
+      input.customerEmail
+        ? sendBookingConfirmation({
+            to: input.customerEmail,
+            customerName: input.customerName,
+            serviceName: svc?.name_lat ?? "—",
+            date: input.date,
+            timeSlot: input.timeSlot,
+            price: finalPrice,
+            basePrice,
+            surchargeApplied,
+            salonAddress: salon?.address ?? "",
+            bookingId: booking.id,
+            cancelUrl: `${baseUrl}/otkazi/${booking.id}?t=${bookingCancelToken(booking.id)}`,
+          })
+        : Promise.resolve(),
+      isStaffCreated && salon?.email
+        ? sendOwnerNewBookingEmail({
+            to: salon.email,
+            customerName: input.customerName,
+            customerPhone: phone,
+            serviceName: svc?.name_lat ?? "—",
+            date: input.date,
+            timeSlot: input.timeSlot,
+            price: finalPrice,
+            source: "WALK-IN",
+          })
+        : Promise.resolve(),
+      sendPushToSalon(session.salonId, {
+        title: `Walk-in · ${input.timeSlot}`,
+        body: `${input.customerName} · ${svc?.name_lat ?? "—"} · ${input.date}`,
+        url: "/admin/termini",
+        tag: `booking-${booking.id}`,
+      }),
+    ]);
+  } catch (e) {
+    console.error("walk-in notify failed:", e instanceof Error ? e.message : "unknown");
   }
 
   revalidatePath("/admin/termini");

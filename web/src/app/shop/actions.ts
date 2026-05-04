@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendOrderEmail, sendOrderConfirmationToCustomer } from "@/lib/email/templates";
 import { normalizePhone } from "@/lib/phone";
+import { sendPushToSalon } from "@/lib/push/server";
 
 const orderSchema = z.object({
   customerName: z.string().min(2).max(80),
@@ -102,11 +103,15 @@ export async function submitOrder(input: OrderInput) {
   // 1. Internal: salon owner gets the order alert (existing behaviour).
   // 2. Customer-facing: confirmation receipt so the buyer doesn't depend on
   //    keeping the success page open. Skipped silently if no email given.
+  const itemSummary = data.items.length === 1
+    ? `${data.items[0].quantity}× ${data.items[0].name}`
+    : `${data.items.reduce((s, it) => s + it.quantity, 0)} stavki`;
+
   await Promise.allSettled([
     sendOrderEmail({
       to: salon.email ?? "",
       customerName: data.customerName,
-      customerPhone: data.customerPhone,
+      customerPhone: phone,
       customerEmail: data.customerEmail || null,
       pickupNote: data.pickupNote || null,
       items: data.items.map((it) => ({ name: it.name, quantity: it.quantity, price: it.price })),
@@ -124,6 +129,12 @@ export async function submitOrder(input: OrderInput) {
       salonAddress: salon.address ?? "",
       salonPhone: salon.phone ?? "",
     }).catch((e) => console.error("order email (customer) failed:", e instanceof Error ? e.message : "unknown")),
+    sendPushToSalon(salon.id, {
+      title: `Nova porudžbina · ${total} RSD`,
+      body: `${data.customerName} · ${itemSummary}`,
+      url: "/admin/shop/porudzbine",
+      tag: `order-${order.id}`,
+    }),
   ]);
 
   return { ok: true as const, orderId: order.id, loyaltyDiscount: isLoyaltyDiscount, subtotal, total };

@@ -94,6 +94,47 @@ export async function sendBookingConfirmation(input: {
   });
 }
 
+/**
+ * Owner-side email fired when a new haircut booking lands. Mirrors the
+ * push-notification payload so Triša gets the same info on lock-screen
+ * and in the inbox. Source = "WEB" for public booking, "WALK-IN" for
+ * staff-created in admin.
+ */
+export async function sendOwnerNewBookingEmail(input: {
+  to: string;
+  customerName: string;
+  customerPhone: string;
+  serviceName: string;
+  date: string;
+  timeSlot: string;
+  price: number;
+  source: "WEB" | "WALK-IN";
+}) {
+  if (!input.to) return;
+  const resend = getResend();
+  await resend.emails.send({
+    from: `Berbernica Trisa <${FROM_EMAIL}>`,
+    to: input.to,
+    subject: `Nov termin · ${input.date} ${input.timeSlot} · ${input.customerName}`,
+    html: `
+      <div style="font-family: Inter, sans-serif; max-width: 480px; margin: 0 auto; color: #1A0F05; background: #FAF3E3; padding: 24px;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5C3A22; letter-spacing: .15em; text-transform: uppercase; margin-bottom: 8px;">${input.source === "WEB" ? "novi termin · sajt" : "novi termin · walk-in"}</div>
+        <h1 style="font-family: Georgia, serif; font-style: italic; font-size: 22px; margin: 0 0 16px 0;">${input.customerName}</h1>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 16px;">
+          <tr><td style="padding: 4px 0; color: #5C3A22;">Telefon</td><td style="text-align: right;"><a href="tel:${input.customerPhone}" style="color: #D4A53A; text-decoration: none;">${input.customerPhone}</a></td></tr>
+          <tr><td style="padding: 4px 0; color: #5C3A22;">Usluga</td><td style="text-align: right; color: #1A0F05;">${input.serviceName}</td></tr>
+          <tr><td style="padding: 4px 0; color: #5C3A22;">Datum</td><td style="text-align: right; color: #1A0F05;">${input.date}</td></tr>
+          <tr><td style="padding: 4px 0; color: #5C3A22;">Vreme</td><td style="text-align: right; font-family: Georgia, serif; font-style: italic; color: #D4A53A; font-size: 18px;">${input.timeSlot}</td></tr>
+          <tr><td style="padding: 4px 0; color: #5C3A22;">Cena</td><td style="text-align: right; color: #1A0F05;">${input.price} RSD</td></tr>
+        </table>
+        <p style="font-size: 11px; color: #5C3A22; opacity: .65; line-height: 1.5; margin: 0;">
+          Stigao je i u admin panel. Push notifikaciju primaš direktno u aplikaciji ako si je uključio.
+        </p>
+      </div>
+    `,
+  });
+}
+
 export async function sendOrderEmail(input: {
   to: string;
   customerName: string;

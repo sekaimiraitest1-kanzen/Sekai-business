@@ -2,11 +2,12 @@
 
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendBookingConfirmation } from "@/lib/email/templates";
+import { sendBookingConfirmation, sendOwnerNewBookingEmail } from "@/lib/email/templates";
 import { computeBlockedSlots, rangesOverlap, toMinutes, type Range } from "@/lib/booking/slots";
 import { isPastBelgrade } from "@/lib/datetime";
 import { bookingCancelToken } from "@/lib/booking/cancel-token";
 import { normalizePhone } from "@/lib/phone";
+import { sendPushToSalon } from "@/lib/push/server";
 
 const bookingSchema = z.object({
   salonId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID format"),
@@ -178,37 +179,59 @@ export async function submitBooking(input: BookingInput) {
     await sb.from("customers").update(updates).eq("id", customerId);
   }
 
-  // Send confirmation email (best-effort, don't block on failure). Pulls
-  // the actual service price + applies the 30% surcharge if it was set
-  // above, and embeds the cancel-link token so the customer can self-cancel
-  // straight from the email.
-  if (data.email) {
-    try {
-      const { data: svc } = await sb.from("services").select("name_lat, price").eq("id", data.serviceId).single();
-      const { data: salon } = await sb.from("salons").select("address").eq("id", data.salonId).single();
-      const basePrice = svc?.price ?? 0;
-      const finalPrice = isLoyaltyRedeem
-        ? 0
-        : surchargeApplied ? Math.round(basePrice * 1.3) : basePrice;
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://berbernica-ruby.vercel.app";
-      await sendBookingConfirmation({
-        to: data.email,
-        customerName: data.name,
-        serviceName: svc?.name_lat ?? "—",
-        date: data.date,
-        timeSlot: data.timeSlot,
-        price: finalPrice,
-        basePrice,
-        surchargeApplied,
-        loyaltyFreeCut: isLoyaltyRedeem,
-        salonAddress: salon?.address ?? "",
-        bookingId: booking.id,
-        cancelUrl: `${baseUrl}/otkazi/${booking.id}?t=${bookingCancelToken(booking.id)}`,
-      });
-    } catch (e) {
-      // Log only the message — the error object may serialize customer email/name passed to sendBookingConfirmation.
-      console.error("booking email failed:", e instanceof Error ? e.message : "unknown");
-    }
+  // Notifications: customer confirmation email (if she gave one), owner
+  // email (always), owner push (always — fan-out across every device the
+  // owner subscribed). All three are best-effort; nothing here may throw
+  // upward — the booking is already in DB and must surface as success.
+  try {
+    const [{ data: svc }, { data: salon }] = await Promise.all([
+      sb.from("services").select("name_lat, price").eq("id", data.serviceId).single(),
+      sb.from("salons").select("address, email").eq("id", data.salonId).single(),
+    ]);
+    const basePrice = svc?.price ?? 0;
+    const finalPrice = isLoyaltyRedeem
+      ? 0
+      : surchargeApplied ? Math.round(basePrice * 1.3) : basePrice;
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://berbernica-ruby.vercel.app";
+
+    await Promise.allSettled([
+      data.email
+        ? sendBookingConfirmation({
+            to: data.email,
+            customerName: data.name,
+            serviceName: svc?.name_lat ?? "—",
+            date: data.date,
+            timeSlot: data.timeSlot,
+            price: finalPrice,
+            basePrice,
+            surchargeApplied,
+            loyaltyFreeCut: isLoyaltyRedeem,
+            salonAddress: salon?.address ?? "",
+            bookingId: booking.id,
+            cancelUrl: `${baseUrl}/otkazi/${booking.id}?t=${bookingCancelToken(booking.id)}`,
+          })
+        : Promise.resolve(),
+      salon?.email
+        ? sendOwnerNewBookingEmail({
+            to: salon.email,
+            customerName: data.name,
+            customerPhone: phone,
+            serviceName: svc?.name_lat ?? "—",
+            date: data.date,
+            timeSlot: data.timeSlot,
+            price: finalPrice,
+            source: "WEB",
+          })
+        : Promise.resolve(),
+      sendPushToSalon(data.salonId, {
+        title: `Nov termin · ${data.timeSlot}`,
+        body: `${data.name} · ${svc?.name_lat ?? "—"} · ${data.date}`,
+        url: "/admin/termini",
+        tag: `booking-${booking.id}`,
+      }),
+    ]);
+  } catch (e) {
+    console.error("booking notify failed:", e instanceof Error ? e.message : "unknown");
   }
 
   return {

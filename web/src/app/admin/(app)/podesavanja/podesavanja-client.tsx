@@ -9,6 +9,7 @@ import {
   type SocialPlatform,
 } from "@/lib/social-links";
 import { InstallAppCard } from "@/components/install-app-card";
+import { PushNotifCard } from "@/components/push-notif-card";
 
 type Ann = {
   id: string;
@@ -112,6 +113,9 @@ export function PodesavanjaClient({
 
           {/* Manual PWA install — pairs with the auto-bar from admin layout. */}
           <InstallAppCard />
+
+          {/* Web Push subscription — relies on the PWA being installed on iOS. */}
+          <PushNotifCard />
         </>
       )}
     </>
