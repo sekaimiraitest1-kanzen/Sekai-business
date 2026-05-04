@@ -20,7 +20,14 @@ export default async function HomePage() {
   ]);
 
   const salon = salonRes.data;
-  const services = servicesRes.data ?? [];
+  // Featured / VIP services always render LAST so the gold-accent block
+  // anchors the bottom of the list. Admin can add new regular services in
+  // any sort_order — they'll never push the VIP block out of place.
+  const allServices = servicesRes.data ?? [];
+  const services = [
+    ...allServices.filter((s) => !s.featured),
+    ...allServices.filter((s) => !!s.featured),
+  ];
   // Build a Map of site_content rows so render code can do `content.get("hero_title")?.sr ?? FALLBACK`.
   // FALLBACK preserves the original hardcoded text if the row is missing or empty — admin /admin/sajt
   // edits propagate within next revalidation interval (≤ 5 min).
