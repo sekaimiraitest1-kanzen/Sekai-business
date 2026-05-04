@@ -209,7 +209,7 @@ export function TerminiClient({
             weekTo={weekTo}
             workingHours={workingHours}
             selectedDay={selectedDay}
-            onDayClick={(key) => setSelectedDay((cur) => (cur === key ? null : key))}
+            onDayClick={(key) => setSelectedDay(key)}
           />
           {selectedDay && (
             <DayDrillIn
@@ -428,10 +428,16 @@ function MonthHeatmap({ monthFrom, monthBookings, weekFrom, weekTo, workingHours
 
 // ── DAY DRILL-IN (week view → tap-a-day) ──────────
 //
-// Inline panel that appears below the month heatmap when Triša taps a
-// day cell. Mirrors the TODAY view's TimelineRow rendering so any day
-// reads at a glance and clicking a row opens the same detail sheet
-// with status-change actions.
+// Modal sheet that opens when Triša taps a day cell in the month
+// heatmap. Renders the same TimelineRow used in the TODAY view so the
+// visual is identical, and tapping a row hands off to the existing
+// BookingDetailSheet for status changes.
+//
+// Switched from inline-panel to overlay sheet because the inline panel
+// rendered below the calendar — on a phone screen the calendar takes
+// the whole viewport, so the panel stayed below the fold and Triša
+// thought tapping did nothing. The overlay sheet pops up over the
+// calendar so it's impossible to miss.
 function DayDrillIn({ date, bookings, loading, currentUserId, onSelect, onClose }: {
   date: string;
   bookings: Booking[] | null;
@@ -441,39 +447,63 @@ function DayDrillIn({ date, bookings, loading, currentUserId, onSelect, onClose 
   onClose: () => void;
 }) {
   return (
-    <div className="trm-day-drill">
-      <div className="trm-day-drill-header">
-        <div className="trm-day-drill-title">
-          <span data-sr>{formatLongDate(date, "sr")}</span>
-          <span data-lat>{formatLongDate(date, "lat")}</span>
-          {bookings && (
-            <span className="trm-day-drill-count">
-              {" · "}
-              {bookings.length}
-              <span data-sr> термина</span>
-              <span data-lat> termina</span>
-            </span>
+    <div className="adm-sheet-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="adm-sheet" style={{ maxHeight: "80vh", overflowY: "auto" }}>
+        <div className="adm-sheet-handle" />
+        <div className="adm-sheet-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px" }}>
+          <div>
+            <span data-sr>{formatLongDate(date, "sr")}</span>
+            <span data-lat>{formatLongDate(date, "lat")}</span>
+            {bookings && (
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "rgba(245,233,208,.5)", marginLeft: 8, fontStyle: "normal" }}>
+                · {bookings.length}
+                <span data-sr> термина</span>
+                <span data-lat> termina</span>
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Zatvori"
+            style={{
+              background: "transparent",
+              border: "1px solid rgba(245,233,208,.2)",
+              color: "rgba(245,233,208,.7)",
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              fontSize: 18,
+              lineHeight: 1,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 0,
+              fontStyle: "normal",
+            }}
+          >×</button>
+        </div>
+        <div style={{ padding: "12px 20px 20px" }}>
+          {loading ? (
+            <div className="adm-empty" style={{ padding: 16, fontSize: 12, color: "rgba(245,233,208,.5)" }}>
+              <span data-sr>Учитавам…</span>
+              <span data-lat>Učitavam…</span>
+            </div>
+          ) : !bookings || bookings.length === 0 ? (
+            <div className="adm-empty" style={{ padding: 16 }}>
+              <span data-sr>Нема термина за овај дан.</span>
+              <span data-lat>Nema termina za ovaj dan.</span>
+            </div>
+          ) : (
+            <div className="trm-timeline">
+              {bookings.map((b) => (
+                <TimelineRow key={b.id} booking={b} isNext={false} currentUserId={currentUserId} onSelect={() => onSelect(b)} />
+              ))}
+            </div>
           )}
         </div>
-        <button type="button" className="trm-day-drill-close" onClick={onClose} aria-label="Zatvori">×</button>
       </div>
-      {loading ? (
-        <div className="adm-empty" style={{ padding: 16, fontSize: 12, color: "rgba(245,233,208,.5)" }}>
-          <span data-sr>Учитавам…</span>
-          <span data-lat>Učitavam…</span>
-        </div>
-      ) : !bookings || bookings.length === 0 ? (
-        <div className="adm-empty" style={{ padding: 16 }}>
-          <span data-sr>Нема термина.</span>
-          <span data-lat>Nema termina.</span>
-        </div>
-      ) : (
-        <div className="trm-timeline">
-          {bookings.map((b) => (
-            <TimelineRow key={b.id} booking={b} isNext={false} currentUserId={currentUserId} onSelect={() => onSelect(b)} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
