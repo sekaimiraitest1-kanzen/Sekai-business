@@ -7,10 +7,12 @@ import "@/styles/legacy-booking.css";
 import "@/styles/legacy-shop.css";
 import "@/styles/product-detail.css";
 import "@/styles/cart-fly.css";
+import "@/styles/scroll-reveal.css";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { CookieNotice } from "@/components/cookie-notice";
 import { PlausibleScript } from "@/components/plausible";
 import { SkipToContent } from "@/components/skip-to-content";
+import { ScrollRevealRunner } from "@/components/scroll-reveal";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin", "cyrillic"],
@@ -133,6 +135,7 @@ export default function RootLayout({
         <CookieNotice />
         <ServiceWorkerRegister />
         <PlausibleScript />
+        <ScrollRevealRunner />
       </body>
     </html>
   );

@@ -1,0 +1,152 @@
+/* ============================================================
+   SCROLL-REVEAL MOTION SYSTEM
+   Editorial cinema for the public site. Pure CSS transitions
+   driven by an IntersectionObserver toggling `.is-revealed`.
+
+   Variants (apply via data-reveal="…"):
+     up      — fade + translateY(28px → 0)        — default
+     up-lg   — fade + translateY(40px → 0)        — hero/title-weight
+     fade    — opacity only                       — humble paragraphs
+     left    — fade + translateX(-28px → 0)       — section labels
+     scale   — fade + scale(.96 → 1)              — image cards
+     stagger — observed parent, children stagger  — grids/lists
+
+   All transitions run on `transform` + `opacity` only (compositor-only)
+   and are `will-change: transform, opacity` for GPU promotion.
+   ============================================================ */
+
+[data-reveal] {
+  will-change: transform, opacity;
+  transition:
+    opacity 720ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 820ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Default + 'up' */
+[data-reveal=""],
+[data-reveal="up"] {
+  opacity: 0;
+  transform: translateY(28px);
+}
+[data-reveal=""].is-revealed,
+[data-reveal="up"].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* Larger drop — for big titles / hero-weight elements */
+[data-reveal="up-lg"] {
+  opacity: 0;
+  transform: translateY(48px);
+  transition-duration: 900ms, 1000ms;
+}
+[data-reveal="up-lg"].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* Pure opacity fade — for humble body copy */
+[data-reveal="fade"] {
+  opacity: 0;
+  transition-duration: 900ms, 900ms;
+}
+[data-reveal="fade"].is-revealed {
+  opacity: 1;
+}
+
+/* Slide-in from left — signature for section labels (§ XX · TITLE) */
+[data-reveal="left"] {
+  opacity: 0;
+  transform: translateX(-28px);
+}
+[data-reveal="left"].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* Soft scale — for image-heavy cards (gallery, location, hero stats) */
+[data-reveal="scale"] {
+  opacity: 0;
+  transform: scale(0.96);
+  transform-origin: center bottom;
+}
+[data-reveal="scale"].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================
+   STAGGER SYSTEM
+   When a parent has data-reveal-stagger, its direct children
+   that themselves declare a reveal variant inherit a per-index
+   delay. The parent itself isn't observed — the runner observes
+   the children. Each child reveals when it enters the viewport,
+   but with a delay derived from its position.
+
+   For tight grids (services, gallery) we cap stagger at child 8;
+   beyond that the delay would feel sluggish.
+   ============================================================ */
+
+[data-reveal-stagger] > [data-reveal]:nth-child(1) { transition-delay: 0ms, 0ms; }
+[data-reveal-stagger] > [data-reveal]:nth-child(2) { transition-delay: 70ms, 70ms; }
+[data-reveal-stagger] > [data-reveal]:nth-child(3) { transition-delay: 140ms, 140ms; }
+[data-reveal-stagger] > [data-reveal]:nth-child(4) { transition-delay: 210ms, 210ms; }
+[data-reveal-stagger] > [data-reveal]:nth-child(5) { transition-delay: 280ms, 280ms; }
+[data-reveal-stagger] > [data-reveal]:nth-child(6) { transition-delay: 350ms, 350ms; }
+[data-reveal-stagger] > [data-reveal]:nth-child(7) { transition-delay: 420ms, 420ms; }
+[data-reveal-stagger] > [data-reveal]:nth-child(8) { transition-delay: 490ms, 490ms; }
+[data-reveal-stagger] > [data-reveal]:nth-child(9) { transition-delay: 560ms, 560ms; }
+[data-reveal-stagger] > [data-reveal]:nth-child(n+10) { transition-delay: 600ms, 600ms; }
+
+/* Fast stagger — for small clusters where 70ms feels too slow */
+[data-reveal-stagger="fast"] > [data-reveal]:nth-child(1) { transition-delay: 0ms, 0ms; }
+[data-reveal-stagger="fast"] > [data-reveal]:nth-child(2) { transition-delay: 50ms, 50ms; }
+[data-reveal-stagger="fast"] > [data-reveal]:nth-child(3) { transition-delay: 100ms, 100ms; }
+[data-reveal-stagger="fast"] > [data-reveal]:nth-child(4) { transition-delay: 150ms, 150ms; }
+[data-reveal-stagger="fast"] > [data-reveal]:nth-child(n+5) { transition-delay: 200ms, 200ms; }
+
+/* Slow stagger — for hero stats / dramatic reveals */
+[data-reveal-stagger="slow"] > [data-reveal]:nth-child(1) { transition-delay: 0ms, 0ms; }
+[data-reveal-stagger="slow"] > [data-reveal]:nth-child(2) { transition-delay: 120ms, 120ms; }
+[data-reveal-stagger="slow"] > [data-reveal]:nth-child(3) { transition-delay: 240ms, 240ms; }
+[data-reveal-stagger="slow"] > [data-reveal]:nth-child(4) { transition-delay: 360ms, 360ms; }
+
+/* ============================================================
+   EDITORIAL FLOURISH
+   The mustard underline that already exists on .section-label::before
+   gets a draw-in animation when the label reveals. Tiny detail, big
+   feel — it's the one moment where the page reads as "designed".
+   ============================================================ */
+.section-label[data-reveal] {
+  position: relative;
+}
+.section-label[data-reveal]::before {
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 820ms cubic-bezier(0.2, 0.8, 0.2, 1) 280ms;
+}
+.section-label[data-reveal].is-revealed::before {
+  transform: scaleX(1);
+}
+
+/* ============================================================
+   REDUCED MOTION
+   Strip transforms + transitions; show everything in place.
+   The runner already adds `.is-revealed` immediately when this
+   pref is set, so the rules below just neutralize transform/delay.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    will-change: auto;
+  }
+  [data-reveal-stagger] > [data-reveal] {
+    transition-delay: 0ms !important;
+  }
+  .section-label[data-reveal]::before {
+    transform: none;
+    transition: none;
+  }
+}

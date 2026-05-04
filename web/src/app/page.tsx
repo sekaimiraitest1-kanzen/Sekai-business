@@ -175,11 +175,11 @@ export default async function HomePage() {
       <section className="section onama" id="onama">
         <div className="onama-grid">
           <div className="onama-text">
-            <div className="section-label">
+            <div className="section-label" data-reveal="left">
               <span data-sr>§ 02 · О НАМА</span>
               <span data-lat>§ 02 · O NAMA</span>
             </div>
-            <h2 className="section-title">
+            <h2 className="section-title" data-reveal="up-lg">
               <span data-sr>
                 {aboutTitleA_sr}
                 {aboutTitleB_sr && <><br />{aboutTitleB_sr}</>}
@@ -189,11 +189,11 @@ export default async function HomePage() {
                 {aboutTitleB_lat && <><br />{aboutTitleB_lat}</>}
               </span>
             </h2>
-            <p>
+            <p data-reveal="up">
               <span data-sr>{aboutStory.sr}</span>
               <span data-lat>{aboutStory.lat}</span>
             </p>
-            <p>
+            <p data-reveal="up">
               <span data-sr>
                 Радимо искључиво преко апликације — букираш за 10 секунди, појавиш се, добијеш третман и настављаш даље. Док си ту, покупи најбоље препарате или озбиљан алат да одржаваш стил и код куће.
               </span>
@@ -201,35 +201,35 @@ export default async function HomePage() {
                 Radimo isključivo preko aplikacije — bukiraš za 10 sekundi, pojaviš se, dobiješ tretman i nastavljaš dalje. Dok si tu, pokupi najbolje preparate ili ozbiljan alat da održavaš stil i kod kuće.
               </span>
             </p>
-            <p className="loyalty-line">
+            <p className="loyalty-line" data-reveal="up">
               <span data-sr>Шесто шишање чисти кућа. Закажи, не чекај.</span>
               <span data-lat>Šesto šišanje časti kuća. Zakaži, ne čekaj.</span>
             </p>
           </div>
 
-          <div className="stats-grid">
-            <div className="stat-card">
+          <div className="stats-grid" data-reveal-stagger="fast">
+            <div className="stat-card" data-reveal="up">
               <div className="stat-val">5+</div>
               <div className="stat-label">
                 <span data-sr>ГОДИНА ИСКУСТВА</span>
                 <span data-lat>GODINA ISKUSTVA</span>
               </div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card" data-reveal="up">
               <div className="stat-val">60+</div>
               <div className="stat-label">
                 <span data-sr>СТАЛНИХ МУШТ.</span>
                 <span data-lat>STALNIH MUŠTERIJA.</span>
               </div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card" data-reveal="up">
               <div className="stat-val">4.9</div>
               <div className="stat-label">
                 <span data-sr>★ GOOGLE ОЦЕНА</span>
                 <span data-lat>★ GOOGLE OCENA</span>
               </div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card" data-reveal="up">
               <div className="stat-val">{services.length || 11}</div>
               <div className="stat-label">
                 <span data-sr>УСЛУГА У ПОНУДИ</span>
@@ -243,22 +243,22 @@ export default async function HomePage() {
       {/* ── USLUGE ──────────────────────────────────────── */}
       <section className="section usluge" id="usluge">
         <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
-          <div className="section-label">
+          <div className="section-label" data-reveal="left">
             <span data-sr>§ 03 · УСЛУГЕ</span>
             <span data-lat>§ 03 · USLUGE</span>
           </div>
-          <h2 className="section-title">
+          <h2 className="section-title" data-reveal="up-lg">
             <span data-sr>Шта радимо.</span>
             <span data-lat>Šta radimo.</span>
           </h2>
-          <p className="usluge-note" data-sr>
+          <p className="usluge-note" data-sr data-reveal="fade">
             ПЛАЋА СЕ ГОТОВИНОМ ИЛИ КАРТИЦОМ · БЕЗ ДОПЛАТА · БЕЗ "СЕРВИСНИХ НАКНАДА"
           </p>
-          <p className="usluge-note" data-lat>
+          <p className="usluge-note" data-lat data-reveal="fade">
             PLAĆA SE GOTOVINOM ILI KARTICOM · BEZ DOPLATA · BEZ "SERVISNIH NAKNADA"
           </p>
 
-          <div className="services-list">
+          <div className="services-list" data-reveal-stagger>
             {services.length > 0
               ? services.map((s, i) => {
                   // Premium tier is now a per-row DB flag (services.featured) — admin /admin/usluge
@@ -267,7 +267,7 @@ export default async function HomePage() {
                   const metaSr = s.meta_sr || `${s.duration_min} МИН`;
                   const metaLat = s.meta_lat || `${s.duration_min} MIN`;
                   return (
-                    <div key={i} className={`service-item ${isFeatured ? "featured" : ""}`}>
+                    <div key={i} className={`service-item ${isFeatured ? "featured" : ""}`} data-reveal="up">
                       <div className="service-item-left">
                         <div className="service-meta">
                           <span data-sr>{metaSr}</span>
@@ -293,7 +293,7 @@ export default async function HomePage() {
                   );
                 })
               : DEFAULT_SERVICES.map((s, i) => (
-                  <div key={i} className="service-item">
+                  <div key={i} className="service-item" data-reveal="up">
                     <div className="service-item-left">
                       <div className="service-meta">
                         <span data-sr>{s.metaSr}</span>
@@ -313,7 +313,7 @@ export default async function HomePage() {
                 ))}
           </div>
 
-          <div className="services-footer">
+          <div className="services-footer" data-reveal="up">
             <a href="/zakazivanje" className="btn-primary">
               <span data-sr>ЗАКАЖИ ТЕРМИН →</span>
               <span data-lat>ZAKAŽI TERMIN →</span>
@@ -326,11 +326,11 @@ export default async function HomePage() {
       <section className="galerija" id="galerija">
         <div className="galerija-header">
           <div>
-            <div className="section-label" style={{ color: "var(--mustard)" }}>
+            <div className="section-label" style={{ color: "var(--mustard)" }} data-reveal="left">
               <span data-sr>§ 04 · ГАЛЕРИЈА</span>
               <span data-lat>§ 04 · GALERIJA</span>
             </div>
-            <h2 className="section-title" style={{ color: "var(--cream)", marginBottom: 0 }}>
+            <h2 className="section-title" style={{ color: "var(--cream)", marginBottom: 0 }} data-reveal="up-lg">
               <span data-sr>Наш рад.</span>
               <span data-lat>Naš rad.</span>
             </h2>
@@ -355,9 +355,9 @@ export default async function HomePage() {
           )}
         </div>
 
-        <div className="gallery-grid">
+        <div className="gallery-grid" data-reveal-stagger>
           {gallery.map((g, i) => (
-            <div key={i} className={`gallery-item ${g.cls}`}>
+            <div key={i} className={`gallery-item ${g.cls}`} data-reveal="scale">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={g.src}
@@ -374,22 +374,22 @@ export default async function HomePage() {
       {/* ── UTISCI ──────────────────────────────────────── */}
       <section className="section utisci" id="utisci">
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div className="section-label">
+          <div className="section-label" data-reveal="left">
             <span data-sr>§ 05 · УТИСЦИ</span>
             <span data-lat>§ 05 · UTISCI</span>
           </div>
-          <h2 className="section-title">
+          <h2 className="section-title" data-reveal="up-lg">
             <span data-sr>Шта кажу мушterije.</span>
             <span data-lat>Šta kažu mušterije.</span>
           </h2>
 
-          <div className="reviews-grid">
+          <div className="reviews-grid" data-reveal-stagger="slow">
             {REVIEWS.map((r, i) => {
               const dbText = [review1, review2, review3][i];
               // getC() always returns either DB value or hardcoded fallback,
               // so we always have text to render (no skip).
               return (
-                <div key={i} className="review-card">
+                <div key={i} className="review-card" data-reveal="up">
                   <div className="review-quote-mark">&quot;</div>
                   <div className="review-stars">★★★★★</div>
                   <p className="review-text" data-sr>{dbText.sr}</p>
@@ -414,17 +414,18 @@ export default async function HomePage() {
       {/* ── LOKACIJA ────────────────────────────────────── */}
       <section className="section lokacija" id="lokacija">
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div className="section-label">
+          <div className="section-label" data-reveal="left">
             <span data-sr>§ 06 · ЛОКАЦИЈА</span>
             <span data-lat>§ 06 · LOKACIJA</span>
           </div>
-          <h2 className="section-title">
+          <h2 className="section-title" data-reveal="up-lg">
             <span data-sr>Где смо.</span>
             <span data-lat>Gde smo.</span>
           </h2>
 
-          <div className="lokacija-grid">
+          <div className="lokacija-grid" data-reveal-stagger="slow">
             <a
+              data-reveal="scale"
               className="map-card"
               href={`https://maps.google.com/?q=${encodeURIComponent(salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica")}`}
               target="_blank"
@@ -452,7 +453,7 @@ export default async function HomePage() {
               </span>
             </a>
 
-            <div>
+            <div data-reveal="up">
               <HoursCard workingHours={salon?.working_hours} />
 
               <div className="contact-info">
@@ -480,12 +481,12 @@ export default async function HomePage() {
       </section>
 
       {/* ── CTA BAND ────────────────────────────────────── */}
-      <section className="cta-band">
-        <p className="cta-band-eyebrow">
+      <section className="cta-band" data-reveal-stagger="slow">
+        <p className="cta-band-eyebrow" data-reveal="fade">
           <span data-sr>БЕЗ ЖУРБЕ · БЕЗ ЧЕКАЊА</span>
           <span data-lat>BEZ ŽURBE · BEZ ČEKANJA</span>
         </p>
-        <h2 className="cta-band-title">
+        <h2 className="cta-band-title" data-reveal="up-lg">
           <span data-sr>
             Закажи онлине.
             <br />
@@ -497,12 +498,12 @@ export default async function HomePage() {
             Dođi kad želiš.
           </span>
         </h2>
-        <a href="/zakazivanje" className="btn-dark">
+        <a href="/zakazivanje" className="btn-dark" data-reveal="up">
           <span data-sr>ЗАКАЖИ ТЕРМИН →</span>
           <span data-lat>ZAKAŽI TERMIN →</span>
         </a>
-        <p className="cta-band-note" data-sr>Резервација за мање од 30 секунди. Без налога.</p>
-        <p className="cta-band-note" data-lat>Rezervacija za manje od 30 sekundi. Bez naloga.</p>
+        <p className="cta-band-note" data-sr data-reveal="fade">Резервација за мање од 30 секунди. Без налога.</p>
+        <p className="cta-band-note" data-lat data-reveal="fade">Rezervacija za manje od 30 sekundi. Bez naloga.</p>
       </section>
 
       </main>
