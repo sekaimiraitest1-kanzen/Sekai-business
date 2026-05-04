@@ -41,9 +41,13 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
     sb.from("customers")
       .select("id")
       .eq("salon_id", session.salonId)
+      .is("deleted_at", null)
       .gte("created_at", cur.from.toISOString())
       .lte("created_at", new Date(cur.to.getTime() + 86400000).toISOString()),
-    sb.from("customers").select("id, last_visit_date").eq("salon_id", session.salonId),
+    sb.from("customers")
+      .select("id, last_visit_date")
+      .eq("salon_id", session.salonId)
+      .is("deleted_at", null),
     sb.from("orders").select("total, status, created_at").eq("salon_id", session.salonId)
       .gte("created_at", cur.from.toISOString())
       .lte("created_at", new Date(cur.to.getTime() + 86400000).toISOString()),
