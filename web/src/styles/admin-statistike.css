@@ -176,83 +176,141 @@
   background: rgba(212, 165, 58, 0.18);
 }
 
-/* ── BAR CHART ─────────────────────────────────── */
-.bar-chart {
-  display: flex;
-  flex-direction: column;
+/* ── REVENUE LIST (replaces the old bar chart) ── */
+/* Editorial list of top + weak entries. Three layers of hierarchy:
+   ranked top with mustard digit + numeric value, weak with bullet + dim
+   value, distribution triplet at the bottom. No SVG, no positioned bars
+   — values can never collide because each lives in its own grid row. */
+.rev-list {
+  margin-top: 16px;
 }
-.bars {
-  position: relative;          /* anchors the average line */
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: 140px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid rgba(245, 233, 208, 0.08);
+.rev-list-head {
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(212, 165, 58, 0.7);
+  margin-bottom: 8px;
 }
-.bar-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-  height: 100%;
-  min-width: 0;
+.rev-list-row {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(245, 233, 208, 0.06);
 }
-.bar-value {
+.rev-list-row:last-child { border-bottom: none; }
+.rev-list-row.today {
+  background: linear-gradient(
+    90deg,
+    rgba(212, 165, 58, 0.06) 0%,
+    transparent 100%
+  );
+  margin-left: -8px;
+  padding-left: 8px;
+  border-left: 2px solid var(--mustard);
+}
+.rev-list-rank {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--mustard);
+  font-feature-settings: "kern" 1;
+  line-height: 1;
+  text-align: left;
+}
+.rev-list-bullet {
+  color: rgba(245, 233, 208, 0.35);
+  text-align: center;
+  font-size: 18px;
+  line-height: 1;
+}
+.rev-list-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rev-list-tag {
   font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
-  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.14em;
   color: var(--mustard);
-  opacity: 0.85;
-  height: 12px;
+  margin-left: -4px;
+}
+.rev-list-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--mustard);
+  font-feature-settings: "kern" 1;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
   white-space: nowrap;
-  overflow: visible;            /* compact format already fits; let it breathe */
 }
-.bar {
-  width: 100%;
-  max-width: 32px;
-  /* Default tier — overridden by .above-avg / .below-avg below. */
-  background: rgba(212, 165, 58, 0.45);
-  transition: background 0.15s, opacity 0.15s;
-  border-radius: 1px 1px 0 0;
-  min-height: 2px;
+.rev-list-row.weak .rev-list-val {
+  color: rgba(245, 233, 208, 0.6);
+  font-size: 16px;
 }
-/* Tier coloring — at-a-glance "good day vs bad day". */
-.bar.above-avg { background: var(--mustard-bright); }
-.bar.below-avg { background: rgba(212, 165, 58, 0.32); }
-.bar.today {
-  background: var(--mustard);
-  box-shadow: 0 0 12px rgba(212, 165, 58, 0.25);
+.rev-list-row.weak .rev-list-label {
+  color: rgba(245, 233, 208, 0.7);
 }
-.bar.peak {
-  background: var(--mustard-bright);
-  box-shadow: 0 0 14px rgba(232, 184, 74, 0.45);
-}
-.bar:hover { background: var(--mustard-bright); }
 
-/* Average line + tag — sits absolute over .bars at the avg height. */
-.bars-avg-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 0;
-  border-top: 1px dashed rgba(212, 165, 58, 0.55);
-  pointer-events: none;
+/* Distribution triplet — same visual vocabulary as .retention-row so the
+   page stays cohesive. Three coloured cells answering "kakav je period". */
+.rev-dist {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 18px;
 }
-.bars-avg-tag {
-  position: absolute;
-  top: -7px;
-  right: 0;
-  background: var(--brown-900);
-  padding: 0 4px;
+.rev-dist-cell {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(245, 233, 208, 0.06);
+  padding: 14px 10px 12px;
+  text-align: center;
+  position: relative;
+}
+.rev-dist-cell.good { border-top: 2px solid var(--success); }
+.rev-dist-cell.mid  { border-top: 2px solid var(--mustard); }
+.rev-dist-cell.zero { border-top: 2px solid rgba(245, 233, 208, 0.15); }
+.rev-dist-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1.05;
+  font-feature-settings: "kern" 1;
+}
+.rev-dist-cell.good .rev-dist-num { color: var(--success); }
+.rev-dist-cell.mid  .rev-dist-num { color: var(--mustard); }
+.rev-dist-cell.zero .rev-dist-num { color: rgba(245, 233, 208, 0.45); }
+.rev-dist-unit {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px;
-  letter-spacing: 0.12em;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(245, 233, 208, 0.4);
+  margin-top: 2px;
   text-transform: uppercase;
-  color: rgba(212, 165, 58, 0.65);
-  line-height: 14px;
+}
+.rev-dist-lbl {
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(245, 233, 208, 0.55);
+  margin-top: 6px;
+  line-height: 1.2;
 }
 .bar-labels {
   display: flex;
@@ -361,19 +419,22 @@
 }
 
 /* ── NARROW PHONES (iPhone 11/13 Pro range) ──────
-   At ≤390px the daily bars get cramped. We keep the chart breathable
-   by tightening fonts, looser bar gap, and trimming the summary band. */
+   At ≤390px the summary band + dist triplet need tighter type so the
+   3-column row doesn't break into two lines per cell. */
 @media (max-width: 390px) {
   .stat-summary-band { gap: 8px; padding: 8px 0 10px; }
   .stat-summary-val { font-size: 16px; }
   .stat-summary-lbl { font-size: 8px; letter-spacing: 0.14em; }
   .stat-summary-peak-day { font-size: 10px; }
-  .bars { gap: 3px; height: 120px; }
-  .bar-value { font-size: 8px; height: 10px; }
-  .bars-avg-tag { font-size: 7px; padding: 0 3px; }
+  .rev-list-rank { font-size: 20px; }
+  .rev-list-label { font-size: 12px; }
+  .rev-list-val { font-size: 16px; }
+  .rev-list-row.weak .rev-list-val { font-size: 14px; }
+  .rev-dist-cell { padding: 12px 6px 10px; }
+  .rev-dist-num { font-size: 28px; }
+  .rev-dist-lbl { font-size: 9px; letter-spacing: 0.08em; }
+  .rev-dist-unit { font-size: 8px; }
 }
 @media (max-width: 380px) {
-  .bar-label { font-size: 8px; }
-  .bar-value { font-size: 8px; }
   .stat-hero-value { font-size: clamp(36px, 10vw, 48px); }
 }

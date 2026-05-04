@@ -42,7 +42,6 @@ export function StatistikeClient(props: {
   staffBreakdown: StaffBreakdownRow[] | null;
 }) {
   const { period, totalRevenue, change, doneCount, cancelledCount, cancelledPct, avgPerBooking, newCustomers, series, topServices, retention, ordersCount, isStaffView, staffBreakdown } = props;
-  const max = Math.max(1, ...series.map((s) => s.value));
 
   const periodLabelSr = period === "day" ? "ДАНАС" : period === "week" ? "ОВА НЕДЕЉА" : "ОВАЈ МЕСЕЦ";
   const periodLabelLat = period === "day" ? "DANAS" : period === "week" ? "OVA NEDELJA" : "OVAJ MESEC";
@@ -105,10 +104,11 @@ export function StatistikeClient(props: {
         <StatBox labelSr="ОТКАЗАНО" labelLat="OTKAZANO" value={String(cancelledCount)} unit={`${cancelledPct}%`} tone={cancelledPct > 10 ? "danger" : undefined} />
       </div>
 
-      {/* Bar chart — revenue per day/hour. Reads at three layers:
-          1. summary band (avg + peak) — 1.5s glance answer
-          2. dashed avg line + tier-coloured bars — "good day vs bad day"
-          3. compact value labels on peak/today only — narrow-phone safe.   */}
+      {/* PRIHODI block — list-based, no chart. Three sections under the
+          summary band: top earners, weakest earners (when there are
+          enough data points), and a 3-bucket distribution triplet. The
+          aim is "scannable in 3 seconds on iPhone 11" — every value sits
+          in its own row, so nothing can ever overlap. */}
       <div className="stat-card-block">
         <div className="stat-card-title">
           <span data-sr>ПРИХОДИ</span>
@@ -128,7 +128,21 @@ export function StatistikeClient(props: {
           }
           const avg = Math.round(earning.reduce((acc, s) => acc + s.value, 0) / earning.length);
           const peak = earning.reduce((p, s) => (s.value > p.value ? s : p), earning[0]);
-          const avgPct = Math.max(2, Math.round((avg / max) * 100));
+          const sortedDesc = [...earning].sort((a, b) => b.value - a.value);
+          const top = sortedDesc.slice(0, 3);
+          // Only show "weakest" list when there's enough variance to be
+          // meaningful — fewer than 4 earning entries means top + bottom
+          // would overlap and the section would just repeat itself.
+          const weakest = earning.length >= 4 ? [...sortedDesc].reverse().slice(0, 3) : [];
+          const aboveCount = earning.filter((s) => s.value >= avg).length;
+          const belowCount = earning.filter((s) => s.value < avg).length;
+          const zeroCount = series.length - earning.length;
+          // For day-period the time buckets are hours so the third bucket
+          // is "no revenue" rather than "closed".
+          const zeroLabelSr = period === "day" ? "БЕЗ ПРИХОДА" : "ЗАТВОРЕНО";
+          const zeroLabelLat = period === "day" ? "BEZ PRIHODA" : "ZATVORENO";
+          const unitSr = period === "day" ? "САТИ" : "ДАНИ";
+          const unitLat = period === "day" ? "SATI" : "DANI";
           return (
             <>
               <div className="stat-summary-band">
@@ -145,37 +159,67 @@ export function StatistikeClient(props: {
                   </span>
                 </div>
               </div>
-              <div className="bar-chart">
-                <div className="bars">
-                  <div
-                    className="bars-avg-line"
-                    style={{ bottom: `${avgPct}%` }}
-                    aria-hidden="true"
-                  >
-                    <span className="bars-avg-tag" data-sr>прос.</span>
-                    <span className="bars-avg-tag" data-lat>pros.</span>
-                  </div>
-                  {series.map((s) => {
-                    const h = Math.max(2, Math.round((s.value / max) * 100));
-                    const isPeak = s.value === peak.value && s.value > 0;
-                    const aboveAvg = avg > 0 && s.value >= avg;
-                    const showValue = s.value > 0 && (isPeak || s.isToday);
-                    return (
-                      <div key={s.key} className="bar-wrap">
-                        <div className="bar-value">{showValue ? formatCompactRsd(s.value) : ""}</div>
-                        <div
-                          className={`bar ${s.isToday ? "today" : ""} ${isPeak ? "peak" : ""} ${aboveAvg ? "above-avg" : "below-avg"}`}
-                          style={{ height: `${h}%` }}
-                          title={s.value > 0 ? `${s.label}: ${s.value.toLocaleString("sr-RS")} RSD` : s.label}
-                        />
-                      </div>
-                    );
-                  })}
+
+              <div className="rev-list">
+                <div className="rev-list-head">
+                  <span data-sr>{period === "day" ? "ТОП САТИ" : "ТОП ДАНИ"}</span>
+                  <span data-lat>{period === "day" ? "TOP SATI" : "TOP DANI"}</span>
                 </div>
-                <div className="bar-labels">
-                  {series.map((s) => (
-                    <div key={`lbl-${s.key}`} className={`bar-label ${s.isToday ? "today" : ""}`}>{s.label}</div>
+                {top.map((s, i) => (
+                  <div key={s.key} className={`rev-list-row top ${s.isToday ? "today" : ""}`}>
+                    <span className="rev-list-rank">{i + 1}</span>
+                    <span className="rev-list-label">{s.label}{s.isToday ? " ·" : ""}</span>
+                    {s.isToday && (
+                      <>
+                        <span className="rev-list-tag" data-sr>ДАНАС</span>
+                        <span className="rev-list-tag" data-lat>DANAS</span>
+                      </>
+                    )}
+                    <span className="rev-list-val">{formatCompactRsd(s.value)}</span>
+                  </div>
+                ))}
+              </div>
+
+              {weakest.length > 0 && (
+                <div className="rev-list">
+                  <div className="rev-list-head">
+                    <span data-sr>{period === "day" ? "СЛАБИЈИ САТИ" : "СЛАБИЈИ ДАНИ"}</span>
+                    <span data-lat>{period === "day" ? "SLABIJI SATI" : "SLABIJI DANI"}</span>
+                  </div>
+                  {weakest.map((s) => (
+                    <div key={s.key} className={`rev-list-row weak ${s.isToday ? "today" : ""}`}>
+                      <span className="rev-list-bullet" aria-hidden="true">·</span>
+                      <span className="rev-list-label">{s.label}</span>
+                      <span className="rev-list-val">{formatCompactRsd(s.value)}</span>
+                    </div>
                   ))}
+                </div>
+              )}
+
+              <div className="rev-dist">
+                <div className="rev-dist-cell good">
+                  <div className="rev-dist-num">{aboveCount}</div>
+                  <div className="rev-dist-unit"><span data-sr>{unitSr}</span><span data-lat>{unitLat}</span></div>
+                  <div className="rev-dist-lbl">
+                    <span data-sr>ИЗНАД ПРОСЕКА</span>
+                    <span data-lat>IZNAD PROSEKA</span>
+                  </div>
+                </div>
+                <div className="rev-dist-cell mid">
+                  <div className="rev-dist-num">{belowCount}</div>
+                  <div className="rev-dist-unit"><span data-sr>{unitSr}</span><span data-lat>{unitLat}</span></div>
+                  <div className="rev-dist-lbl">
+                    <span data-sr>ИСПОД ПРОСЕКА</span>
+                    <span data-lat>ISPOD PROSEKA</span>
+                  </div>
+                </div>
+                <div className="rev-dist-cell zero">
+                  <div className="rev-dist-num">{zeroCount}</div>
+                  <div className="rev-dist-unit"><span data-sr>{unitSr}</span><span data-lat>{unitLat}</span></div>
+                  <div className="rev-dist-lbl">
+                    <span data-sr>{zeroLabelSr}</span>
+                    <span data-lat>{zeroLabelLat}</span>
+                  </div>
                 </div>
               </div>
             </>
