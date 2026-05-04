@@ -34,8 +34,12 @@
   font-weight: 700;
   font-style: italic;
   color: var(--mustard);
-  line-height: 1;
-  letter-spacing: -0.01em;
+  line-height: 1.05;
+  /* Safari WebKit applies kerning + negative letter-spacing harder than
+     Blink → italic Cyrillic characters touch/overlap on iPhone 11/13 Pro.
+     Default tracking + line-height bump keeps glyphs clear. */
+  letter-spacing: 0;
+  font-feature-settings: "kern" 1;
   margin-bottom: 8px;
 }
 .stat-hero-currency {
@@ -80,11 +84,14 @@
   font-size: 28px;
   font-weight: 700;
   font-style: italic;
-  line-height: 1.05;
-  letter-spacing: -0.01em;
+  line-height: 1.15;
+  /* Same Safari kerning/overlap concern as .stat-hero-value above. */
+  letter-spacing: 0;
+  font-feature-settings: "kern" 1;
   display: flex;
   align-items: baseline;
   gap: 6px;
+  min-width: 0;
 }
 .stat-box-unit {
   font-size: 12px;
@@ -118,12 +125,64 @@
   margin-bottom: 16px;
 }
 
+/* ── SUMMARY BAND (avg + peak readout above the chart) ── */
+.stat-summary-band {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px dashed rgba(212, 165, 58, 0.18);
+}
+.stat-summary-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.stat-summary-lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(245, 233, 208, 0.4);
+}
+.stat-summary-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--mustard);
+  font-feature-settings: "kern" 1;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stat-summary-peak-day {
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(245, 233, 208, 0.6);
+  text-transform: uppercase;
+  margin-right: 2px;
+}
+.stat-summary-sep {
+  width: 1px;
+  align-self: stretch;
+  background: rgba(212, 165, 58, 0.18);
+}
+
 /* ── BAR CHART ─────────────────────────────────── */
 .bar-chart {
   display: flex;
   flex-direction: column;
 }
 .bars {
+  position: relative;          /* anchors the average line */
   display: flex;
   align-items: flex-end;
   gap: 4px;
@@ -144,27 +203,56 @@
 .bar-value {
   font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
-  color: rgba(245, 233, 208, 0.5);
+  font-variant-numeric: tabular-nums;
+  color: var(--mustard);
+  opacity: 0.85;
   height: 12px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: clip;
+  overflow: visible;            /* compact format already fits; let it breathe */
 }
 .bar {
   width: 100%;
   max-width: 32px;
-  background: rgba(212, 165, 58, 0.4);
+  /* Default tier — overridden by .above-avg / .below-avg below. */
+  background: rgba(212, 165, 58, 0.45);
   transition: background 0.15s, opacity 0.15s;
   border-radius: 1px 1px 0 0;
   min-height: 2px;
 }
-.bar.today,
-.bar.peak {
+/* Tier coloring — at-a-glance "good day vs bad day". */
+.bar.above-avg { background: var(--mustard-bright); }
+.bar.below-avg { background: rgba(212, 165, 58, 0.32); }
+.bar.today {
   background: var(--mustard);
   box-shadow: 0 0 12px rgba(212, 165, 58, 0.25);
 }
-.bar:hover {
+.bar.peak {
   background: var(--mustard-bright);
+  box-shadow: 0 0 14px rgba(232, 184, 74, 0.45);
+}
+.bar:hover { background: var(--mustard-bright); }
+
+/* Average line + tag — sits absolute over .bars at the avg height. */
+.bars-avg-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed rgba(212, 165, 58, 0.55);
+  pointer-events: none;
+}
+.bars-avg-tag {
+  position: absolute;
+  top: -7px;
+  right: 0;
+  background: var(--brown-900);
+  padding: 0 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(212, 165, 58, 0.65);
+  line-height: 14px;
 }
 .bar-labels {
   display: flex;
@@ -251,7 +339,9 @@
   font-size: 32px;
   font-weight: 700;
   font-style: italic;
-  line-height: 1;
+  /* line-height: 1 was clipping italic ascenders/descenders on iPhone Safari. */
+  line-height: 1.1;
+  font-feature-settings: "kern" 1;
 }
 .retention-lbl {
   font-family: 'Oswald', sans-serif;
@@ -270,7 +360,18 @@
   letter-spacing: 0.04em;
 }
 
-/* ── DAY-VIEW HOURLY BAR LABELS — slightly smaller ── */
+/* ── NARROW PHONES (iPhone 11/13 Pro range) ──────
+   At ≤390px the daily bars get cramped. We keep the chart breathable
+   by tightening fonts, looser bar gap, and trimming the summary band. */
+@media (max-width: 390px) {
+  .stat-summary-band { gap: 8px; padding: 8px 0 10px; }
+  .stat-summary-val { font-size: 16px; }
+  .stat-summary-lbl { font-size: 8px; letter-spacing: 0.14em; }
+  .stat-summary-peak-day { font-size: 10px; }
+  .bars { gap: 3px; height: 120px; }
+  .bar-value { font-size: 8px; height: 10px; }
+  .bars-avg-tag { font-size: 7px; padding: 0 3px; }
+}
 @media (max-width: 380px) {
   .bar-label { font-size: 8px; }
   .bar-value { font-size: 8px; }

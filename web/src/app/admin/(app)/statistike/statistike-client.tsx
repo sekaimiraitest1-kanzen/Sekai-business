@@ -2,6 +2,23 @@
 
 import Link from "next/link";
 
+/**
+ * Compact RSD format for bar-chart labels and the summary band so values
+ * never get clipped inside a 32px-max bar at 9px font on iPhone 11 Pro.
+ *   1.234        → "1,2K"
+ *   12.345       → "12,3K"
+ *   123.456      → "123K"
+ *   1.234.567    → "1,2M"
+ * Returns "" for 0 — empty strings paint nothing in the cell.
+ */
+function formatCompactRsd(n: number): string {
+  if (!n) return "";
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(".", ",")}M`;
+  if (n >= 100_000) return `${Math.round(n / 1000)}K`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(".", ",")}K`;
+  return String(n);
+}
+
 type Series = { label: string; value: number; key: string; isToday: boolean };
 type TopService = { name_sr: string; name_lat: string; count: number; revenue: number };
 type Retention = { active: number; atRisk: number; churned: number };
@@ -88,7 +105,10 @@ export function StatistikeClient(props: {
         <StatBox labelSr="ОТКАЗАНО" labelLat="OTKAZANO" value={String(cancelledCount)} unit={`${cancelledPct}%`} tone={cancelledPct > 10 ? "danger" : undefined} />
       </div>
 
-      {/* Bar chart — revenue per day/hour */}
+      {/* Bar chart — revenue per day/hour. Reads at three layers:
+          1. summary band (avg + peak) — 1.5s glance answer
+          2. dashed avg line + tier-coloured bars — "good day vs bad day"
+          3. compact value labels on peak/today only — narrow-phone safe.   */}
       <div className="stat-card-block">
         <div className="stat-card-title">
           <span data-sr>ПРИХОДИ</span>
@@ -96,31 +116,71 @@ export function StatistikeClient(props: {
           <span style={{ marginLeft: 6, opacity: 0.5 }} data-sr>· {period === "day" ? "по сату" : period === "week" ? "по данима" : "по датуму"}</span>
           <span style={{ marginLeft: 6, opacity: 0.5 }} data-lat>· {period === "day" ? "po satu" : period === "week" ? "po danima" : "po datumu"}</span>
         </div>
-        {series.every((s) => s.value === 0) ? (
-          <div className="adm-empty" style={{ padding: 32 }}>
-            <span data-sr>Нема прихода у овом периоду.</span>
-            <span data-lat>Nema prihoda u ovom periodu.</span>
-          </div>
-        ) : (
-          <div className="bar-chart">
-            <div className="bars">
-              {series.map((s) => {
-                const h = Math.max(2, Math.round((s.value / max) * 100));
-                return (
-                  <div key={s.key} className="bar-wrap">
-                    <div className="bar-value">{s.value > 0 ? s.value.toLocaleString("sr-RS") : ""}</div>
-                    <div className={`bar ${s.isToday ? "today" : ""} ${s.value === max && s.value > 0 ? "peak" : ""}`} style={{ height: `${h}%` }} />
+        {(() => {
+          const earning = series.filter((s) => s.value > 0);
+          if (earning.length === 0) {
+            return (
+              <div className="adm-empty" style={{ padding: 32 }}>
+                <span data-sr>Нема прихода у овом периоду.</span>
+                <span data-lat>Nema prihoda u ovom periodu.</span>
+              </div>
+            );
+          }
+          const avg = Math.round(earning.reduce((acc, s) => acc + s.value, 0) / earning.length);
+          const peak = earning.reduce((p, s) => (s.value > p.value ? s : p), earning[0]);
+          const avgPct = Math.max(2, Math.round((avg / max) * 100));
+          return (
+            <>
+              <div className="stat-summary-band">
+                <div className="stat-summary-cell">
+                  <span className="stat-summary-lbl"><span data-sr>ПРОСЕК</span><span data-lat>PROSEK</span></span>
+                  <span className="stat-summary-val">{formatCompactRsd(avg)}</span>
+                </div>
+                <div className="stat-summary-sep" aria-hidden="true" />
+                <div className="stat-summary-cell">
+                  <span className="stat-summary-lbl"><span data-sr>ПИК</span><span data-lat>PIK</span></span>
+                  <span className="stat-summary-val">
+                    <span className="stat-summary-peak-day">{peak.label}</span>{" "}
+                    {formatCompactRsd(peak.value)}
+                  </span>
+                </div>
+              </div>
+              <div className="bar-chart">
+                <div className="bars">
+                  <div
+                    className="bars-avg-line"
+                    style={{ bottom: `${avgPct}%` }}
+                    aria-hidden="true"
+                  >
+                    <span className="bars-avg-tag" data-sr>прос.</span>
+                    <span className="bars-avg-tag" data-lat>pros.</span>
                   </div>
-                );
-              })}
-            </div>
-            <div className="bar-labels">
-              {series.map((s) => (
-                <div key={`lbl-${s.key}`} className={`bar-label ${s.isToday ? "today" : ""}`}>{s.label}</div>
-              ))}
-            </div>
-          </div>
-        )}
+                  {series.map((s) => {
+                    const h = Math.max(2, Math.round((s.value / max) * 100));
+                    const isPeak = s.value === peak.value && s.value > 0;
+                    const aboveAvg = avg > 0 && s.value >= avg;
+                    const showValue = s.value > 0 && (isPeak || s.isToday);
+                    return (
+                      <div key={s.key} className="bar-wrap">
+                        <div className="bar-value">{showValue ? formatCompactRsd(s.value) : ""}</div>
+                        <div
+                          className={`bar ${s.isToday ? "today" : ""} ${isPeak ? "peak" : ""} ${aboveAvg ? "above-avg" : "below-avg"}`}
+                          style={{ height: `${h}%` }}
+                          title={s.value > 0 ? `${s.label}: ${s.value.toLocaleString("sr-RS")} RSD` : s.label}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="bar-labels">
+                  {series.map((s) => (
+                    <div key={`lbl-${s.key}`} className={`bar-label ${s.isToday ? "today" : ""}`}>{s.label}</div>
+                  ))}
+                </div>
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       {/* Top services */}
