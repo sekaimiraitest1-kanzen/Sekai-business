@@ -6,6 +6,7 @@ import { sendBookingConfirmation } from "@/lib/email/templates";
 import { computeBlockedSlots, rangesOverlap, toMinutes, type Range } from "@/lib/booking/slots";
 import { isPastBelgrade } from "@/lib/datetime";
 import { bookingCancelToken } from "@/lib/booking/cancel-token";
+import { normalizePhone } from "@/lib/phone";
 
 const bookingSchema = z.object({
   salonId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID format"),
@@ -39,6 +40,10 @@ export async function submitBooking(input: BookingInput) {
 
   const sb = createAdminClient();
 
+  // Canonicalize phone before any DB write so the same human shows up
+  // as one customer across booking + shop. See src/lib/phone.ts.
+  const phone = normalizePhone(data.phone);
+
   // 1. Upsert customer by (salon_id, phone). Soft-deleted rows are treated
   //    as fresh — same phone re-booking creates a new customer instead of
   //    resurrecting one Triša explicitly removed.
@@ -46,7 +51,7 @@ export async function submitBooking(input: BookingInput) {
     .from("customers")
     .select("id, no_show_flag, loyalty_pending_reward")
     .eq("salon_id", data.salonId)
-    .eq("phone", data.phone)
+    .eq("phone", phone)
     .is("deleted_at", null)
     .maybeSingle();
 
@@ -60,7 +65,7 @@ export async function submitBooking(input: BookingInput) {
       .from("customers")
       .insert({
         salon_id: data.salonId,
-        phone: data.phone,
+        phone,
         name: data.name,
         email: data.email || null,
         utm_source: data.utmSource ?? "direct",

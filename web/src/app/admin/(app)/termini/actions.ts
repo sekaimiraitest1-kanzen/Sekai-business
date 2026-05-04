@@ -8,6 +8,7 @@ import { todayKey, isPastBelgrade } from "@/lib/datetime";
 import { sendBookingConfirmation } from "@/lib/email/templates";
 import { computeBlockedSlots, rangesOverlap, toMinutes, type Range } from "@/lib/booking/slots";
 import { bookingCancelToken } from "@/lib/booking/cancel-token";
+import { normalizePhone } from "@/lib/phone";
 
 /**
  * Same semantics as the public `getTakenSlots`: returns every grid slot that
@@ -189,6 +190,11 @@ export async function createWalkInBooking(input: {
   });
   if (overlapsBlock) return { ok: false as const, error: "SLOT_TAKEN" };
 
+  // Canonicalize phone before any DB write so admin walk-ins land on the
+  // same row as the customer's prior bookings/orders even if they typed
+  // the number in a different format here.
+  const phone = normalizePhone(input.customerPhone);
+
   // Upsert customer (skip soft-deleted — same phone walk-in after delete
   // creates a fresh row instead of reviving the removed one). We also pull
   // the no_show_flag here so the walk-in can apply the surcharge if the
@@ -197,7 +203,7 @@ export async function createWalkInBooking(input: {
     .from("customers")
     .select("id, no_show_flag")
     .eq("salon_id", session.salonId)
-    .eq("phone", input.customerPhone)
+    .eq("phone", phone)
     .is("deleted_at", null)
     .maybeSingle();
 
@@ -207,7 +213,7 @@ export async function createWalkInBooking(input: {
       .from("customers")
       .insert({
         salon_id: session.salonId,
-        phone: input.customerPhone,
+        phone,
         name: input.customerName,
         email: input.customerEmail || null,
         utm_source: "walk-in",

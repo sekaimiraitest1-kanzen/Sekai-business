@@ -19,3 +19,36 @@ export function formatPhoneE164(input: string): string {
   if (input.trim().startsWith("+")) return input.trim();
   return input;
 }
+
+/**
+ * Canonical national-format key for customer dedup.
+ *
+ * Real-world Triša data already had the same person under both
+ * "0603300036" (booking flow) and "+381603300036" (shop checkout) —
+ * both flows ran `eq("phone", x)` against raw user input, so the
+ * formatting difference produced two customer rows for one human.
+ *
+ * Strategy: produce a single canonical national-format string per
+ * phone so equality checks collapse the same person. Used at every
+ * customer-write site (booking, shop, admin walk-in) plus the matching
+ * DB-side normalization in supabase/migrations/011.
+ *
+ *   "+381603300036"   →  "0603300036"
+ *   " 0603 300 036 "  →  "0603300036"
+ *   "(060) 599-7257"  →  "0605997257"
+ *   "603300036"       →  "0603300036"   (8-10 digit bare → 0-prefix)
+ *
+ * For non-Serbian numbers (no 381 prefix, doesn't start with 0) the
+ * helper returns the digits-only form so foreign visitors still get a
+ * stable canonical key.
+ */
+export function normalizePhone(raw: string | null | undefined): string {
+  if (!raw) return "";
+  const cleaned = raw.replace(/[\s\-().]/g, "").trim();
+  const noPlus = cleaned.startsWith("+") ? cleaned.slice(1) : cleaned;
+  if (!/^\d+$/.test(noPlus)) return cleaned;
+  if (noPlus.startsWith("381")) return "0" + noPlus.slice(3);
+  if (noPlus.startsWith("0")) return noPlus;
+  if (noPlus.length >= 8 && noPlus.length <= 10) return "0" + noPlus;
+  return noPlus;
+}

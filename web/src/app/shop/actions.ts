@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendOrderEmail, sendOrderConfirmationToCustomer } from "@/lib/email/templates";
+import { normalizePhone } from "@/lib/phone";
 
 const orderSchema = z.object({
   customerName: z.string().min(2).max(80),
@@ -32,6 +33,10 @@ export async function submitOrder(input: OrderInput) {
     .single();
   if (!salon) return { ok: false as const, error: "NO_SALON" };
 
+  // Canonicalize phone before any DB write so the same human shows up
+  // as one customer whether they booked first or shopped first.
+  const phone = normalizePhone(data.customerPhone);
+
   // Upsert customer (skip soft-deleted rows — same phone re-buying after
   // delete starts fresh). Pull loyalty_pending_reward so we can auto-apply
   // the 20% shop discount if the customer earned + chose it.
@@ -39,7 +44,7 @@ export async function submitOrder(input: OrderInput) {
     .from("customers")
     .select("id, loyalty_pending_reward")
     .eq("salon_id", salon.id)
-    .eq("phone", data.customerPhone)
+    .eq("phone", phone)
     .is("deleted_at", null)
     .maybeSingle();
 
@@ -47,7 +52,7 @@ export async function submitOrder(input: OrderInput) {
   if (!customerId) {
     const { data: created } = await sb
       .from("customers")
-      .insert({ salon_id: salon.id, phone: data.customerPhone, name: data.customerName, email: data.customerEmail || null })
+      .insert({ salon_id: salon.id, phone, name: data.customerName, email: data.customerEmail || null })
       .select("id")
       .single();
     customerId = created?.id;
