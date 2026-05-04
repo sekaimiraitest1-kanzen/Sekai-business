@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { LangToggle } from "@/components/lang-toggle";
 import { useCart } from "@/lib/shop/cart-context";
+import { useCartFly } from "@/lib/shop/cart-fly";
 import { submitOrder } from "./actions";
 import { trackEvent, trackRevenue, EVENTS } from "@/lib/plausible";
 
@@ -13,9 +14,44 @@ import { trackEvent, trackRevenue, EVENTS } from "@/lib/plausible";
  */
 export function ShopShell({ children }: { children: React.ReactNode }) {
   const cart = useCart();
+  const fly = useCartFly();
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [orderDone, setOrderDone] = useState<string | null>(null);
+  const cartBtnRef = useRef<HTMLButtonElement | null>(null);
+  const countRef = useRef<HTMLSpanElement | null>(null);
+  const prevCountRef = useRef(cart.count);
+  const skipFirstPopRef = useRef(true);
+
+  // Wire the cart-icon target so flyToCart knows where to land.
+  useEffect(() => {
+    fly.registerCartTarget(cartBtnRef.current);
+    return () => fly.registerCartTarget(null);
+  }, [fly]);
+
+  // Wire the toast's "OPEN" CTA to the existing drawer state.
+  useEffect(() => {
+    fly.setOpenCartHandler(() => setCartOpen(true));
+  }, [fly]);
+
+  // Spring-pop the count badge only on user-driven increments. The first
+  // run after mount is the localStorage-hydration jump (0 → restored) — we
+  // skip it so the badge doesn't bounce on every page reload.
+  useEffect(() => {
+    const prev = prevCountRef.current;
+    prevCountRef.current = cart.count;
+    if (skipFirstPopRef.current) {
+      skipFirstPopRef.current = false;
+      return;
+    }
+    const el = countRef.current;
+    if (!el) return;
+    if (cart.count > prev) {
+      el.classList.remove("cart-count-pop");
+      void el.offsetWidth;
+      el.classList.add("cart-count-pop");
+    }
+  }, [cart.count]);
 
   return (
     <div className="sh-page">
@@ -36,9 +72,15 @@ export function ShopShell({ children }: { children: React.ReactNode }) {
         </Link>
         <div className="sh-nav-spacer" />
         <LangToggle />
-        <button className="sh-nav-cart-btn" onClick={() => setCartOpen(true)} type="button" aria-label="Open cart">
+        <button
+          ref={cartBtnRef}
+          className="sh-nav-cart-btn"
+          onClick={() => setCartOpen(true)}
+          type="button"
+          aria-label="Open cart"
+        >
           🛒 <span data-sr>КОРПА</span><span data-lat>KORPA</span>
-          <span className="sh-cart-count">{cart.count}</span>
+          <span ref={countRef} className="sh-cart-count">{cart.count}</span>
         </button>
       </nav>
 

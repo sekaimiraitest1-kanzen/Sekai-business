@@ -6,6 +6,7 @@ import "@/styles/legacy.css";
 import "@/styles/legacy-booking.css";
 import "@/styles/legacy-shop.css";
 import "@/styles/product-detail.css";
+import "@/styles/cart-fly.css";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { CookieNotice } from "@/components/cookie-notice";
 import { PlausibleScript } from "@/components/plausible";

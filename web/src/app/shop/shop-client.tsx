@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useCart } from "@/lib/shop/cart-context";
+import { useCartFly } from "@/lib/shop/cart-fly";
 
 type Product = {
   id: string;
@@ -23,6 +24,7 @@ type Category = { slug: string; name_sr: string; name_lat: string };
 export function ShopClient({ products, categories }: { products: Product[]; categories: Category[] }) {
   const [filter, setFilter] = useState<string>("sve");
   const cart = useCart();
+  const fly = useCartFly();
 
   const filtered = useMemo(() => {
     if (filter === "sve") return products;
@@ -126,11 +128,30 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        const btn = e.currentTarget;
                         cart.add(
                           { productId: p.id, slug: p.slug, name: p.name_lat, price: p.price, image_url: p.image_url },
                           1,
                           p.stock
                         );
+                        // Source for the trajectory: prefer the product image
+                        // (more meaningful visual reference) but fall back to
+                        // the button itself if the card layout ever changes.
+                        const card = btn.closest(".product-card");
+                        const imgEl = card?.querySelector(".product-img") as HTMLElement | null;
+                        fly.flyToCart({
+                          sourceEl: imgEl ?? btn,
+                          imageUrl: p.image_url,
+                          productName: p.name_lat,
+                          qty: 1,
+                          priceTotal: p.price,
+                          fallbackInitial: (p.brand ?? p.name_lat).charAt(0),
+                        });
+                        // Brief success flash on the CTA button itself.
+                        btn.classList.remove("cart-cta-success");
+                        void btn.offsetWidth;
+                        btn.classList.add("cart-cta-success");
+                        window.setTimeout(() => btn.classList.remove("cart-cta-success"), 520);
                       }}
                     >
                       +

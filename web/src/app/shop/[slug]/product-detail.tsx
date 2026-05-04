@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useCart } from "@/lib/shop/cart-context";
+import { useCartFly } from "@/lib/shop/cart-fly";
 
 type Product = {
   id: string;
@@ -33,8 +34,11 @@ type Related = {
 
 export function ProductDetail({ product, related }: { product: Product; related: Related[] }) {
   const cart = useCart();
+  const fly = useCartFly();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const imageRef = useRef<HTMLDivElement | null>(null);
+  const addBtnRef = useRef<HTMLButtonElement | null>(null);
   const out = product.stock <= 0;
   const lowStock = product.stock > 0 && product.stock < 5;
 
@@ -52,6 +56,27 @@ export function ProductDetail({ product, related }: { product: Product; related:
     );
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
+
+    // Detail page: launch ghost from the hero image (the user's focal point)
+    // so the spatial mapping image → cart is unambiguous.
+    const src = imageRef.current ?? addBtnRef.current;
+    if (src) {
+      fly.flyToCart({
+        sourceEl: src,
+        imageUrl: product.image_url,
+        productName: product.name_lat,
+        qty,
+        priceTotal: product.price * qty,
+        fallbackInitial: (product.brand ?? product.name_lat).charAt(0),
+      });
+    }
+    const btn = addBtnRef.current;
+    if (btn) {
+      btn.classList.remove("cart-cta-success");
+      void btn.offsetWidth;
+      btn.classList.add("cart-cta-success");
+      window.setTimeout(() => btn.classList.remove("cart-cta-success"), 520);
+    }
   }
 
   return (
@@ -65,7 +90,7 @@ export function ProductDetail({ product, related }: { product: Product; related:
 
       <article className="pd-grid">
         <div className="pd-image-col">
-          <div className="pd-image">
+          <div className="pd-image" ref={imageRef}>
             {product.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -173,6 +198,7 @@ export function ProductDetail({ product, related }: { product: Product; related:
           </div>
 
           <button
+            ref={addBtnRef}
             type="button"
             className="pd-add-btn"
             disabled={out}
