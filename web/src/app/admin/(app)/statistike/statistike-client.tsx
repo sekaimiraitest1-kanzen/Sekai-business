@@ -1,6 +1,14 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import {
+  getDoneBookingsDetail,
+  getNewCustomersDetail,
+  getCancelledBookingsDetail,
+  deleteBookingFromStats,
+  deleteAllCancelledInPeriod,
+} from "./actions";
 
 /**
  * Compact RSD format for bar-chart labels and the summary band so values
@@ -31,6 +39,10 @@ const WEEKDAY_NAMES_LAT = ["nedeljom", "ponedeljkom", "utorkom", "sredom", "čet
 const MONTH_NAMES_SR = ["ЈАНУАР", "ФЕБРУАР", "МАРТ", "АПРИЛ", "МАЈ", "ЈУН", "ЈУЛ", "АВГУСТ", "СЕПТЕМБАР", "ОКТОБАР", "НОВЕМБАР", "ДЕЦЕМБАР"];
 const MONTH_NAMES_LAT = ["JANUAR", "FEBRUAR", "MART", "APRIL", "MAJ", "JUN", "JUL", "AVGUST", "SEPTEMBAR", "OKTOBAR", "NOVEMBAR", "DECEMBAR"];
 
+type DoneBooking = { id: string; date: string; time_slot: string; customers: { name?: string | null; phone?: string | null } | null; services: { name_sr?: string | null; name_lat?: string | null; price?: number | null } | null };
+type NewCustomer = { id: string; name?: string | null; phone?: string | null; created_at?: string | null; utm_source?: string | null };
+type CancelledBooking = { id: string; date: string; time_slot: string; customers: { name?: string | null; phone?: string | null } | null; services: { name_sr?: string | null; name_lat?: string | null; price?: number | null } | null };
+
 export function StatistikeClient(props: {
   period: "day" | "week" | "month";
   totalRevenue: number;
@@ -51,6 +63,39 @@ export function StatistikeClient(props: {
   monthlyTotals: MonthRow[];
 }) {
   const { period, totalRevenue, change, doneCount, cancelledCount, cancelledPct, avgPerBooking, newCustomers, series, topServices, retention, ordersCount, isStaffView, staffBreakdown, bestWeekday, monthlyTotals } = props;
+
+  // ── Popup state ────────────────────────────────────────────────────────────
+  type PopupKey = "termini" | "novi" | "prosecno" | "otkazano";
+  const [popup, setPopup] = useState<PopupKey | null>(null);
+  const [loadingPopup, setLoadingPopup] = useState<PopupKey | null>(null);
+  const [doneBookings, setDoneBookings] = useState<DoneBooking[]>([]);
+  const [newCustomersList, setNewCustomersList] = useState<NewCustomer[]>([]);
+  const [cancelledBookings, setCancelledBookings] = useState<CancelledBooking[]>([]);
+  const [cancelledIsOwner, setCancelledIsOwner] = useState(false);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [, startTransition] = useTransition();
+
+  async function openPopup(key: PopupKey) {
+    setLoadingPopup(key);
+    if (key === "termini") {
+      const res = await getDoneBookingsDetail(period);
+      if (res.ok) setDoneBookings(res.bookings as DoneBooking[]);
+    } else if (key === "novi") {
+      const res = await getNewCustomersDetail(period);
+      if (res.ok) setNewCustomersList(res.customers as NewCustomer[]);
+    } else if (key === "otkazano") {
+      const res = await getCancelledBookingsDetail(period);
+      if (res.ok) {
+        setCancelledBookings(res.bookings as CancelledBooking[]);
+        setCancelledIsOwner(res.isOwner);
+        setDeletedIds(new Set());
+      }
+    }
+    setLoadingPopup(null);
+    setPopup(key);
+  }
+
+  function closePopup() { setPopup(null); }
 
   const periodLabelSr = period === "day" ? "ДАНАС" : period === "week" ? "ОВА НЕДЕЉА" : "ОВАЈ МЕСЕЦ";
   const periodLabelLat = period === "day" ? "DANAS" : period === "week" ? "OVA NEDELJA" : "OVAJ MESEC";
@@ -105,12 +150,12 @@ export function StatistikeClient(props: {
         )}
       </div>
 
-      {/* 2×2 grid of stat boxes */}
+      {/* 2×2 grid of stat boxes — all clickable */}
       <div className="stat-grid">
-        <StatBox labelSr="ТЕРМИНИ" labelLat="TERMINI" value={String(doneCount)} subSr="обављено" subLat="obavljeno" />
-        <StatBox labelSr="НОВИ" labelLat="NOVI" value={String(newCustomers)} subSr="муштерије" subLat="mušterije" />
-        <StatBox labelSr="ПРОСЕЧНО" labelLat="PROSEČNO" value={avgPerBooking.toLocaleString("sr-RS")} unit="RSD" subSr="по термину" subLat="po terminu" />
-        <StatBox labelSr="ОТКАЗАНО" labelLat="OTKAZANO" value={String(cancelledCount)} unit={`${cancelledPct}%`} tone={cancelledPct > 10 ? "danger" : undefined} />
+        <StatBox labelSr="ТЕРМИНИ" labelLat="TERMINI" value={String(doneCount)} subSr="обављено" subLat="obavljeno" loading={loadingPopup === "termini"} onClick={() => openPopup("termini")} />
+        <StatBox labelSr="НОВИ" labelLat="NOVI" value={String(newCustomers)} subSr="муштерије" subLat="mušterije" loading={loadingPopup === "novi"} onClick={() => openPopup("novi")} />
+        <StatBox labelSr="ПРОСЕЧНО" labelLat="PROSEČNO" value={avgPerBooking.toLocaleString("sr-RS")} unit="RSD" subSr="по термину" subLat="po terminu" loading={loadingPopup === "prosecno"} onClick={() => openPopup("prosecno")} />
+        <StatBox labelSr="ОТКАЗАНО" labelLat="OTKAZANO" value={String(cancelledCount)} unit={`${cancelledPct}%`} tone={cancelledPct > 10 ? "danger" : undefined} loading={loadingPopup === "otkazano"} onClick={cancelledCount > 0 ? () => openPopup("otkazano") : undefined} />
       </div>
 
       {/* PRIHODI block — period-specific, no cross-day comparison clutter:
@@ -351,6 +396,172 @@ export function StatistikeClient(props: {
         </div>
       </div>
 
+      {/* ── POPUPS ────────────────────────────────────────────────────────── */}
+
+      {/* ТЕРМИНИ popup — list of done bookings */}
+      {popup === "termini" && (
+        <div className="adm-sheet-overlay" onClick={(e) => e.target === e.currentTarget && closePopup()}>
+          <div className="adm-sheet" style={{ maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+            <SheetHeader titleSr="ТЕРМИНИ · ОБАВЉЕНО" titleLat="TERMINI · OBAVLJENO" onClose={closePopup} />
+            <div style={{ overflowY: "auto", flex: 1, padding: "0 20px 24px" }}>
+              {doneBookings.length === 0 ? (
+                <div className="adm-empty" style={{ padding: 32 }}>
+                  <span data-sr>Нема обављених термина.</span>
+                  <span data-lat>Nema obavljenih termina.</span>
+                </div>
+              ) : doneBookings.map((b) => {
+                const c = Array.isArray(b.customers) ? b.customers[0] : b.customers;
+                const s = Array.isArray(b.services) ? b.services[0] : b.services;
+                return (
+                  <div key={b.id} style={{ borderBottom: "1px solid rgba(245,233,208,.08)", padding: "12px 0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                    <div>
+                      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, color: "var(--cream)", letterSpacing: ".04em" }}>{c?.name ?? "—"}</div>
+                      <div style={{ fontSize: 12, color: "rgba(245,233,208,.5)", marginTop: 3 }}>
+                        <span data-sr>{s?.name_sr ?? "—"}</span>
+                        <span data-lat>{s?.name_lat ?? "—"}</span>
+                        {" · "}{b.date} {b.time_slot.slice(0, 5)}
+                      </div>
+                    </div>
+                    <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, color: "var(--mustard)", whiteSpace: "nowrap" }}>{(s?.price ?? 0).toLocaleString("sr-RS")} RSD</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* НОВИ popup — list of new customers */}
+      {popup === "novi" && (
+        <div className="adm-sheet-overlay" onClick={(e) => e.target === e.currentTarget && closePopup()}>
+          <div className="adm-sheet" style={{ maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+            <SheetHeader titleSr="НОВЕ МУШТЕРИЈЕ" titleLat="NOVE MUŠTERIJE" onClose={closePopup} />
+            <div style={{ overflowY: "auto", flex: 1, padding: "0 20px 24px" }}>
+              {newCustomersList.length === 0 ? (
+                <div className="adm-empty" style={{ padding: 32 }}>
+                  <span data-sr>Нема нових муштерија у овом периоду.</span>
+                  <span data-lat>Nema novih mušterija u ovom periodu.</span>
+                </div>
+              ) : newCustomersList.map((c) => (
+                <div key={c.id} style={{ borderBottom: "1px solid rgba(245,233,208,.08)", padding: "12px 0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                  <div>
+                    <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, color: "var(--cream)", letterSpacing: ".04em" }}>{c.name ?? "—"}</div>
+                    <div style={{ fontSize: 12, color: "rgba(245,233,208,.5)", marginTop: 3 }}>{c.phone ?? "—"}</div>
+                  </div>
+                  <div style={{ fontSize: 11, color: "rgba(245,233,208,.4)", textAlign: "right" }}>
+                    {c.created_at ? new Date(c.created_at).toLocaleDateString("sr-RS", { day: "numeric", month: "short" }) : ""}
+                    {c.utm_source && <div style={{ color: "rgba(245,233,208,.3)" }}>{c.utm_source}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ПРОСЕЧНО popup — top services breakdown */}
+      {popup === "prosecno" && (
+        <div className="adm-sheet-overlay" onClick={(e) => e.target === e.currentTarget && closePopup()}>
+          <div className="adm-sheet" style={{ maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+            <SheetHeader titleSr="ПРОСЕК ПО УСЛУЗИ" titleLat="PROSEK PO USLUZI" onClose={closePopup} />
+            <div style={{ overflowY: "auto", flex: 1, padding: "0 20px 24px" }}>
+              {topServices.length === 0 ? (
+                <div className="adm-empty" style={{ padding: 32 }}>
+                  <span data-sr>Нема података.</span><span data-lat>Nema podataka.</span>
+                </div>
+              ) : (() => {
+                const maxCount = Math.max(1, ...topServices.map(s => s.count));
+                return topServices.map((s, i) => {
+                  const barPct = Math.round((s.count / maxCount) * 100);
+                  const avg = s.count > 0 ? Math.round(s.revenue / s.count) : 0;
+                  return (
+                    <div key={i} style={{ borderBottom: "1px solid rgba(245,233,208,.08)", padding: "14px 0" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: "var(--cream)", letterSpacing: ".04em" }}>
+                          <span data-sr>{s.name_sr}</span><span data-lat>{s.name_lat}</span>
+                        </div>
+                        <div style={{ display: "flex", gap: 12, fontSize: 12, color: "rgba(245,233,208,.6)" }}>
+                          <span>{s.count}×</span>
+                          <span style={{ color: "var(--mustard)" }}>{avg.toLocaleString("sr-RS")} RSD</span>
+                        </div>
+                      </div>
+                      <div style={{ height: 4, background: "rgba(245,233,208,.1)", borderRadius: 2, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${barPct}%`, background: "var(--mustard)", borderRadius: 2, transition: "width .4s" }} />
+                      </div>
+                      <div style={{ fontSize: 11, color: "rgba(245,233,208,.35)", marginTop: 4 }}>
+                        <span data-sr>укупно {s.revenue.toLocaleString("sr-RS")} RSD</span>
+                        <span data-lat>ukupno {s.revenue.toLocaleString("sr-RS")} RSD</span>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ОТКАЗАНО popup — cancelled bookings + delete */}
+      {popup === "otkazano" && (
+        <div className="adm-sheet-overlay" onClick={(e) => e.target === e.currentTarget && closePopup()}>
+          <div className="adm-sheet" style={{ maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+            <SheetHeader titleSr="ОТКАЗАНИ ТЕРМИНИ" titleLat="OTKAZANI TERMINI" onClose={closePopup} />
+            {cancelledIsOwner && cancelledBookings.filter(b => !deletedIds.has(b.id)).length > 0 && (
+              <div style={{ padding: "0 20px 12px", borderBottom: "1px solid rgba(245,233,208,.08)" }}>
+                <button
+                  style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--danger)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  onClick={async () => {
+                    if (!confirm("Obrisati sve otkazane termine iz ovog perioda?")) return;
+                    await deleteAllCancelledInPeriod(period);
+                    setDeletedIds(new Set(cancelledBookings.map(b => b.id)));
+                  }}
+                >
+                  <span data-sr>🗑 ОБРИШИ СВЕ ОТКАЗАНЕ</span>
+                  <span data-lat>🗑 OBRIŠI SVE OTKAZANE</span>
+                </button>
+              </div>
+            )}
+            <div style={{ overflowY: "auto", flex: 1, padding: "0 20px 24px" }}>
+              {cancelledBookings.filter(b => !deletedIds.has(b.id)).length === 0 ? (
+                <div className="adm-empty" style={{ padding: 32 }}>
+                  <span data-sr>Нема отказаних термина.</span>
+                  <span data-lat>Nema otkazanih termina.</span>
+                </div>
+              ) : cancelledBookings.filter(b => !deletedIds.has(b.id)).map((b) => {
+                const c = Array.isArray(b.customers) ? b.customers[0] : b.customers;
+                const s = Array.isArray(b.services) ? b.services[0] : b.services;
+                return (
+                  <div key={b.id} style={{ borderBottom: "1px solid rgba(245,233,208,.08)", padding: "12px 0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, color: "var(--cream)", letterSpacing: ".04em" }}>{c?.name ?? "—"}</div>
+                      <div style={{ fontSize: 12, color: "rgba(245,233,208,.5)", marginTop: 3 }}>
+                        <span data-sr>{s?.name_sr ?? "—"}</span>
+                        <span data-lat>{s?.name_lat ?? "—"}</span>
+                        {" · "}{b.date} {b.time_slot.slice(0, 5)}
+                      </div>
+                      {c?.phone && <div style={{ fontSize: 12, color: "rgba(245,233,208,.35)" }}>{c.phone}</div>}
+                    </div>
+                    {cancelledIsOwner && (
+                      <button
+                        style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, color: "var(--danger)", background: "none", border: "1px solid rgba(192,57,43,.3)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", letterSpacing: ".06em", flexShrink: 0 }}
+                        onClick={() => {
+                          startTransition(async () => {
+                            await deleteBookingFromStats(b.id);
+                            setDeletedIds(prev => new Set(prev).add(b.id));
+                          });
+                        }}
+                      >
+                        🗑
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {ordersCount > 0 && !isStaffView && (
         <div className="adm-banner info" style={{ marginTop: 12 }}>
           🛒 <span data-sr>{ordersCount} порудж. у овом периоду — види /admin/shop/porudzbine</span>
@@ -396,7 +607,7 @@ function PeriodLink({ period, current, sr, lat }: { period: "day" | "week" | "mo
   );
 }
 
-function StatBox({ labelSr, labelLat, value, unit, subSr, subLat, tone }: {
+function StatBox({ labelSr, labelLat, value, unit, subSr, subLat, tone, onClick, loading }: {
   labelSr: string;
   labelLat: string;
   value: string;
@@ -404,9 +615,22 @@ function StatBox({ labelSr, labelLat, value, unit, subSr, subLat, tone }: {
   subSr?: string;
   subLat?: string;
   tone?: "danger";
+  onClick?: () => void;
+  loading?: boolean;
 }) {
+  const Tag = onClick ? "button" : "div";
   return (
-    <div className="stat-box">
+    <Tag
+      className="stat-box"
+      onClick={onClick}
+      style={onClick ? { cursor: "pointer", position: "relative", WebkitTapHighlightColor: "transparent" } : undefined}
+      {...(Tag === "button" ? { type: "button" as const } : {})}
+    >
+      {loading && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,.35)", borderRadius: "inherit", zIndex: 1 }}>
+          <span style={{ width: 18, height: 18, border: "2px solid rgba(245,233,208,.2)", borderTopColor: "var(--mustard)", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
+        </div>
+      )}
       <div className="stat-box-label">
         <span data-sr>{labelSr}</span>
         <span data-lat>{labelLat}</span>
@@ -421,6 +645,30 @@ function StatBox({ labelSr, labelLat, value, unit, subSr, subLat, tone }: {
           <span data-lat>{subLat}</span>
         </div>
       )}
+      {onClick && (
+        <div style={{ position: "absolute", bottom: 8, right: 10, fontSize: 10, color: "rgba(245,233,208,.25)", letterSpacing: ".05em", fontFamily: "'Oswald', sans-serif" }}>
+          ▸
+        </div>
+      )}
+    </Tag>
+  );
+}
+
+function SheetHeader({ titleSr, titleLat, onClose }: { titleSr: string; titleLat: string; onClose: () => void }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px 14px", borderBottom: "1px solid rgba(245,233,208,.08)", flexShrink: 0 }}>
+      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 16, letterSpacing: ".08em", color: "var(--cream)" }}>
+        <span data-sr>{titleSr}</span>
+        <span data-lat>{titleLat}</span>
+      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(245,233,208,.5)", fontSize: 22, lineHeight: 1, padding: "0 4px", fontFamily: "sans-serif" }}
+        aria-label="Zatvori"
+      >
+        ×
+      </button>
     </div>
   );
 }
