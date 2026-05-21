@@ -1,0 +1,91 @@
+name: Database backup
+
+# Free-tier-friendly backup strategy: GitHub Actions cron pg_dumps the
+# Supabase Postgres nightly and uploads the SQL as a workflow artifact
+# (90-day retention, free, no external storage account). Compressed with
+# gzip. Runs on a low-traffic hour (03:00 UTC = 04/05:00 Europe/Belgrade).
+#
+# Connection routing: GitHub-hosted runners are IPv4-only, but Supabase
+# direct hosts (db.<ref>.supabase.co) are IPv6-only on the free tier.
+# So we route through the Supavisor pooler. pg_dump needs prepared
+# statements + COPY, which Transaction Mode (6543) blocks — use Session
+# Mode (5432) instead.
+#
+# Required repo secrets:
+#   SUPABASE_DB_HOST      pooler host, e.g. aws-0-eu-west-1.pooler.supabase.com
+#   SUPABASE_DB_USER      tenant-suffixed user, e.g. postgres.<project-ref>
+#   SUPABASE_DB_PORT      5432  (Session Mode — DO NOT use 6543 for pg_dump)
+#   SUPABASE_DB_PASSWORD  the postgres user's password
+#
+# To restore: download the latest artifact, gunzip, then
+#   psql "$DATABASE_URL" < trisha-YYYY-MM-DD.sql
+
+on:
+  schedule:
+    - cron: "0 3 * * *"        # 03:00 UTC daily
+  workflow_dispatch: {}        # allow manual run from Actions tab
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify required secrets are present
+        env:
+          PGHOST: ${{ secrets.SUPABASE_DB_HOST }}
+          PGUSER: ${{ secrets.SUPABASE_DB_USER }}
+          PGPORT: ${{ secrets.SUPABASE_DB_PORT }}
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          missing=()
+          [ -z "$PGHOST" ]     && missing+=("SUPABASE_DB_HOST")
+          [ -z "$PGUSER" ]     && missing+=("SUPABASE_DB_USER")
+          [ -z "$PGPORT" ]     && missing+=("SUPABASE_DB_PORT")
+          [ -z "$PGPASSWORD" ] && missing+=("SUPABASE_DB_PASSWORD")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing required repo secrets: ${missing[*]}"
+            exit 1
+          fi
+          echo "All required secrets present."
+
+      - name: Install Postgres 17 client
+        # Supabase is on PG 17.x; Ubuntu's default postgresql-client is 16,
+        # which refuses to dump from a newer server. Add the official PGDG
+        # apt repo to get postgresql-client-17.
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client-17
+          /usr/lib/postgresql/17/bin/pg_dump --version
+
+      - name: Run pg_dump
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGHOST: ${{ secrets.SUPABASE_DB_HOST }}
+          PGPORT: ${{ secrets.SUPABASE_DB_PORT }}
+          PGUSER: ${{ secrets.SUPABASE_DB_USER }}
+          PGDATABASE: postgres
+        run: |
+          STAMP=$(date -u +%Y-%m-%d)
+          mkdir -p out
+          /usr/lib/postgresql/17/bin/pg_dump \
+            --no-owner --no-privileges \
+            --schema=public \
+            --schema=auth \
+            --no-publications --no-subscriptions \
+            -f "out/trisha-${STAMP}.sql"
+          gzip -9 "out/trisha-${STAMP}.sql"
+          ls -lh out/
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_number }}
+          path: out/*.sql.gz
+          retention-days: 90
+          compression-level: 0   # already gzipped
