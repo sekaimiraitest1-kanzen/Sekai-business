@@ -27,7 +27,7 @@ function dayKey(d: Date): keyof WorkingHours {
 }
 
 function fmtDate(d: Date): string {
-  return d.toISOString().split("T")[0];
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function generateSlots(open: string, close: string, durationMin: number): string[] {
