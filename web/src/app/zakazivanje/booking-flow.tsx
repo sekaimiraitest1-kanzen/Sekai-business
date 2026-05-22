@@ -493,6 +493,7 @@ export function BookingFlow({
             setDate(d);
             setTime(null);
             setCalOpen(false);
+            go(3);
           }}
           lang={lang}
         />
