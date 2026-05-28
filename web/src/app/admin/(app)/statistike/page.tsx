@@ -56,13 +56,15 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
   // Owner-only: per-staff revenue breakdown for the current period. Lets
   // Triša see "I made 60K, Marko made 45K this week" at a glance. Only
   // computed when role is owner — staff already see their own number.
+  const todayStr = fmt(nowBelgrade());
+
   let staffBreakdown: { id: string; display_name: string; revenue: number; count: number }[] | null = null;
   if (!staffMode) {
     const [bookingsForBreakdown, staffRows] = await Promise.all([
       sb.from("bookings")
-        .select("staff_id, services(price)")
+        .select("date, staff_id, services(price)")
         .eq("salon_id", session.salonId)
-        .eq("status", "done")
+        .in("status", ["done", "confirmed", "pending"])
         .not("staff_id", "is", null)
         .gte("date", fmt(cur.from)).lte("date", fmt(cur.to)),
       sb.from("admin_users")
@@ -73,9 +75,11 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
       (staffRows.data ?? []).map((r) => [r.id as string, (r.display_name as string) ?? "—"])
     );
     const agg = new Map<string, { revenue: number; count: number }>();
-    type BR = { staff_id: string | null; services: { price?: number | null } | { price?: number | null }[] | null };
+    type BR = { date: string | null; staff_id: string | null; services: { price?: number | null } | { price?: number | null }[] | null; status?: string | null };
     for (const b of (bookingsForBreakdown.data ?? []) as BR[]) {
       if (!b.staff_id) continue;
+      if (b.status === "cancelled" || b.status === "no_show") continue;
+      if (b.status !== "done" && (b.date as string) >= todayStr) continue;
       const svc = b.services;
       const p = (Array.isArray(svc) ? svc[0]?.price : svc?.price) ?? 0;
       const cur = agg.get(b.staff_id) ?? { revenue: 0, count: 0 };
@@ -112,7 +116,8 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
   let insightQ = sb.from("bookings")
     .select("date, staff_id, services(price)")
     .eq("salon_id", session.salonId)
-    .eq("status", "done")
+    .in("status", ["done", "confirmed", "pending"])
+    .lt("date", todayStr)
     .gte("date", fmt(insightWindowStart))
     .lte("date", fmt(cur.to));
   if (staffMode) insightQ = insightQ.eq("staff_id", session.adminUserId);
@@ -168,7 +173,10 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
     });
   }
 
-  const doneBookings = bookings.filter((b) => b.status === "done");
+  const doneBookings = bookings.filter(
+    (b) => b.status === "done" ||
+    (b.status !== "cancelled" && b.status !== "no_show" && (b.date as string) < todayStr)
+  );
   const revenueBookings = doneBookings.reduce((sum, b) => sum + priceOf(b), 0);
   const revenueOrders = ordersData.filter((o) => o.status === "picked_up").reduce((s, o) => s + (o.total ?? 0), 0);
   const totalRevenue = revenueBookings + revenueOrders;
@@ -192,8 +200,6 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
   // build bar chart series — array of { label, value, key, isToday }
   const series: { label: string; value: number; key: string; isToday: boolean }[] = [];
   const labelsSr = ["ПОН", "УТО", "СРЕ", "ЧЕТ", "ПЕТ", "СУБ", "НЕД"];
-  const todayKeyStr = todayKey();
-
   if (period === "day") {
     // hourly buckets 09–20
     for (let h = 9; h <= 20; h++) {
@@ -208,7 +214,7 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
       const d = new Date(cur.from);
       d.setDate(cur.from.getDate() + i);
       const k = fmt(d);
-      series.push({ label: labelsSr[i], value: dailyRevenue[k] ?? 0, key: k, isToday: k === todayKeyStr });
+      series.push({ label: labelsSr[i], value: dailyRevenue[k] ?? 0, key: k, isToday: k === todayStr });
     }
   } else {
     const days = (cur.to.getDate() - cur.from.getDate()) + 1;
@@ -216,7 +222,7 @@ export default async function StatistikePage({ searchParams }: { searchParams: {
       const d = new Date(cur.from);
       d.setDate(cur.from.getDate() + i);
       const k = fmt(d);
-      series.push({ label: String(d.getDate()), value: dailyRevenue[k] ?? 0, key: k, isToday: k === todayKeyStr });
+      series.push({ label: String(d.getDate()), value: dailyRevenue[k] ?? 0, key: k, isToday: k === todayStr });
     }
   }
 
