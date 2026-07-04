@@ -162,7 +162,7 @@ export default async function HomePage() {
 
           <div className="hero-photo">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/hero-trisha.webp" alt="Barbershop Vuk" />
+            <img src="/hero-vuk.webp" alt="Barbershop Vuk" />
           </div>
         </div>
       </section>
