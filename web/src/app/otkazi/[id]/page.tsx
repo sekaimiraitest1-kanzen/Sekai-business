@@ -48,37 +48,37 @@ export default async function CancelBookingPage({
   let errorView: { titleSr: string; titleLat: string; bodySr: string; bodyLat: string } | null = null;
   if (!valid) {
     errorView = {
-      titleSr: "Линк није исправан",
+      titleSr: "Link is invalid",
       titleLat: "Link nije ispravan",
-      bodySr: "Покушај да отвориш линк из и-мејла потврде. Ако и даље не ради, позови нас.",
+      bodySr: "Try opening the link from the confirmation email. If it still doesn't work, call us.",
       bodyLat: "Pokušaj da otvoriš link iz email-a potvrde. Ako i dalje ne radi, pozovi nas.",
     };
   } else if (!booking) {
     errorView = {
-      titleSr: "Термин не постоји",
+      titleSr: "Appointment doesn't exist",
       titleLat: "Termin ne postoji",
-      bodySr: "Можда је већ отказан или је линк стар.",
+      bodySr: "It may already be cancelled, or the link is old.",
       bodyLat: "Možda je već otkazan ili je link star.",
     };
   } else if (booking.status === "cancelled") {
     errorView = {
-      titleSr: "Термин је већ отказан",
+      titleSr: "Appointment already cancelled",
       titleLat: "Termin je već otkazan",
-      bodySr: "Видимо се неки други пут.",
+      bodySr: "See you some other time.",
       bodyLat: "Vidimo se neki drugi put.",
     };
   } else if (booking.status === "done" || booking.status === "no_show") {
     errorView = {
-      titleSr: "Термин се не може отказати",
+      titleSr: "This appointment can't be cancelled",
       titleLat: "Termin se ne može otkazati",
-      bodySr: "Овај термин је већ обављен или маркиран као неодржан.",
+      bodySr: "This appointment has already happened or was marked as a no-show.",
       bodyLat: "Ovaj termin je već obavljen ili markiran kao neodržan.",
     };
   } else if (booking.date && booking.time_slot && isPastBelgrade(booking.date as string, (booking.time_slot as string).slice(0, 5))) {
     errorView = {
-      titleSr: "Термин је прошао",
+      titleSr: "Appointment has passed",
       titleLat: "Termin je prošao",
-      bodySr: "Не можемо вратити време.",
+      bodySr: "We can't turn back time.",
       bodyLat: "Ne možemo vratiti vreme.",
     };
   }
@@ -89,7 +89,7 @@ export default async function CancelBookingPage({
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: 22, color: "var(--mustard)" }}>Barbershop Vuk</div>
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "rgba(245,233,208,.5)", letterSpacing: ".15em", textTransform: "uppercase", marginTop: 6 }}>
-            ОТКАЗИВАЊЕ ТЕРМИНА
+            OTKAZIVANJE TERMINA
           </div>
         </div>
 
@@ -104,7 +104,7 @@ export default async function CancelBookingPage({
               <span data-lat>{errorView.bodyLat}</span>
             </p>
             <Link href="/" style={{ display: "inline-block", marginTop: 24, padding: "10px 24px", background: "var(--mustard)", color: "var(--brown-950)", textDecoration: "none", fontWeight: 600, fontSize: 13 }}>
-              <span data-sr>НАЗАД НА САЈТ</span>
+              <span data-sr>BACK TO SITE</span>
               <span data-lat>NAZAD NA SAJT</span>
             </Link>
           </div>

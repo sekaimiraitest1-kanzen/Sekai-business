@@ -287,11 +287,11 @@ export default async function HomePage() {
         <div className="galerija-header">
           <div>
             <div className="section-label" style={{ color: "var(--mustard)" }} data-reveal="left">
-              <span data-sr>§ 04 · ГАЛЕРИЈА</span>
+              <span data-sr>§ 04 · GALLERY</span>
               <span data-lat>§ 04 · GALERIJA</span>
             </div>
             <h2 className="section-title" style={{ color: "var(--cream)", marginBottom: 0 }} data-reveal="up-lg">
-              <span data-sr>Наш рад.</span>
+              <span data-sr>Our work.</span>
               <span data-lat>Naš rad.</span>
             </h2>
           </div>
@@ -309,7 +309,7 @@ export default async function HomePage() {
                 textTransform: "uppercase",
               }}
             >
-              <span data-sr>ПОГЛЕДАЈ НА INSTAGRAM →</span>
+              <span data-sr>VIEW ON INSTAGRAM →</span>
               <span data-lat>POGLEDAJ NA INSTAGRAM →</span>
             </a>
           )}
@@ -335,11 +335,11 @@ export default async function HomePage() {
       <section className="section utisci" id="utisci">
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div className="section-label" data-reveal="left">
-            <span data-sr>§ 05 · УТИСЦИ</span>
+            <span data-sr>§ 05 · REVIEWS</span>
             <span data-lat>§ 05 · UTISCI</span>
           </div>
           <h2 className="section-title" data-reveal="up-lg">
-            <span data-sr>Шта кажу мушterije.</span>
+            <span data-sr>What our customers say.</span>
             <span data-lat>Šta kažu mušterije.</span>
           </h2>
 
@@ -375,11 +375,11 @@ export default async function HomePage() {
       <section className="section lokacija" id="lokacija">
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div className="section-label" data-reveal="left">
-            <span data-sr>§ 06 · ЛОКАЦИЈА</span>
+            <span data-sr>§ 06 · LOCATION</span>
             <span data-lat>§ 06 · LOKACIJA</span>
           </div>
           <h2 className="section-title" data-reveal="up-lg">
-            <span data-sr>Где смо.</span>
+            <span data-sr>Find us.</span>
             <span data-lat>Gde smo.</span>
           </h2>
 
@@ -387,10 +387,10 @@ export default async function HomePage() {
             <a
               data-reveal="scale"
               className="map-card"
-              href={`https://maps.google.com/?q=${encodeURIComponent(salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica")}`}
+              href={`https://maps.google.com/?q=${encodeURIComponent(salon?.address ?? "Majora Zorana Radosavljevića 138, Beograd")}`}
               target="_blank"
               rel="noreferrer"
-              aria-label={`Otvori ${salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica"} u Google Maps`}
+              aria-label={`Otvori ${salon?.address ?? "Majora Zorana Radosavljevića 138, Beograd"} u Google Maps`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -404,10 +404,10 @@ export default async function HomePage() {
               <div className="map-card-overlay" aria-hidden="true" />
               <div className="map-card-address">
                 <span>📍</span>
-                <span>{salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica"}</span>
+                <span>{salon?.address ?? "Majora Zorana Radosavljevića 138, Beograd"}</span>
               </div>
               <span className="map-card-cta">
-                <span data-sr>ОТВОРИ У GOOGLE MAPS</span>
+                <span data-sr>OPEN IN GOOGLE MAPS</span>
                 <span data-lat>OTVORI U GOOGLE MAPS</span>
                 <span className="map-card-cta-arrow" aria-hidden="true">→</span>
               </span>
@@ -420,10 +420,10 @@ export default async function HomePage() {
                 <div className="contact-row">
                   <span>📞</span>
                   <a
-                    href={`tel:${formatPhoneE164(salon?.phone ?? "065 9003 742")}`}
+                    href={`tel:${formatPhoneE164(salon?.phone ?? "060 1424576")}`}
                     style={{ color: "inherit", textDecoration: "none" }}
                   >
-                    {salon?.phone ?? "065 9003 742"}
+                    {salon?.phone ?? "060 1424576"}
                   </a>
                 </div>
                 <div className="contact-row">
@@ -432,7 +432,7 @@ export default async function HomePage() {
                 </div>
                 <div className="contact-row">
                   <span>📍</span>
-                  <span>{salon?.address ?? "Majora Zorana Radosavljevića 226b, Batajnica"}</span>
+                  <span>{salon?.address ?? "Majora Zorana Radosavljevića 138, Beograd"}</span>
                 </div>
               </div>
             </div>
@@ -443,14 +443,14 @@ export default async function HomePage() {
       {/* ── CTA BAND ────────────────────────────────────── */}
       <section className="cta-band" data-reveal-stagger="slow">
         <p className="cta-band-eyebrow" data-reveal="fade">
-          <span data-sr>БЕЗ ЖУРБЕ · БЕЗ ЧЕКАЊА</span>
+          <span data-sr>NO RUSH · NO WAITING</span>
           <span data-lat>BEZ ŽURBE · BEZ ČEKANJA</span>
         </p>
         <h2 className="cta-band-title" data-reveal="up-lg">
           <span data-sr>
-            Закажи онлине.
+            Book online.
             <br />
-            Дођи кад желиш.
+            Come in whenever.
           </span>
           <span data-lat>
             Zakaži online.
@@ -459,10 +459,10 @@ export default async function HomePage() {
           </span>
         </h2>
         <a href="/zakazivanje" className="btn-dark" data-reveal="up">
-          <span data-sr>ЗАКАЖИ ТЕРМИН →</span>
+          <span data-sr>BOOK NOW →</span>
           <span data-lat>ZAKAŽI TERMIN →</span>
         </a>
-        <p className="cta-band-note" data-sr data-reveal="fade">Резервација за мање од 30 секунди. Без налога.</p>
+        <p className="cta-band-note" data-sr data-reveal="fade">Book in under 30 seconds. No account needed.</p>
         <p className="cta-band-note" data-lat data-reveal="fade">Rezervacija za manje od 30 sekundi. Bez naloga.</p>
       </section>
 
@@ -480,20 +480,20 @@ type WorkingHours = Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun"
 
 function HoursCard({ workingHours }: { workingHours?: WorkingHours | null }) {
   const days: { key: keyof WorkingHours; sr: string; lat: string }[] = [
-    { key: "mon", sr: "Понедељак", lat: "Ponedeljak" },
-    { key: "tue", sr: "Уторак", lat: "Utorak" },
-    { key: "wed", sr: "Среда", lat: "Sreda" },
-    { key: "thu", sr: "Четвртак", lat: "Četvrtak" },
-    { key: "fri", sr: "Петак", lat: "Petak" },
-    { key: "sat", sr: "Субота", lat: "Subota" },
-    { key: "sun", sr: "Недеља", lat: "Nedelja" },
+    { key: "mon", sr: "Monday", lat: "Ponedeljak" },
+    { key: "tue", sr: "Tuesday", lat: "Utorak" },
+    { key: "wed", sr: "Wednesday", lat: "Sreda" },
+    { key: "thu", sr: "Thursday", lat: "Četvrtak" },
+    { key: "fri", sr: "Friday", lat: "Petak" },
+    { key: "sat", sr: "Saturday", lat: "Subota" },
+    { key: "sun", sr: "Sunday", lat: "Nedelja" },
   ];
 
   const todayIndex = (new Date().getDay() + 6) % 7; // Mon=0..Sun=6
 
   return (
     <div className="hours-card">
-      <div className="hours-title" data-sr>РАДНО ВРЕМЕ</div>
+      <div className="hours-title" data-sr>OPENING HOURS</div>
       <div className="hours-title" data-lat>RADNO VREME</div>
       {days.map((d, i) => {
         const wh = workingHours?.[d.key];
@@ -505,7 +505,7 @@ function HoursCard({ workingHours }: { workingHours?: WorkingHours | null }) {
               <span className="hours-day" data-lat>{d.lat}</span>
               {isToday && (
                 <>
-                  <span className="today-badge" data-sr>ДАНАС</span>
+                  <span className="today-badge" data-sr>TODAY</span>
                   <span className="today-badge" data-lat>DANAS</span>
                 </>
               )}
@@ -516,7 +516,7 @@ function HoursCard({ workingHours }: { workingHours?: WorkingHours | null }) {
               </span>
             ) : (
               <>
-                <span className="hours-closed" data-sr>ЗАТВОРЕНО</span>
+                <span className="hours-closed" data-sr>CLOSED</span>
                 <span className="hours-closed" data-lat>ZATVORENO</span>
               </>
             )}
@@ -533,9 +533,9 @@ function HoursCard({ workingHours }: { workingHours?: WorkingHours | null }) {
 // /admin/sajt → review_1 / review_2 / review_3 (site_content table).
 // ──────────────────────────────────────────────────────────
 const REVIEWS = [
-  { initialsSr: "МК", initialsLat: "MK", authorSr: "Марко К.", authorLat: "Marko K.", sourceSr: "Google · 2 нед.", sourceLat: "Google · 2 ned." },
-  { initialsSr: "НЈ", initialsLat: "NJ", authorSr: "Никола Ј.", authorLat: "Nikola J.", sourceSr: "Google · 1 мес.", sourceLat: "Google · 1 mes." },
-  { initialsSr: "СП", initialsLat: "SP", authorSr: "Стефан П.", authorLat: "Stefan P.", sourceSr: "Google · 3 нед.", sourceLat: "Google · 3 ned." },
+  { initialsSr: "MK", initialsLat: "MK", authorSr: "Marko K.", authorLat: "Marko K.", sourceSr: "Google · 2 wk. ago", sourceLat: "Google · 2 ned." },
+  { initialsSr: "NJ", initialsLat: "NJ", authorSr: "Nikola J.", authorLat: "Nikola J.", sourceSr: "Google · 1 mo. ago", sourceLat: "Google · 1 mes." },
+  { initialsSr: "SP", initialsLat: "SP", authorSr: "Stefan P.", authorLat: "Stefan P.", sourceSr: "Google · 3 wk. ago", sourceLat: "Google · 3 ned." },
 ];
 
 // Used as the empty-DB fallback for /#usluge (matches Barbershop Vuk's

@@ -36,22 +36,22 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
       <div className="shop-hero">
         <div className="shop-hero-inner">
           <div>
-            <div className="shop-eyebrow" data-sr>§ ПРОДАВНИЦА · КОЗМЕТИКА</div>
+            <div className="shop-eyebrow" data-sr>§ SHOP · COSMETICS</div>
             <div className="shop-eyebrow" data-lat>§ PRODAVNICA · KOZMETIKA</div>
-            <h1 className="shop-title" data-sr>Стил и код<br/>куће.</h1>
+            <h1 className="shop-title" data-sr>Style at<br/>home.</h1>
             <h1 className="shop-title" data-lat>Stil i kod<br/>kuće.</h1>
-            <p className="shop-sub" data-sr>Препарати за негу косе, коже и браде. Само лично преузимање у салону — без доставе.</p>
+            <p className="shop-sub" data-sr>Products for hair, skin, and beard care. In-store pickup only — no delivery.</p>
             <p className="shop-sub" data-lat>Preparati za negu kose, kože i brade. Samo lično preuzimanje u salonu — bez dostave.</p>
           </div>
           <div className="shop-stats">
             <div>
               <div className="shop-stat-val">{products.length}</div>
-              <div className="shop-stat-label" data-sr>ПРОИЗВОДА</div>
+              <div className="shop-stat-label" data-sr>PRODUCTS</div>
               <div className="shop-stat-label" data-lat>PROIZVODA</div>
             </div>
             <div>
               <div className="shop-stat-val">✓</div>
-              <div className="shop-stat-label" data-sr>САМО PICKUP</div>
+              <div className="shop-stat-label" data-sr>PICKUP ONLY</div>
               <div className="shop-stat-label" data-lat>SAMO PICKUP</div>
             </div>
           </div>
@@ -60,7 +60,7 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
 
       <div className="filter-bar">
         <button className={`filter-chip ${filter === "sve" ? "active" : ""}`} onClick={() => setFilter("sve")} type="button">
-          <span data-sr>СВЕ</span><span data-lat>SVE</span>
+          <span data-sr>ALL</span><span data-lat>SVE</span>
         </button>
         {categories.map((c) => (
           <button key={c.slug} className={`filter-chip ${filter === c.slug ? "active" : ""}`} onClick={() => setFilter(c.slug)} type="button">
@@ -72,11 +72,11 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
 
       <div className="products-section">
         <div className="section-divider">
-          <div className="section-divider-label" data-sr>СВИ ПРОИЗВОДИ</div>
+          <div className="section-divider-label" data-sr>ALL PRODUCTS</div>
           <div className="section-divider-label" data-lat>SVI PROIZVODI</div>
           <div className="section-divider-line"></div>
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "var(--brown-700)", letterSpacing: ".06em" }}>
-            <span data-sr>{filtered.length} НА СТОКУ</span>
+            <span data-sr>{filtered.length} IN STOCK</span>
             <span data-lat>{filtered.length} NA STOKU</span>
           </div>
         </div>
@@ -84,7 +84,7 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
         <div className="products-grid">
           {filtered.length === 0 && (
             <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: 64, fontFamily: "'JetBrains Mono', monospace", color: "var(--brown-700)" }}>
-              <span data-sr>Нема производа у овој категорији.</span>
+              <span data-sr>No products in this category.</span>
               <span data-lat>Nema proizvoda u ovoj kategoriji.</span>
             </div>
           )}
@@ -109,7 +109,7 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
                   {p.badge && <div className={`product-badge badge-${p.badge}`}>{p.badge.toUpperCase()}</div>}
                   {out && (
                     <div className="product-out-overlay">
-                      <span data-sr>РАСПРОДАТО</span>
+                      <span data-sr>SOLD OUT</span>
                       <span data-lat>RASPRODATO</span>
                     </div>
                   )}

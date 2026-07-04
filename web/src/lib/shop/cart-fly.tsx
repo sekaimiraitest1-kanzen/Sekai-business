@@ -255,14 +255,14 @@ function CartToast({
           <span className="cart-fly-toast-body">
             <span className="cart-fly-toast-name">{toast.productName}</span>
             <span className="cart-fly-toast-meta">
-              <span data-sr>у корпи</span>
+              <span data-sr>in cart</span>
               <span data-lat>u korpi</span>
               {toast.qty > 1 ? <> · <strong>{toast.qty}×</strong></> : null}
               {typeof toast.priceTotal === "number" ? <> · {toast.priceTotal} RSD</> : null}
             </span>
           </span>
           <span className="cart-fly-toast-cta" aria-hidden="true">
-            <span data-sr>ОТВОРИ →</span>
+            <span data-sr>OPEN →</span>
             <span data-lat>OTVORI →</span>
           </span>
         </button>

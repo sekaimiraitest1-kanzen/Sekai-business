@@ -53,10 +53,10 @@ const jetbrains = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Барбершоп Вук · Батајница",
-    template: "%s · Барбершоп Вук",
+    default: "Barbershop Vuk · Batajnica",
+    template: "%s · Barbershop Vuk",
   },
-  description: "Твоје место за стил, традицију и добру причу. Мушка берберница у Батајници — шишање, брада, бријање. Заказивање онлине.",
+  description: "Tvoje mesto za stil, tradiciju i dobru priču. Muška berbernica u Batajnici — šišanje, brada, brijanje. Zakazivanje onlajn.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3050"),
   manifest: "/manifest.json",
   icons: {
@@ -69,10 +69,10 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Вук",
+    title: "Vuk",
     startupImage: [{ url: "/icons/icon-512.png" }],
   },
-  applicationName: "Вук",
+  applicationName: "Vuk",
   formatDetection: { telephone: false, email: false, address: false },
   other: {
     "mobile-web-app-capable": "yes",
@@ -84,22 +84,22 @@ export const metadata: Metadata = {
     type: "website",
     locale: "sr_RS",
     url: "/",
-    siteName: "Барбершоп Вук",
-    title: "Барбершоп Вук · Батајница",
-    description: "Мушка берберница у Батајници. Шишање, брада, бријање. Заказивање онлине, без чекања.",
+    siteName: "Barbershop Vuk",
+    title: "Barbershop Vuk · Batajnica",
+    description: "Muška berbernica u Batajnici. Šišanje, brada, brijanje. Zakazivanje onlajn, bez čekanja.",
     images: [
       {
         url: "/logo-source.png",
         width: 600,
         height: 600,
-        alt: "Барбершоп Вук — Батајница",
+        alt: "Barbershop Vuk — Batajnica",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Барбершоп Вук · Батајница",
-    description: "Мушка берберница у Батајници. Шишање, брада, бријање. Заказивање онлине, без чекања.",
+    title: "Barbershop Vuk · Batajnica",
+    description: "Muška berbernica u Batajnici. Šišanje, brada, brijanje. Zakazivanje onlajn, bez čekanja.",
     images: ["/logo-source.png"],
   },
   robots: {

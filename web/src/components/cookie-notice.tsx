@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "trisa-cookie-acked-v1";
+const STORAGE_KEY = "vuk-cookie-acked-v1";
 
 /**
  * Minimal "ok-button" cookie notice. We don't need a consent gate because
@@ -44,18 +44,18 @@ export function CookieNotice() {
     <div className="cookie-notice" role="region" aria-label="Cookie notice">
       <div className="cookie-notice-text">
         <span data-sr>
-          Сајт користи само технички неопходне колачиће (за памћење писма).
-          Без праћења, без оглашавања.{" "}
-          <Link href="/privatnost">Сазнај више →</Link>
+          This site only uses strictly necessary cookies (to remember your language).
+          No tracking, no ads.{" "}
+          <Link href="/privatnost">Learn more →</Link>
         </span>
         <span data-lat>
-          Sajt koristi samo tehnički neophodne kolačiće (za pamćenje pisma).
+          Sajt koristi samo tehnički neophodne kolačiće (za pamćenje jezika).
           Bez praćenja, bez oglašavanja.{" "}
           <Link href="/privatnost">Saznaj više →</Link>
         </span>
       </div>
       <button className="cookie-notice-btn" onClick={dismiss} type="button">
-        <span data-sr>У РЕДУ</span>
+        <span data-sr>OK</span>
         <span data-lat>U REDU</span>
       </button>
     </div>

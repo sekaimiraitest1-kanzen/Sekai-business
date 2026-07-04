@@ -8,14 +8,14 @@ import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumbs";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Заказивање термина",
+  title: "Zakazivanje termina",
   description: "Zakaži termin u Barbershop Vuk za 30 sekundi — izaberi uslugu i vreme, potvrdi SMS-om. Bez naloga, bez čekanja. Batajnica, Beograd.",
   alternates: { canonical: "/zakazivanje" },
   openGraph: {
     type: "website",
     url: "/zakazivanje",
-    title: "Заказивање термина · Барбершоп Вук",
-    description: "Закажи термин за 30 секунди. Изабери услугу, време, потврди.",
+    title: "Zakazivanje termina · Barbershop Vuk",
+    description: "Zakaži termin za 30 sekundi. Izaberi uslugu, vreme, potvrdi.",
   },
 };
 

@@ -11,7 +11,7 @@
 export function SkipToContent() {
   return (
     <a href="#main-content" className="skip-to-content">
-      <span data-sr>Прескочи на садржај</span>
+      <span data-sr>Skip to content</span>
       <span data-lat>Preskoči na sadržaj</span>
     </a>
   );

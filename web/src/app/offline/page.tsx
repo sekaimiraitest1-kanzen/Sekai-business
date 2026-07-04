@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Без везе · Барбершоп Вук",
-  description: "Нема интернет везе. Покушај поново када се повежеш.",
+  title: "Offline · Barbershop Vuk",
+  description: "Nema internet veze. Pokušaj ponovo kada se povežeš.",
 };
 
 // Static, no DB calls — must render purely from the SW pre-cache when offline.
@@ -13,8 +13,8 @@ export default function OfflinePage() {
       id="main-content"
       style={{
         minHeight: "100dvh",
-        background: "var(--paper, #FAF3E3)",
-        color: "var(--brown-950, #1A0F05)",
+        background: "var(--paper, #FAF7F0)",
+        color: "var(--brown-950, #0A0A0A)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -30,7 +30,7 @@ export default function OfflinePage() {
           height: 88,
           borderRadius: "50%",
           background: "var(--mustard, #D4A53A)",
-          color: "var(--brown-950, #1A0F05)",
+          color: "var(--brown-950, #0A0A0A)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -54,7 +54,7 @@ export default function OfflinePage() {
           letterSpacing: "-0.01em",
         }}
       >
-        <span data-sr>Без везе</span>
+        <span data-sr>Offline</span>
         <span data-lat>Bez veze</span>
       </h1>
 
@@ -68,7 +68,7 @@ export default function OfflinePage() {
           margin: "0 0 28px",
         }}
       >
-        <span data-sr>Тренутно нема интернета. Покушај поново када се повежеш.</span>
+        <span data-sr>No internet connection right now. Try again once you're back online.</span>
         <span data-lat>Trenutno nema interneta. Pokušaj ponovo kada se povežeš.</span>
       </p>
 
@@ -79,8 +79,8 @@ export default function OfflinePage() {
           alignItems: "center",
           justifyContent: "center",
           padding: "14px 28px",
-          background: "var(--brown-950, #1A0F05)",
-          color: "var(--paper, #FAF3E3)",
+          background: "var(--brown-950, #0A0A0A)",
+          color: "var(--paper, #FAF7F0)",
           fontFamily: "'Oswald', sans-serif",
           fontWeight: 600,
           fontSize: 13,
@@ -90,7 +90,7 @@ export default function OfflinePage() {
           borderRadius: 0,
         }}
       >
-        <span data-sr>Покушај поново</span>
+        <span data-sr>Try again</span>
         <span data-lat>Pokušaj ponovo</span>
       </Link>
 
@@ -104,7 +104,7 @@ export default function OfflinePage() {
           color: "rgba(26, 15, 5, 0.4)",
         }}
       >
-        <span data-sr>Барбершоп Вук · Батајница</span>
+        <span data-sr>Barbershop Vuk · Batajnica</span>
         <span data-lat>Barbershop Vuk · Batajnica</span>
       </p>
     </main>

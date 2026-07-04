@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Страна није пронађена",
-  description: "Тражена страна не постоји или је уклоњена.",
+  title: "Strana nije pronađena",
+  description: "Tražena strana ne postoji ili je uklonjena.",
   robots: { index: false, follow: false },
 };
 
@@ -47,7 +47,7 @@ export default function NotFound() {
           lineHeight: 1.05,
         }}
       >
-        <span data-sr>Овде нема ничега.</span>
+        <span data-sr>There's nothing here.</span>
         <span data-lat>Ovde nema ničega.</span>
       </h1>
       <p
@@ -60,8 +60,8 @@ export default function NotFound() {
         }}
       >
         <span data-sr>
-          Линк који си пратио је покварен или се страна померила. Иди натраг
-          или закажи термин — увек си добродошао код нас.
+          The link you followed is broken, or the page has moved. Go back
+          or book an appointment — you're always welcome here.
         </span>
         <span data-lat>
           Link koji si pratio je pokvaren ili se strana pomerila. Idi nazad
@@ -83,7 +83,7 @@ export default function NotFound() {
             fontWeight: 600,
           }}
         >
-          <span data-sr>← НА ПОЧЕТНУ</span>
+          <span data-sr>← BACK HOME</span>
           <span data-lat>← NA POČETNU</span>
         </Link>
         <Link
@@ -100,7 +100,7 @@ export default function NotFound() {
             fontWeight: 600,
           }}
         >
-          <span data-sr>ЗАКАЖИ ТЕРМИН →</span>
+          <span data-sr>BOOK NOW →</span>
           <span data-lat>ZAKAŽI TERMIN →</span>
         </Link>
       </div>

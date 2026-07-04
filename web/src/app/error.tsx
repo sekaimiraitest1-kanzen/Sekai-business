@@ -59,7 +59,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
           lineHeight: 1.1,
         }}
       >
-        <span data-sr>Нешто је пукло.</span>
+        <span data-sr>Something broke.</span>
         <span data-lat>Nešto je puklo.</span>
       </h1>
       <p
@@ -72,7 +72,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         }}
       >
         <span data-sr>
-          Сервер је имао проблем. Покушај поново за минут, или нас позови ако се настави.
+          The server had a problem. Try again in a minute, or call us if it keeps happening.
         </span>
         <span data-lat>
           Server je imao problem. Pokušaj ponovo za minut, ili nas pozovi ako se nastavi.
@@ -94,7 +94,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
             fontWeight: 600,
           }}
         >
-          <span data-sr>↻ ПОКУШАЈ ПОНОВО</span>
+          <span data-sr>↻ TRY AGAIN</span>
           <span data-lat>↻ POKUŠAJ PONOVO</span>
         </button>
         <Link
@@ -111,11 +111,11 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
             fontWeight: 600,
           }}
         >
-          <span data-sr>← НА ПОЧЕТНУ</span>
+          <span data-sr>← BACK HOME</span>
           <span data-lat>← NA POČETNU</span>
         </Link>
         <a
-          href="tel:+381659003742"
+          href="tel:+381601424576"
           style={{
             fontFamily: "'Oswald', sans-serif",
             fontSize: 13,
@@ -128,7 +128,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
             fontWeight: 600,
           }}
         >
-          📞 065 9003 742
+          📞 060 1424576
         </a>
       </div>
       {error.digest && (

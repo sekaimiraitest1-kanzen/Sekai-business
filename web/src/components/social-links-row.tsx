@@ -14,7 +14,7 @@ export function SocialLinksRow({ links }: { links: SocialLinks }) {
   return (
     <div className="footer-social-row">
       <div className="footer-social-label">
-        <span data-sr>ПРАТИ НАС</span>
+        <span data-sr>FOLLOW US</span>
         <span data-lat>PRATI NAS</span>
       </div>
       <div className="footer-social-icons">

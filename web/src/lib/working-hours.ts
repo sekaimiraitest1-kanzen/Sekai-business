@@ -13,7 +13,7 @@ export type DayHours = { open: string; close: string } | null;
 export type WorkingHours = Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", DayHours>;
 
 const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
-const DAY_LABEL_SR = ["НЕД", "ПОН", "УТО", "СРЕ", "ЧЕТ", "ПЕТ", "СУБ"] as const;
+const DAY_LABEL_SR = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const;
 const DAY_LABEL_LAT = ["NED", "PON", "UTO", "SRE", "ČET", "PET", "SUB"] as const;
 
 function toMin(hhmm: string): number {
@@ -39,7 +39,7 @@ export type OpenStatus = {
 export function computeOpenStatus(workingHours: WorkingHours | null | undefined, now: Date): OpenStatus {
   // Fallback when working hours haven't been seeded yet — keep the original "ОТВОРЕНО · ДО 20H" tone.
   if (!workingHours) {
-    return { isOpen: true, textSr: "ОТВОРЕНО · ДО 20H", textLat: "OTVORENO · DO 20H" };
+    return { isOpen: true, textSr: "OPEN · UNTIL 20H", textLat: "OTVORENO · DO 20H" };
   }
 
   const todayDow = now.getDay(); // 0=Sun..6=Sat
@@ -55,7 +55,7 @@ export function computeOpenStatus(workingHours: WorkingHours | null | undefined,
       const closeH = hourLabel(today.close);
       return {
         isOpen: true,
-        textSr: `ОТВОРЕНО · ДО ${closeH}H`,
+        textSr: `OPEN · UNTIL ${closeH}H`,
         textLat: `OTVORENO · DO ${closeH}H`,
       };
     }
@@ -63,7 +63,7 @@ export function computeOpenStatus(workingHours: WorkingHours | null | undefined,
       const openH = hourLabel(today.open);
       return {
         isOpen: false,
-        textSr: `ЗАТВОРЕНО · ОТВАРАЊЕ У ${openH}H`,
+        textSr: `CLOSED · OPENS AT ${openH}H`,
         textLat: `ZATVORENO · OTVARANJE U ${openH}H`,
       };
     }
@@ -81,12 +81,12 @@ export function computeOpenStatus(workingHours: WorkingHours | null | undefined,
       const dayLabelLat = DAY_LABEL_LAT[nextDow];
       return {
         isOpen: false,
-        textSr: isTomorrow ? `ЗАТВОРЕНО · СУТРА У ${openH}H` : `ЗАТВОРЕНО · ${dayLabelSr} У ${openH}H`,
+        textSr: isTomorrow ? `CLOSED · TOMORROW AT ${openH}H` : `CLOSED · ${dayLabelSr} AT ${openH}H`,
         textLat: isTomorrow ? `ZATVORENO · SUTRA U ${openH}H` : `ZATVORENO · ${dayLabelLat} U ${openH}H`,
       };
     }
   }
 
   // No working hours configured at all (defensive — shouldn't reach here in production)
-  return { isOpen: false, textSr: "ЗАТВОРЕНО", textLat: "ZATVORENO" };
+  return { isOpen: false, textSr: "CLOSED", textLat: "ZATVORENO" };
 }
