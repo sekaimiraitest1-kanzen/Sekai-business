@@ -10,32 +10,32 @@ export function SiteNav() {
           <img src="/logo-120.png" alt="" width={120} height={120} />
         </div>
         <div className="nav-logo-text">
-          <span data-sr>Барбершоп Вук</span>
+          <span data-sr>Barbershop Vuk</span>
           <span data-lat>Barbershop Vuk</span>
-          <span data-sr>Батајница · EST 2024</span>
+          <span data-sr>Batajnica · EST 2024</span>
           <span data-lat>Batajnica · EST 2024</span>
         </div>
       </Link>
 
       <ul className="nav-links">
         <li>
-          <a href="/#onama" data-sr>О нама</a>
+          <a href="/#onama" data-sr>About</a>
           <a href="/#onama" data-lat>O nama</a>
         </li>
         <li>
-          <a href="/#usluge" data-sr>Услуге</a>
+          <a href="/#usluge" data-sr>Services</a>
           <a href="/#usluge" data-lat>Usluge</a>
         </li>
         <li>
-          <a href="/#galerija" data-sr>Галерија</a>
+          <a href="/#galerija" data-sr>Gallery</a>
           <a href="/#galerija" data-lat>Galerija</a>
         </li>
         <li>
-          <a href="/#utisci" data-sr>Утисци</a>
+          <a href="/#utisci" data-sr>Reviews</a>
           <a href="/#utisci" data-lat>Utisci</a>
         </li>
         <li>
-          <Link href="/shop" data-sr>Продавница</Link>
+          <Link href="/shop" data-sr>Shop</Link>
           <Link href="/shop" data-lat>Prodavnica</Link>
         </li>
       </ul>

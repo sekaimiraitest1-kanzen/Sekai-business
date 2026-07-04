@@ -44,14 +44,14 @@ export default async function HomePage() {
   // 9 site-content slots — fallbacks restore the original page text so a
   // DB outage / unseeded fresh deploy still renders the salon's voice. DB
   // values (admin /admin/sajt) take precedence whenever present.
-  const heroEyebrow  = getC("hero_eyebrow",  "СТИЛ · ТРАДИЦИЈА · ПРИЧА", "STIL · TRADICIJA · PRIČA");
-  const heroTitle    = getC("hero_title",    "Место где се рез|претвара у причу", "Mesto gde se rez|pretvara u priču");
-  const heroSubtitle = getC("hero_subtitle", "Барбершоп Вук — мушка берберница у Батајници. Шишање, брада, добра прича. Без журбе, без комплекса. Само оно што треба.", "Barbershop Vuk — muška berbernica u Batajnici. Šišanje, brada, dobra priča. Bez žurbe, bez kompleksa. Samo ono što treba.");
-  const aboutTitle   = getC("about_title",   "Твој изглед,|наша правила.", "Tvoj izgled,|naša pravila.");
-  const aboutStory   = getC("about_story",   "Заборави на чекање у редовима и листање старих новина. Основани 2024. године, спојили смо занатски приступ берберској столици са технологијом која поштује твоје време. Код нас нема филозофирања: фокус је на бруталном фејду, хируршки прецизној бради и здравом изгледу косе.", "Zaboravi na čekanje u redovima i listanje starih novina. Osnovani 2024. godine, spojili smo zanatski pristup berberskoj stolici sa tehnologijom koja poštuje tvoje vreme. Kod nas nema filozofiranja: fokus je na brutalnom Fade-u, hirurški preciznoj bradi i zdravom izgledu kose.");
-  const review1      = getC("review_1",      "Најбоље шишање у Батајници. Увек стигну на време, никад не журим, и излазим срећан. Цена ок, атмосфера супер.", "Najbolje šišanje u Batajnici. Uvek stignu na vreme, nikad ne žurim, i izlazim srećan. Cena ok, atmosfera super.");
-  const review2      = getC("review_2",      "Долазим од првог дана отварања. Никад ме нису разочарали. Знају како шишам. И син ми иде овде.", "Dolazim od prvog dana otvaranja. Nikad me nisu razočarali. Znaju kako šišam. I sin mi ide ovde.");
-  const review3      = getC("review_3",      "Лепа, топла берберница. Без надувавања, без „стилиста\". Само добар занат и права прича.", "Lepa, topla berbernica. Bez naduvavanja, bez „stilista\". Samo dobar zanat i prava priča.");
+  const heroEyebrow  = getC("hero_eyebrow",  "STYLE · TRADITION · STORY", "STIL · TRADICIJA · PRIČA");
+  const heroTitle    = getC("hero_title",    "We will keep you an|impeccable look", "Mesto gde se rez|pretvara u priču");
+  const heroSubtitle = getC("hero_subtitle", "Barbershop Vuk — a men's barbershop in Batajnica. Haircuts, beard, good stories. No rush, no fuss. Just what you need.", "Barbershop Vuk — muška berbernica u Batajnici. Šišanje, brada, dobra priča. Bez žurbe, bez kompleksa. Samo ono što treba.");
+  const aboutTitle   = getC("about_title",   "Professional barbershop|for men only.", "Tvoj izgled,|naša pravila.");
+  const aboutStory   = getC("about_story",   "Forget waiting in line and flipping through old magazines. Opened in 2024, we combined honest craft in the barber chair with technology that respects your time. No philosophizing here: the focus is on a sharp fade, precise beard work, and healthy-looking hair.", "Zaboravi na čekanje u redovima i listanje starih novina. Osnovani 2024. godine, spojili smo zanatski pristup berberskoj stolici sa tehnologijom koja poštuje tvoje vreme. Kod nas nema filozofiranja: fokus je na brutalnom Fade-u, hirurški preciznoj bradi i zdravom izgledu kose.");
+  const review1      = getC("review_1",      "Best haircut in Batajnica. Always on time, never rushed, and I leave happy. Price is fair, atmosphere is great.", "Najbolje šišanje u Batajnici. Uvek stignu na vreme, nikad ne žurim, i izlazim srećan. Cena ok, atmosfera super.");
+  const review2      = getC("review_2",      "I've been coming since opening day. Never disappointed. They know exactly how I like it. My son comes here too.", "Dolazim od prvog dana otvaranja. Nikad me nisu razočarali. Znaju kako šišam. I sin mi ide ovde.");
+  const review3      = getC("review_3",      "Nice, warm barbershop. No pretension, no \"stylist\" attitude. Just good craft and a good story.", "Lepa, topla berbernica. Bez naduvavanja, bez „stilista\". Samo dobar zanat i prava priča.");
 
   // Hero / about titles use a "|" line-break marker — first segment renders normally, second as <em>.
   const splitTitle = (s: string): [string, string] => {
@@ -120,53 +120,49 @@ export default async function HomePage() {
           <span data-sr>{openStatus.textSr}</span>
           <span data-lat>{openStatus.textLat}</span>
         </div>
-        <div className="hero-content">
-          <h1 className="hero-title">
-            <span data-sr>
-              {heroTitleA_sr}
-              {heroTitleB_sr && <><br /><em>{heroTitleB_sr}</em></>}
-            </span>
-            <span data-lat>
-              {heroTitleA_lat}
-              {heroTitleB_lat && <><br /><em>{heroTitleB_lat}</em></>}
-            </span>
-          </h1>
+        <div className="hero-grid">
+          <div className="hero-text">
+            <h1 className="hero-title">
+              <span data-sr>
+                {heroTitleA_sr}
+                {heroTitleB_sr && <><br /><em>{heroTitleB_sr}</em></>}
+              </span>
+              <span data-lat>
+                {heroTitleA_lat}
+                {heroTitleB_lat && <><br /><em>{heroTitleB_lat}</em></>}
+              </span>
+            </h1>
 
-          <p className="hero-sub">
-            <span data-sr>{heroSubtitle.sr}</span>
-            <span data-lat>{heroSubtitle.lat}</span>
-          </p>
+            <p className="hero-sub">
+              <span data-sr>{heroSubtitle.sr}</span>
+              <span data-lat>{heroSubtitle.lat}</span>
+            </p>
 
-          <div className="hero-cta-row">
-            <a href="/zakazivanje" className="btn-primary" style={{ fontSize: "15px", padding: "14px 32px" }}>
-              <span data-sr>ЗАКАЖИ ТЕРМИН</span>
-              <span data-lat>ZAKAŽI TERMIN</span> →
-            </a>
-            <a href="#usluge" className="btn-ghost">
-              <span data-sr>ЦЕНЕ И УСЛУГЕ</span>
-              <span data-lat>CENE I USLUGE</span>
-            </a>
+            <div className="hero-contact">
+              <div className="hero-contact-item">
+                <span aria-hidden="true">📍</span> {salon?.address ?? "Majora Zorana Radosavljevića 138, Beograd 11273"}
+              </div>
+              <div className="hero-contact-item">
+                <span aria-hidden="true">📞</span>{" "}
+                <a href={`tel:${formatPhoneE164(salon?.phone ?? "060 1424576")}`}>{salon?.phone ?? "060 1424576"}</a>
+              </div>
+            </div>
+
+            <div className="hero-cta-row">
+              <a href="/zakazivanje" className="btn-primary" style={{ fontSize: "15px", padding: "14px 32px" }}>
+                <span data-sr>BOOK NOW</span>
+                <span data-lat>ZAKAŽI TERMIN</span> →
+              </a>
+              <a href="#usluge" className="btn-ghost">
+                <span data-sr>SERVICES & PRICES</span>
+                <span data-lat>CENE I USLUGE</span>
+              </a>
+            </div>
           </div>
 
-          <div className="hero-badges">
-            <div className="hero-badge">
-              <div className="hero-badge-val">900</div>
-              <div className="hero-badge-label">
-                <span data-sr>РСД ОД</span>
-                <span data-lat>RSD OD</span>
-              </div>
-            </div>
-            <div className="hero-badge">
-              <div className="hero-badge-val">2025</div>
-              <div className="hero-badge-label">
-                <span data-sr>ОСНОВАНА</span>
-                <span data-lat>OSNOVANA</span>
-              </div>
-            </div>
-            <div className="hero-badge">
-              <div className="hero-badge-val">4.9★</div>
-              <div className="hero-badge-label">Google</div>
-            </div>
+          <div className="hero-photo">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/hero-trisha.webp" alt="Barbershop Vuk" />
           </div>
         </div>
       </section>
@@ -176,7 +172,7 @@ export default async function HomePage() {
         <div className="onama-grid">
           <div className="onama-text">
             <div className="section-label" data-reveal="left">
-              <span data-sr>§ 02 · О НАМА</span>
+              <span data-sr>§ 02 · ABOUT</span>
               <span data-lat>§ 02 · O NAMA</span>
             </div>
             <h2 className="section-title" data-reveal="up-lg">
@@ -195,44 +191,34 @@ export default async function HomePage() {
             </p>
             <p data-reveal="up">
               <span data-sr>
-                Радимо искључиво преко апликације — букираш за 10 секунди, појавиш се, добијеш третман и настављаш даље. Док си ту, покупи најбоље препарате или озбиљан алат да одржаваш стил и код куће.
+                We book exclusively through the app — reserve in 10 seconds, show up, get your treatment, and get on with your day. While you're here, pick up top-shelf products or serious tools to keep your style going at home.
               </span>
               <span data-lat>
                 Radimo isključivo preko aplikacije — bukiraš za 10 sekundi, pojaviš se, dobiješ tretman i nastavljaš dalje. Dok si tu, pokupi najbolje preparate ili ozbiljan alat da održavaš stil i kod kuće.
               </span>
             </p>
             <p className="loyalty-line" data-reveal="up">
-              <span data-sr>Шесто шишање чисти кућа. Закажи, не чекај.</span>
+              <span data-sr>Every 6th haircut is on the house. Book now, don't wait.</span>
               <span data-lat>Šesto šišanje časti kuća. Zakaži, ne čekaj.</span>
             </p>
+            <a href="#usluge" className="btn-primary" data-reveal="up" style={{ marginTop: 8 }}>
+              <span data-sr>LEARN MORE</span>
+              <span data-lat>SAZNAJ VIŠE</span>
+            </a>
           </div>
 
           <div className="stats-grid" data-reveal-stagger="fast">
             <div className="stat-card" data-reveal="up">
-              <div className="stat-val">5+</div>
+              <div className="stat-val">2024</div>
               <div className="stat-label">
-                <span data-sr>ГОДИНА ИСКУСТВА</span>
-                <span data-lat>GODINA ISKUSTVA</span>
+                <span data-sr>SINCE</span>
+                <span data-lat>OSNOVANI</span>
               </div>
             </div>
             <div className="stat-card" data-reveal="up">
-              <div className="stat-val">60+</div>
+              <div className="stat-val">{services.length || 9}+</div>
               <div className="stat-label">
-                <span data-sr>СТАЛНИХ МУШТ.</span>
-                <span data-lat>STALNIH MUŠTERIJA.</span>
-              </div>
-            </div>
-            <div className="stat-card" data-reveal="up">
-              <div className="stat-val">4.9</div>
-              <div className="stat-label">
-                <span data-sr>★ GOOGLE ОЦЕНА</span>
-                <span data-lat>★ GOOGLE OCENA</span>
-              </div>
-            </div>
-            <div className="stat-card" data-reveal="up">
-              <div className="stat-val">{services.length || 11}</div>
-              <div className="stat-label">
-                <span data-sr>УСЛУГА У ПОНУДИ</span>
+                <span data-sr>SERVICES</span>
                 <span data-lat>USLUGA U PONUDI</span>
               </div>
             </div>
@@ -244,78 +230,52 @@ export default async function HomePage() {
       <section className="section usluge" id="usluge">
         <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
           <div className="section-label" data-reveal="left">
-            <span data-sr>§ 03 · УСЛУГЕ</span>
+            <span data-sr>§ 03 · SERVICES</span>
             <span data-lat>§ 03 · USLUGE</span>
           </div>
           <h2 className="section-title" data-reveal="up-lg">
-            <span data-sr>Шта радимо.</span>
+            <span data-sr>What we provide.</span>
             <span data-lat>Šta radimo.</span>
           </h2>
           <p className="usluge-note" data-sr data-reveal="fade">
-            ПЛАЋА СЕ ГОТОВИНОМ ИЛИ КАРТИЦОМ · БЕЗ ДОПЛАТА · БЕЗ "СЕРВИСНИХ НАКНАДА"
+            PAID BY CASH OR CARD · NO SURCHARGES · NO "SERVICE FEES"
           </p>
           <p className="usluge-note" data-lat data-reveal="fade">
             PLAĆA SE GOTOVINOM ILI KARTICOM · BEZ DOPLATA · BEZ "SERVISNIH NAKNADA"
           </p>
 
-          <div className="services-list" data-reveal-stagger>
-            {services.length > 0
-              ? services.map((s, i) => {
-                  // Premium tier is now a per-row DB flag (services.featured) — admin /admin/usluge
-                  // can mark any service as featured and supply its own description / meta tag.
-                  const isFeatured = !!s.featured;
-                  const metaSr = s.meta_sr || `${s.duration_min} МИН`;
-                  const metaLat = s.meta_lat || `${s.duration_min} MIN`;
-                  return (
-                    <div key={i} className={`service-item ${isFeatured ? "featured" : ""}`} data-reveal="up">
-                      <div className="service-item-left">
-                        <div className="service-meta">
-                          <span data-sr>{metaSr}</span>
-                          <span data-lat>{metaLat}</span>
-                        </div>
-                        <div className="service-name">
-                          <span data-sr>{s.name_sr}</span>
-                          <span data-lat>{s.name_lat}</span>
-                        </div>
-                        {isFeatured && (s.description_sr || s.description_lat) && (
-                          <div className="service-desc">
-                            <span data-sr>{s.description_sr ?? ""}</span>
-                            <span data-lat>{s.description_lat ?? ""}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="service-price">
-                        {s.price}
-                        <span className="service-currency" data-sr>РСД</span>
-                        <span className="service-currency" data-lat>RSD</span>
-                      </div>
-                    </div>
-                  );
-                })
-              : DEFAULT_SERVICES.map((s, i) => (
-                  <div key={i} className="service-item" data-reveal="up">
-                    <div className="service-item-left">
-                      <div className="service-meta">
-                        <span data-sr>{s.metaSr}</span>
-                        <span data-lat>{s.metaLat}</span>
-                      </div>
-                      <div className="service-name">
-                        <span data-sr>{s.nameSr}</span>
-                        <span data-lat>{s.nameLat}</span>
-                      </div>
-                    </div>
-                    <div className="service-price">
-                      {s.price}
-                      <span className="service-currency" data-sr>РСД</span>
-                      <span className="service-currency" data-lat>RSD</span>
-                    </div>
+          <div className="services-grid" data-reveal-stagger>
+            {(services.length > 0 ? services : DEFAULT_SERVICES_GRID).map((s, i) => {
+              const nameSr = "name_sr" in s ? s.name_sr : s.nameSr;
+              const nameLat = "name_lat" in s ? s.name_lat : s.nameLat;
+              const descSr = "description_sr" in s ? s.description_sr : undefined;
+              const descLat = "description_lat" in s ? s.description_lat : undefined;
+              return (
+                <div key={i} className="svc-tile" data-reveal="up">
+                  <div className="svc-tile-icon" aria-hidden="true">{serviceIcon(nameLat)}</div>
+                  <div className="svc-tile-name">
+                    <span data-sr>{nameSr}</span>
+                    <span data-lat>{nameLat}</span>
                   </div>
-                ))}
+                  {(descSr || descLat) && (
+                    <div className="svc-tile-desc">
+                      <span data-sr>{descSr ?? ""}</span>
+                      <span data-lat>{descLat ?? ""}</span>
+                    </div>
+                  )}
+                  <div className="svc-tile-price">
+                    <span data-sr>FROM </span>
+                    <span data-lat>OD </span>
+                    {s.price} RSD
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <div className="services-footer" data-reveal="up">
             <a href="/zakazivanje" className="btn-primary">
-              <span data-sr>ЗАКАЖИ ТЕРМИН →</span>
+              <span data-sr>BOOK NOW →</span>
               <span data-lat>ZAKAŽI TERMIN →</span>
             </a>
           </div>
@@ -578,21 +538,28 @@ const REVIEWS = [
   { initialsSr: "СП", initialsLat: "SP", authorSr: "Стефан П.", authorLat: "Stefan P.", sourceSr: "Google · 3 нед.", sourceLat: "Google · 3 ned." },
 ];
 
-// Used as the empty-DB fallback for /#usluge (matches the salon's pre-clear
+// Used as the empty-DB fallback for /#usluge (matches Barbershop Vuk's
 // service catalog). Once admin /admin/usluge has rows, this list is bypassed.
-const DEFAULT_SERVICES = [
-  { metaSr: "30 МИН", metaLat: "30 MIN", nameSr: "Обично шишање", nameLat: "Obično šišanje", price: 900 },
-  { metaSr: "50 МИН · SIGNATURE", metaLat: "50 MIN · SIGNATURE", nameSr: "Фејд шишање", nameLat: "Fade šišanje", price: 1200 },
-  { metaSr: "60 МИН · МАКАЗЕ", metaLat: "60 MIN · MAKAZE", nameSr: "Шишање маказама", nameLat: "Šišanje makazama", price: 1200 },
-  { metaSr: "70 МИН · КОМПЛЕТ", metaLat: "70 MIN · KOMPLET", nameSr: "Шишање + брада (комплет)", nameLat: "Šišanje + brada (komplet)", price: 1400 },
-  { metaSr: "30 МИН", metaLat: "30 MIN", nameSr: "Бријање главе", nameLat: "Brijanje glave", price: 800 },
-  { metaSr: "20 МИН", metaLat: "20 MIN", nameSr: "Шејвер", nameLat: "Shaver", price: 600 },
-  { metaSr: "30 МИН", metaLat: "30 MIN", nameSr: "Само брада", nameLat: "Samo brada", price: 600 },
-  { metaSr: "20 МИН", metaLat: "20 MIN", nameSr: "Стилизовање браде", nameLat: "Stilizovanje brade", price: 400 },
-  { metaSr: "30 МИН", metaLat: "30 MIN", nameSr: "Восак за нос и уши", nameLat: "Vosak za nos i uši", price: 600 },
-  { metaSr: "15 МИН", metaLat: "15 MIN", nameSr: "Прање косе", nameLat: "Pranje kose", price: 200 },
-  { metaSr: "90 МИН · ПРЕМИУМ", metaLat: "90 MIN · PREMIUM", nameSr: "VIP третман", nameLat: "VIP tretman", price: 2500 },
+const DEFAULT_SERVICES_GRID = [
+  { nameSr: "Fade", nameLat: "Fade", price: 1500 },
+  { nameSr: "Long hair styling", nameLat: "Oblikovanje duge kose", price: 1500 },
+  { nameSr: "Classic haircut", nameLat: "Klasično šišanje", price: 1200 },
+  { nameSr: "Clipper cut", nameLat: "Mašinica klasično", price: 1000 },
+  { nameSr: "Head shave", nameLat: "Brijanje glave", price: 800 },
+  { nameSr: "Beard styling", nameLat: "Oblikovanje brade", price: 900 },
+  { nameSr: "Beard trim", nameLat: "Skraćivanje/skidanje brade", price: 400 },
+  { nameSr: "Haircut + beard", nameLat: "Šišanje + brada", price: 2000 },
+  { nameSr: "Clipper cut + beard", nameLat: "Mašinica klasično + brada", price: 1700 },
 ];
+
+// Heuristic icon per service, keyed off the Latin name (ASCII, safe to match on).
+function serviceIcon(nameLat: string): string {
+  const n = nameLat.toLowerCase();
+  if (n.includes("+ brada") || n.includes("+ beard")) return "💈";
+  if (n.includes("brijanje") || n.includes("shave")) return "🪒";
+  if (n.includes("brada") || n.includes("beard")) return "🧔";
+  return "✂️";
+}
 
 // Used as the empty-DB fallback for /#galerija. Source files live in
 // public/legacy/uploads/ and were the original 6 photos Triša provided.

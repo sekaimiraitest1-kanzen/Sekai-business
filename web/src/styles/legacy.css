@@ -112,26 +112,70 @@ body {
 }
 
 .lang-toggle {
-  display: flex;
-  background: rgba(255,255,255,.06);
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid rgba(212,165,58,.2);
+  position: relative;
 }
 
-.lang-btn {
+.lang-btn-current {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: 'Oswald', sans-serif;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.1em;
-  padding: 5px 10px;
+  padding: 6px 12px;
+  cursor: pointer;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(158,27,27,.25);
+  border-radius: 4px;
+  color: rgba(245,240,232,.8);
+  transition: all .2s;
+}
+.lang-btn-current:hover {
+  border-color: var(--mustard);
+  color: var(--mustard);
+}
+.lang-btn-caret {
+  font-size: 9px;
+  opacity: .7;
+}
+
+.lang-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 120px;
+  background: var(--brown-950);
+  border: 1px solid rgba(158,27,27,.25);
+  border-radius: 4px;
+  list-style: none;
+  padding: 4px;
+  margin: 0;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+.lang-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 8px 10px;
   cursor: pointer;
   background: none;
   border: none;
-  color: rgba(245,233,208,.5);
-  transition: all .2s;
+  border-radius: 3px;
+  color: rgba(245,240,232,.7);
+  transition: all .15s;
 }
-.lang-btn.active {
+.lang-menu-item:hover {
+  background: rgba(158,27,27,.15);
+  color: var(--mustard);
+}
+.lang-menu-item.active {
   background: var(--mustard);
   color: var(--brown-950);
 }
@@ -160,90 +204,94 @@ body {
 .hero {
   overflow: visible;
   min-height: 100vh;
-  /* Real photograph (vintage barber tools on wood) — `cover` everywhere so
-     it crops centrally instead of stretching. Desktop loads the 1920×1280
-     landscape; under 700px we swap to a 900×1200 portrait crop so phones
-     don't waste bandwidth on the side margins they'd never see. */
-  background: url('/hero-trisha.webp') center / cover no-repeat, var(--brown-950);
+  background: var(--brown-950);
   display: flex;
   align-items: center;
-  justify-content: center;
   padding-top: 64px;
   position: relative;
 }
-@media (max-width: 700px) {
-  .hero {
-    background-image: url('/hero-trisha-mobile.webp');
-  }
-}
 
-
-.hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  /* Photo is warm-bright (light wood + gold tools), so cream/mustard hero
-     text needs more contrast than the previous decorative image required.
-     Three layers stack: full-bleed darkening + bottom vignette + center
-     pool that pushes the wood texture back behind the title. */
-  background:
-    linear-gradient(180deg, rgba(10,5,0,.45) 0%, rgba(10,5,0,.25) 30%, rgba(10,5,0,.55) 100%),
-    radial-gradient(ellipse 80% 55% at 50% 100%, rgba(10,5,0,.7) 0%, transparent 70%),
-    radial-gradient(ellipse 90% 45% at 50% 50%, rgba(10,5,0,.45) 0%, transparent 75%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.hero-content {
+.hero-grid {
   width: 100%;
-  max-width: 82vw;
-  padding: 80px 48px;
-  display: flex;
-  flex-direction: column;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 64px 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
-  text-align: center;
+  gap: 48px;
   position: relative;
   z-index: 2;
 }
 
-.hero-eyebrow {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--mustard);
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
+.hero-text {
+  max-width: 560px;
+}
+
+.hero-photo {
+  height: 560px;
+  overflow: hidden;
+  border-radius: 2px;
+}
+.hero-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(0.85) contrast(1.08);
+}
+
+@media (max-width: 900px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    padding: 96px 24px 48px;
+  }
+  .hero-photo {
+    height: 360px;
+    order: -1;
+  }
+  .hero-text {
+    max-width: 100%;
+  }
 }
 
 .hero-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(36px, 5.5vw, 90px);
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(30px, 4.2vw, 52px);
   font-weight: 700;
-  font-style: italic;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
   color: var(--cream);
-  margin-bottom: 32px;
-  text-align: center;
-  width: 100%;
+  margin-bottom: 24px;
 }
 .hero-title em {
   color: var(--mustard);
-  font-style: italic;
+  font-style: normal;
 }
 
 .hero-sub {
   font-family: 'Inter', sans-serif;
-  font-size: 17px;
+  font-size: 16px;
   line-height: 1.65;
-  color: rgba(245,233,208,.65);
-  max-width: 520px;
-  margin-bottom: 48px;
-  text-align: center;
+  color: rgba(245,240,232,.65);
+  margin-bottom: 24px;
+}
+
+.hero-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 36px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: rgba(245,240,232,.75);
+}
+.hero-contact-item a {
+  color: inherit;
+  text-decoration: none;
+}
+.hero-contact-item a:hover {
+  color: var(--mustard);
 }
 
 .btn-ghost {
@@ -272,38 +320,9 @@ body {
 .hero-cta-row {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 24px;
   flex-wrap: wrap;
-}
-
-.hero-badges {
-  margin-top: 56px;
-  display: flex;
-  gap: 48px;
-  justify-content: center;
-}
-
-.hero-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-.hero-badge-val {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 32px;
-  font-weight: 700;
-  font-style: italic;
-  color: var(--mustard);
-  line-height: 1;
-}
-.hero-badge-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(245,233,208,.4);
 }
 
 .hero-open-tag {
@@ -459,106 +478,62 @@ body {
   margin-bottom: 64px;
 }
 
-.services-list {
+.services-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: rgba(245,240,232,.08);
   width: 100%;
 }
+@media (max-width: 900px) {
+  .services-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .services-grid { grid-template-columns: 1fr; }
+}
 
-.service-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 40px 48px;
-  border-bottom: 1px solid rgba(245,233,208,.08);
-  cursor: pointer;
-  transition: all .2s;
-  position: relative;
+.svc-tile {
+  background: var(--brown-950);
+  padding: 40px 32px;
+  transition: background .2s;
 }
-.service-item:nth-child(odd) { border-right: 1px solid rgba(245,233,208,.06); }
-.service-item:first-child, .service-item:nth-child(2) { border-top: 1px solid rgba(245,233,208,.08); }
-.service-item:hover .service-name { color: var(--mustard); }
-.service-item-left { flex: 1; }
-
-/* ── PREMIUM / FEATURED service: spans both columns, with mustard accent ── */
-.service-item.featured {
-  grid-column: 1 / -1;
-  border-right: none !important;
-  border-top: 1px solid rgba(212,165,58,.25);
-  padding-top: 56px;
-  padding-bottom: 56px;
-  background: linear-gradient(
-    to right,
-    rgba(212,165,58,.04) 0%,
-    rgba(212,165,58,.08) 50%,
-    rgba(212,165,58,.04) 100%
-  );
-  position: relative;
+.svc-tile:hover {
+  background: var(--brown-900);
 }
-.service-item.featured::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent 0%,
-    var(--mustard) 50%,
-    transparent 100%
-  );
-}
-.service-item.featured .service-meta {
-  color: var(--mustard);
-  letter-spacing: 0.18em;
-}
-.service-item.featured .service-name {
+.svc-tile:hover .svc-tile-name {
   color: var(--mustard);
 }
-.service-desc {
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  line-height: 1.7;
-  color: rgba(245,233,208,.55);
-  margin-top: 16px;
-  max-width: 560px;
-  letter-spacing: 0.01em;
+
+.svc-tile-icon {
+  font-size: 28px;
+  margin-bottom: 16px;
+  filter: grayscale(1) brightness(1.6);
 }
 
-.service-meta {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.12em;
+.svc-tile-name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(245,233,208,.35);
-  margin-bottom: 8px;
-}
-
-.service-name {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(28px, 3vw, 44px);
-  font-weight: 700;
-  font-style: italic;
   color: var(--cream);
-  line-height: 1.1;
+  margin-bottom: 10px;
   transition: color .2s;
 }
 
-.service-price {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(28px, 3vw, 44px);
-  font-weight: 700;
-  font-style: italic;
-  color: var(--mustard);
-  line-height: 1.1;
-  text-align: right;
+.svc-tile-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(245,233,208,.5);
+  margin-bottom: 16px;
 }
 
-.service-currency {
-  font-size: 16px;
-  font-style: normal;
-  color: rgba(212,165,58,.5);
-  margin-left: 4px;
+.svc-tile-price {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--mustard);
 }
 
 .services-footer {

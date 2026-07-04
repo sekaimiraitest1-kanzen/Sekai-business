@@ -98,11 +98,11 @@ export function LoginPad() {
         ADMIN
       </div>
       <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 900, fontStyle: "italic", color: "var(--cream)", marginBottom: 4 }}>
-        <span data-sr>Здраво, Вуче.</span>
+        <span data-sr>Hello, Vuk.</span>
         <span data-lat>Zdravo, Vuče.</span>
       </h1>
       <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "rgba(245,233,208,.35)", textTransform: "uppercase", letterSpacing: ".1em" }}>
-        <span data-sr>Унеси PIN да наставиш.</span>
+        <span data-sr>Enter your PIN to continue.</span>
         <span data-lat>Unesi PIN da nastaviš.</span>
       </p>
 
@@ -125,7 +125,7 @@ export function LoginPad() {
           </button>
         ))}
         <button type="button" className="pin-btn special" onClick={clearAll}>
-          <span data-sr>ОЧИСТИ</span>
+          <span data-sr>CLEAR</span>
           <span data-lat>OČISTI</span>
         </button>
         <button
@@ -142,10 +142,6 @@ export function LoginPad() {
       </div>
 
       <div className="pin-error">{error ?? ""}</div>
-
-      <div style={{ marginTop: 24, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.15)", letterSpacing: ".08em" }}>
-        DEMO · UNESI 1234
-      </div>
     </div>
   );
 }

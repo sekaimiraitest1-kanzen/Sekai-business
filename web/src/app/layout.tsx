@@ -115,17 +115,21 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1A0F05",
+  themeColor: "#0A0A0A",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const lang = cookies().get("lang")?.value === "lat" ? "lat" : "sr";
+  // NOTE: internal state keys "sr"/"lat" are legacy names from the Cyrillic/Latin
+  // toggle this fork replaced. "lat" = Serbian (default); "sr" now holds English
+  // content. Kept the old key names to avoid renaming every data-sr/data-lat
+  // attribute across the codebase.
+  const lang = cookies().get("lang")?.value === "sr" ? "sr" : "lat";
 
   return (
     <html
-      lang={lang === "sr" ? "sr-Cyrl" : "sr-Latn"}
+      lang={lang === "sr" ? "en" : "sr-Latn"}
       data-lang={lang}
       className={`${cormorant.variable} ${playfair.variable} ${oswald.variable} ${inter.variable} ${jetbrains.variable}`}
     >

@@ -83,7 +83,7 @@ export function ProductDetail({ product, related }: { product: Product; related:
     <div className="pd-page">
       <div className="pd-breadcrumbs">
         <Link href="/shop" style={{ color: "inherit", textDecoration: "none" }}>
-          ← <span data-sr>СВЕ ПРОИЗВОДИ</span>
+          ← <span data-sr>ALL PRODUCTS</span>
           <span data-lat>SVI PROIZVODI</span>
         </Link>
       </div>
@@ -122,16 +122,16 @@ export function ProductDetail({ product, related }: { product: Product; related:
           <div className="pd-stock">
             {out ? (
               <span className="pd-stock-out">
-                <span data-sr>РАСПРОДАТО</span><span data-lat>RASPRODATO</span>
+                <span data-sr>SOLD OUT</span><span data-lat>RASPRODATO</span>
               </span>
             ) : lowStock ? (
               <span className="pd-stock-low">
-                <span data-sr>● Само {product.stock} на стању</span>
+                <span data-sr>● Only {product.stock} left in stock</span>
                 <span data-lat>● Samo {product.stock} na stanju</span>
               </span>
             ) : (
               <span className="pd-stock-ok">
-                <span data-sr>● На стању</span>
+                <span data-sr>● In stock</span>
                 <span data-lat>● Na stanju</span>
               </span>
             )}
@@ -151,7 +151,7 @@ export function ProductDetail({ product, related }: { product: Product; related:
             </div>
             {qty > 1 && (
               <div className="pd-unit-price">
-                <span data-sr>{product.price} РСД по комаду</span>
+                <span data-sr>{product.price} RSD per item</span>
                 <span data-lat>{product.price} RSD po komadu</span>
               </div>
             )}
@@ -159,7 +159,7 @@ export function ProductDetail({ product, related }: { product: Product; related:
 
           <div className="pd-qty-row">
             <label className="pd-qty-label">
-              <span data-sr>КОЛИЧИНА</span>
+              <span data-sr>QUANTITY</span>
               <span data-lat>KOLIČINA</span>
             </label>
             <div className="pd-qty">
@@ -205,31 +205,31 @@ export function ProductDetail({ product, related }: { product: Product; related:
             onClick={handleAdd}
           >
             {added ? (
-              <>✓ <span data-sr>ДОДАТО У КОРПУ</span><span data-lat>DODATO U KORPU</span></>
+              <>✓ <span data-sr>ADDED TO CART</span><span data-lat>DODATO U KORPU</span></>
             ) : out ? (
-              <><span data-sr>РАСПРОДАТО</span><span data-lat>RASPRODATO</span></>
+              <><span data-sr>SOLD OUT</span><span data-lat>RASPRODATO</span></>
             ) : (
-              <><span data-sr>ДОДАЈ У КОРПУ →</span><span data-lat>DODAJ U KORPU →</span></>
+              <><span data-sr>ADD TO CART →</span><span data-lat>DODAJ U KORPU →</span></>
             )}
           </button>
 
           <div className="pd-meta">
             <div className="pd-meta-row">
-              <span className="pd-meta-label" data-sr>ПЛАЋАЊЕ</span>
+              <span className="pd-meta-label" data-sr>PAYMENT</span>
               <span className="pd-meta-label" data-lat>PLAĆANJE</span>
-              <span className="pd-meta-value" data-sr>Готовина или картица у салону</span>
+              <span className="pd-meta-value" data-sr>Cash or card in the salon</span>
               <span className="pd-meta-value" data-lat>Gotovina ili kartica u salonu</span>
             </div>
             <div className="pd-meta-row">
-              <span className="pd-meta-label" data-sr>ПРЕУЗИМАЊЕ</span>
+              <span className="pd-meta-label" data-sr>PICKUP</span>
               <span className="pd-meta-label" data-lat>PREUZIMANJE</span>
-              <span className="pd-meta-value" data-sr>Лично у Барбершоп Вук</span>
+              <span className="pd-meta-value" data-sr>In person at Barbershop Vuk</span>
               <span className="pd-meta-value" data-lat>Lično u Barbershop Vuk</span>
             </div>
             <div className="pd-meta-row">
-              <span className="pd-meta-label" data-sr>ДОСТАВА</span>
+              <span className="pd-meta-label" data-sr>DELIVERY</span>
               <span className="pd-meta-label" data-lat>DOSTAVA</span>
-              <span className="pd-meta-value" data-sr>Тренутно нема — само pickup</span>
+              <span className="pd-meta-value" data-sr>Not available yet — pickup only</span>
               <span className="pd-meta-value" data-lat>Trenutno nema — samo pickup</span>
             </div>
           </div>
@@ -239,7 +239,7 @@ export function ProductDetail({ product, related }: { product: Product; related:
       {related.length > 0 && (
         <section className="pd-related">
           <div className="section-divider">
-            <div className="section-divider-label" data-sr>СЛИЧНИ ПРОИЗВОДИ</div>
+            <div className="section-divider-label" data-sr>SIMILAR PRODUCTS</div>
             <div className="section-divider-label" data-lat>SLIČNI PROIZVODI</div>
             <div className="section-divider-line" />
           </div>

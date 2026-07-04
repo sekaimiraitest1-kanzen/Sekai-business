@@ -62,13 +62,13 @@ export function ShopShell({ children }: { children: React.ReactNode }) {
             <img src="/logo-120.png" alt="Barbershop Vuk" width={120} height={120} />
           </div>
           <div className="sh-nav-logo-text">
-            <span data-sr>Барбершоп Вук</span>
+            <span data-sr>Barbershop Vuk</span>
             <span data-lat>Barbershop Vuk</span>
             <span>EST 2024</span>
           </div>
         </Link>
         <Link href="/" className="sh-nav-back" style={{ marginLeft: 16 }}>
-          ← <span data-sr>ПОЧЕТНА</span><span data-lat>POČETNA</span>
+          ← <span data-sr>HOME</span><span data-lat>POČETNA</span>
         </Link>
         <div className="sh-nav-spacer" />
         <LangToggle />
@@ -79,7 +79,7 @@ export function ShopShell({ children }: { children: React.ReactNode }) {
           type="button"
           aria-label="Open cart"
         >
-          🛒 <span data-sr>КОРПА</span><span data-lat>KORPA</span>
+          🛒 <span data-sr>CART</span><span data-lat>KORPA</span>
           <span ref={countRef} className="sh-cart-count">{cart.count}</span>
         </button>
       </nav>
@@ -105,17 +105,17 @@ export function ShopShell({ children }: { children: React.ReactNode }) {
           <div className="cart-drawer" style={{ maxWidth: 480, padding: 32, textAlign: "center" }}>
             <div style={{ fontSize: 48, marginBottom: 8 }}>✓</div>
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontStyle: "italic", color: "var(--brown-950)", marginBottom: 8 }}>
-              <span data-sr>Хвала!</span><span data-lat>Hvala!</span>
+              <span data-sr>Thank you!</span><span data-lat>Hvala!</span>
             </h2>
             <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "var(--brown-700)", marginBottom: 16 }}>
-              <span data-sr>Поруџбина је послата. Контактираћемо вас ради преузимања.</span>
+              <span data-sr>Your order has been sent. We will contact you for pickup.</span>
               <span data-lat>Porudžbina je poslata. Kontaktiraćemo vas radi preuzimanja.</span>
             </p>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "var(--brown-700)", opacity: 0.5, marginBottom: 16 }}>
               ID: {orderDone.slice(0, 8).toUpperCase()}
             </div>
             <button className="sh-btn-primary" onClick={() => setOrderDone(null)} style={{ width: "auto" }}>
-              <span data-sr>ОК</span><span data-lat>OK</span>
+              <span data-sr>OK</span><span data-lat>OK</span>
             </button>
           </div>
         </div>
@@ -130,13 +130,13 @@ function CartDrawer({ onClose, onCheckout }: { onClose: () => void; onCheckout: 
     <div className="cart-overlay open" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="cart-drawer">
         <div className="cart-header">
-          <h2 className="cart-title" data-sr>КОРПА</h2>
+          <h2 className="cart-title" data-sr>CART</h2>
           <h2 className="cart-title" data-lat>KORPA</h2>
           <button className="cart-close" onClick={onClose} type="button" aria-label="Close cart">✕</button>
         </div>
         {cart.items.length === 0 ? (
           <div style={{ textAlign: "center", padding: 48, fontFamily: "'JetBrains Mono', monospace", color: "rgba(92,58,34,.5)" }}>
-            <span data-sr>Корпа је празна.</span>
+            <span data-sr>Your cart is empty.</span>
             <span data-lat>Korpa je prazna.</span>
           </div>
         ) : (
@@ -161,7 +161,7 @@ function CartDrawer({ onClose, onCheckout }: { onClose: () => void; onCheckout: 
               <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontStyle: "italic", color: "var(--mustard)" }}>{cart.total} RSD</span>
             </div>
             <button className="sh-btn-primary" onClick={onCheckout} style={{ width: "calc(100% - 40px)", margin: "0 20px 20px" }}>
-              <span data-sr>НАСТАВИ ДО ПОТВРДЕ →</span>
+              <span data-sr>CONTINUE TO CONFIRM →</span>
               <span data-lat>NASTAVI DO POTVRDE →</span>
             </button>
           </>
@@ -208,7 +208,7 @@ function CheckoutDrawer({ onClose, onSuccess }: { onClose: () => void; onSuccess
     <div className="cart-overlay open" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="cart-drawer">
         <div className="cart-header">
-          <h2 className="cart-title" data-sr>ПОДАЦИ ЗА ПРЕУЗИМАЊЕ</h2>
+          <h2 className="cart-title" data-sr>PICKUP DETAILS</h2>
           <h2 className="cart-title" data-lat>PODACI ZA PREUZIMANJE</h2>
           <button className="cart-close" onClick={onClose} type="button" aria-label="Back">←</button>
         </div>
@@ -235,10 +235,10 @@ function CheckoutDrawer({ onClose, onSuccess }: { onClose: () => void; onSuccess
           {err && <div style={{ color: "var(--danger)", fontSize: 12, fontFamily: "'JetBrains Mono', monospace" }}>{err}</div>}
 
           <button className="sh-btn-primary" disabled={pending || !name || phone.length < 6 || cart.items.length === 0} onClick={go} style={{ width: "100%" }}>
-            {pending ? "..." : <><span data-sr>ПОТВРДИ ПОРУЏБИНУ →</span><span data-lat>POTVRDI PORUDŽBINU →</span></>}
+            {pending ? "..." : <><span data-sr>CONFIRM ORDER →</span><span data-lat>POTVRDI PORUDŽBINU →</span></>}
           </button>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "var(--brown-700)", textAlign: "center", opacity: 0.6 }}>
-            <span data-sr>Без онлине плаћања — плаћаш у салону при преузимању.</span>
+            <span data-sr>No online payment — you pay in the salon on pickup.</span>
             <span data-lat>Bez online plaćanja — plaćaš u salonu pri preuzimanju.</span>
           </p>
         </div>

@@ -33,48 +33,48 @@ export function SiteFooter({
               <img src="/logo-120.png" alt="Barbershop Vuk" width={120} height={120} />
             </div>
             <div className="nav-logo-text">
-              <span data-sr>Барбершоп Вук</span>
+              <span data-sr>Barbershop Vuk</span>
               <span data-lat>Barbershop Vuk</span>
-              <span>Батајница · EST 2024</span>
+              <span>Batajnica · EST 2024</span>
             </div>
           </Link>
-          <p data-sr>Твоје место за стил, традицију и добру причу. Батајница.</p>
+          <p data-sr>Your place for style, tradition, and good stories. Batajnica.</p>
           <p data-lat>Tvoje mesto za stil, tradiciju i dobru priču. Batajnica.</p>
         </div>
 
         <div>
-          <div className="footer-col-title" data-sr>НАВИГАЦИЈА</div>
+          <div className="footer-col-title" data-sr>NAVIGATION</div>
           <div className="footer-col-title" data-lat>NAVIGACIJA</div>
           <ul className="footer-links">
             <li>
-              <a href="/#onama" data-sr>О нама</a>
+              <a href="/#onama" data-sr>About</a>
               <a href="/#onama" data-lat>O nama</a>
             </li>
             <li>
-              <a href="/#usluge" data-sr>Услуге</a>
+              <a href="/#usluge" data-sr>Services</a>
               <a href="/#usluge" data-lat>Usluge</a>
             </li>
             <li>
-              <a href="/#galerija" data-sr>Галерија</a>
+              <a href="/#galerija" data-sr>Gallery</a>
               <a href="/#galerija" data-lat>Galerija</a>
             </li>
             <li>
-              <a href="/#utisci" data-sr>Утисци</a>
+              <a href="/#utisci" data-sr>Reviews</a>
               <a href="/#utisci" data-lat>Utisci</a>
             </li>
             <li>
-              <Link href="/zakazivanje" data-sr>Заказивање</Link>
+              <Link href="/zakazivanje" data-sr>Book now</Link>
               <Link href="/zakazivanje" data-lat>Zakazivanje</Link>
             </li>
             <li>
-              <Link href="/shop" data-sr>Продавница</Link>
+              <Link href="/shop" data-sr>Shop</Link>
               <Link href="/shop" data-lat>Prodavnica</Link>
             </li>
           </ul>
         </div>
 
         <div>
-          <div className="footer-col-title" data-sr>КОНТАКТ</div>
+          <div className="footer-col-title" data-sr>CONTACT</div>
           <div className="footer-col-title" data-lat>KONTAKT</div>
           <div className="footer-info">
             <div className="footer-info-item">
@@ -91,14 +91,14 @@ export function SiteFooter({
         </div>
 
         <div>
-          <div className="footer-col-title" data-sr>РАДНО ВРЕМЕ</div>
+          <div className="footer-col-title" data-sr>OPENING HOURS</div>
           <div className="footer-col-title" data-lat>RADNO VREME</div>
           <div className="footer-info">
-            <div className="footer-info-item" data-sr>Пон—Пет: {weekdayHours ?? "10:00—20:00"}</div>
+            <div className="footer-info-item" data-sr>Mon—Fri: {weekdayHours ?? "10:00—20:00"}</div>
             <div className="footer-info-item" data-lat>Pon—Pet: {weekdayHours ?? "10:00—20:00"}</div>
-            <div className="footer-info-item" data-sr>Субота: {satHours ?? "10:00—17:00"}</div>
+            <div className="footer-info-item" data-sr>Saturday: {satHours ?? "10:00—17:00"}</div>
             <div className="footer-info-item" data-lat>Subota: {satHours ?? "10:00—17:00"}</div>
-            <div className="footer-info-item" data-sr>Недеља: {sunOpen ? `${wh?.sun?.open.slice(0, 5)}—${wh?.sun?.close.slice(0, 5)}` : "затворено"}</div>
+            <div className="footer-info-item" data-sr>Sunday: {sunOpen ? `${wh?.sun?.open.slice(0, 5)}—${wh?.sun?.close.slice(0, 5)}` : "closed"}</div>
             <div className="footer-info-item" data-lat>Nedelja: {sunOpen ? `${wh?.sun?.open.slice(0, 5)}—${wh?.sun?.close.slice(0, 5)}` : "zatvoreno"}</div>
           </div>
         </div>
@@ -107,10 +107,10 @@ export function SiteFooter({
       <SocialLinksRow links={socialLinks ?? EMPTY_SOCIAL_LINKS} />
 
       <div className="footer-legal">
-        <Link href="/privatnost" data-sr>Политика приватности</Link>
+        <Link href="/privatnost" data-sr>Privacy Policy</Link>
         <Link href="/privatnost" data-lat>Politika privatnosti</Link>
         <span className="footer-legal-sep">·</span>
-        <Link href="/uslovi-koriscenja" data-sr>Услови коришћења</Link>
+        <Link href="/uslovi-koriscenja" data-sr>Terms of Use</Link>
         <Link href="/uslovi-koriscenja" data-lat>Uslovi korišćenja</Link>
       </div>
 
