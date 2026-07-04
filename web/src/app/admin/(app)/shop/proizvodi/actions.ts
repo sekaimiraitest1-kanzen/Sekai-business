@@ -18,7 +18,7 @@ export type ProductInput = {
   category?: string;
   stock: number;
   active: boolean;
-  badge?: "new" | "hot" | "trisha" | null;
+  badge?: "new" | "hot" | "vuk" | null;
 };
 
 export async function upsertProduct(input: ProductInput) {

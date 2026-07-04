@@ -21,12 +21,12 @@ export default async function HomePage() {
       <section className="min-h-screen flex flex-col items-center justify-center px-6 py-24 bg-brown-950 text-cream">
         <p className="font-mono text-xs tracking-wide-18 uppercase text-mustard mb-6">
           <span data-sr>Бутик берберница · Батајница</span>
-          <span data-lat>Butik berbernica · Batajnica</span>
+          <span data-lat>Barbershop Vuk · Batajnica</span>
         </p>
 
         <h1 className="font-display italic font-bold text-center text-cream text-5xl md:text-7xl leading-tight max-w-4xl">
           <span data-sr>{salon?.name ?? "Берберница Триша"}</span>
-          <span data-lat>Berbernica Triša</span>
+          <span data-lat>Barbershop Vuk</span>
         </h1>
 
         <p className="font-body text-center text-cream/70 mt-6 max-w-xl">

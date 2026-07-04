@@ -46,11 +46,11 @@ export default async function HomePage() {
   // values (admin /admin/sajt) take precedence whenever present.
   const heroEyebrow  = getC("hero_eyebrow",  "СТИЛ · ТРАДИЦИЈА · ПРИЧА", "STIL · TRADICIJA · PRIČA");
   const heroTitle    = getC("hero_title",    "Место где се рез|претвара у причу", "Mesto gde se rez|pretvara u priču");
-  const heroSubtitle = getC("hero_subtitle", "Берберница Триша — традиционална мушка берберница у Батајници. Шишање, брада, добра прича. Без журбе, без комплекса. Само оно што треба.", "Berbernica Triša — tradicionalna muška berbernica u Batajnici. Šišanje, brada, dobra priča. Bez žurbe, bez kompleksa. Samo ono što treba.");
+  const heroSubtitle = getC("hero_subtitle", "Барбершоп Вук — мушка берберница у Батајници. Шишање, брада, добра прича. Без журбе, без комплекса. Само оно што треба.", "Barbershop Vuk — muška berbernica u Batajnici. Šišanje, brada, dobra priča. Bez žurbe, bez kompleksa. Samo ono što treba.");
   const aboutTitle   = getC("about_title",   "Твој изглед,|наша правила.", "Tvoj izgled,|naša pravila.");
-  const aboutStory   = getC("about_story",   "Заборави на чекање у редовима и листање старих новина. Основани 2025. године, спојили смо петогодишњи „гринд\" у берберској столици са технологијом која поштује твоје време. Код нас нема филозофирања: фокус је на бруталном фејду, хируршки прецизној бради и здравом изгледу косе.", "Zaboravi na čekanje u redovima i listanje starih novina. Osnovani 2025. godine, spojili smo petogodišnji „grind\" u berberskoj stolici sa tehnologijom koja poštuje tvoje vreme. Kod nas nema filozofiranja: fokus je na brutalnom Fade-u, hirurški preciznoj bradi i zdravom izgledu kose.");
-  const review1      = getC("review_1",      "Најбоље шишање у Батајници. Триша увек стигне на време, никад не журим, и излазим срећан. Цена ок, атмосфера супер.", "Najbolje šišanje u Batajnici. Triša uvek stigne na vreme, nikad ne žurim, i izlazim srećan. Cena ok, atmosfera super.");
-  const review2      = getC("review_2",      "Долазим од првог дана отварања. Никад ме није разочарао. Зна како шишам. И син ми иде код њега.", "Dolazim od prvog dana otvaranja. Nikad me nije razočarao. Zna kako šišam. I sin mi ide kod njega.");
+  const aboutStory   = getC("about_story",   "Заборави на чекање у редовима и листање старих новина. Основани 2024. године, спојили смо занатски приступ берберској столици са технологијом која поштује твоје време. Код нас нема филозофирања: фокус је на бруталном фејду, хируршки прецизној бради и здравом изгледу косе.", "Zaboravi na čekanje u redovima i listanje starih novina. Osnovani 2024. godine, spojili smo zanatski pristup berberskoj stolici sa tehnologijom koja poštuje tvoje vreme. Kod nas nema filozofiranja: fokus je na brutalnom Fade-u, hirurški preciznoj bradi i zdravom izgledu kose.");
+  const review1      = getC("review_1",      "Најбоље шишање у Батајници. Увек стигну на време, никад не журим, и излазим срећан. Цена ок, атмосфера супер.", "Najbolje šišanje u Batajnici. Uvek stignu na vreme, nikad ne žurim, i izlazim srećan. Cena ok, atmosfera super.");
+  const review2      = getC("review_2",      "Долазим од првог дана отварања. Никад ме нису разочарали. Знају како шишам. И син ми иде овде.", "Dolazim od prvog dana otvaranja. Nikad me nisu razočarali. Znaju kako šišam. I sin mi ide ovde.");
   const review3      = getC("review_3",      "Лепа, топла берберница. Без надувавања, без „стилиста\". Само добар занат и права прича.", "Lepa, topla berbernica. Bez naduvavanja, bez „stilista\". Samo dobar zanat i prava priča.");
 
   // Hero / about titles use a "|" line-break marker — first segment renders normally, second as <em>.
@@ -468,7 +468,7 @@ export default async function HomePage() {
                 </div>
                 <div className="contact-row">
                   <span>✉</span>
-                  <span>{salon?.email ?? "berbernicatrisa@gmail.com"}</span>
+                  <span>{salon?.email ?? "sekaimiraitest1@gmail.com"}</span>
                 </div>
                 <div className="contact-row">
                   <span>📍</span>

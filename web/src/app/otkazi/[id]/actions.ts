@@ -114,7 +114,7 @@ export async function cancelBookingByToken(
     try {
       const resend = getResend();
       await resend.emails.send({
-        from: `Berbernica Trisa <${FROM_EMAIL}>`,
+        from: `Barbershop Vuk <${FROM_EMAIL}>`,
         to: salon.email,
         subject: `Otkazan termin — ${customer?.name ?? "—"} · ${dateStr} u ${timeStr}${wasLate ? " (KASNO)" : ""}`,
         html: `

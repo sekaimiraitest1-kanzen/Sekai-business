@@ -87,7 +87,7 @@ export default async function CancelBookingPage({
     <main id="main-content" style={{ minHeight: "100vh", background: "var(--brown-950)", color: "var(--cream)", padding: "48px 24px", fontFamily: "Inter, sans-serif" }}>
       <div style={{ maxWidth: 480, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: 22, color: "var(--mustard)" }}>Berbernica Triša</div>
+          <div style={{ fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: 22, color: "var(--mustard)" }}>Barbershop Vuk</div>
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "rgba(245,233,208,.5)", letterSpacing: ".15em", textTransform: "uppercase", marginTop: 6 }}>
             ОТКАЗИВАЊЕ ТЕРМИНА
           </div>

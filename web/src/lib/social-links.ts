@@ -28,31 +28,31 @@ export const PLATFORM_META: Record<SocialPlatform, PlatformMeta> = {
   instagram: {
     id: "instagram",
     label: "Instagram",
-    placeholder: "https://instagram.com/berbernica.trisha",
+    placeholder: "https://instagram.com/barbershop.vuk",
     hostSuffix: ["instagram.com"],
   },
   facebook: {
     id: "facebook",
     label: "Facebook",
-    placeholder: "https://facebook.com/berbernica.trisha",
+    placeholder: "https://facebook.com/barbershop.vuk",
     hostSuffix: ["facebook.com", "fb.com"],
   },
   tiktok: {
     id: "tiktok",
     label: "TikTok",
-    placeholder: "https://tiktok.com/@berbernica.trisha",
+    placeholder: "https://tiktok.com/@barbershop.vuk",
     hostSuffix: ["tiktok.com"],
   },
   linkedin: {
     id: "linkedin",
     label: "LinkedIn",
-    placeholder: "https://linkedin.com/company/berbernica-trisha",
+    placeholder: "https://linkedin.com/company/barbershop-vuk",
     hostSuffix: ["linkedin.com"],
   },
   x: {
     id: "x",
     label: "X",
-    placeholder: "https://x.com/berbernica",
+    placeholder: "https://x.com/barbershopvuk",
     hostSuffix: ["x.com", "twitter.com"],
   },
 };

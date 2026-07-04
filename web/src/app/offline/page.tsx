@@ -105,7 +105,7 @@ export default function OfflinePage() {
         }}
       >
         <span data-sr>Берберница Триша · Батајница</span>
-        <span data-lat>Berbernica Triša · Batajnica</span>
+        <span data-lat>Barbershop Vuk · Batajnica</span>
       </p>
     </main>
   );

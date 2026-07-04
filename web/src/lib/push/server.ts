@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 const PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY ?? "";
-const SUBJECT = process.env.VAPID_SUBJECT ?? "mailto:noreply@berbernicatrisa.rs";
+const SUBJECT = process.env.VAPID_SUBJECT ?? "mailto:sekaimiraitest1@gmail.com";
 
 let initialized = false;
 function ensureInit() {

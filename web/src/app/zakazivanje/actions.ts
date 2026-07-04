@@ -192,7 +192,7 @@ export async function submitBooking(input: BookingInput) {
     const finalPrice = isLoyaltyRedeem
       ? 0
       : surchargeApplied ? Math.round(basePrice * 1.3) : basePrice;
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://berbernica-ruby.vercel.app";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sekai-business.vercel.app";
 
     const channels: { name: string; run: () => Promise<unknown> }[] = [
       {

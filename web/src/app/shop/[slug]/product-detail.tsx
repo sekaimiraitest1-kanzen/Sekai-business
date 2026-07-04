@@ -95,7 +95,7 @@ export function ProductDetail({ product, related }: { product: Product; related:
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={product.image_url}
-                alt={`${product.name_lat}${product.brand ? " — " + product.brand : ""} | Berbernica Triša`}
+                alt={`${product.name_lat}${product.brand ? " — " + product.brand : ""} | Barbershop Vuk`}
                 width={800}
                 height={800}
               />

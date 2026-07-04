@@ -52,9 +52,9 @@ export default async function TermsPage() {
               или наручивање.
             </p>
             <p>
-              Сајт води BERBERNICA TRIŠA, Мајора Зорана Радосављевића 226б,
-              Батајница, Београд. ПИБ 115240647, матични број 68208955,
-              основана 2.9.2025.
+              Сајт води BARBERSHOP VUK, Мајора Зорана Радосављевића 138,
+              Батајница, Београд. ПИБ [ПОПУНИТИ], матични број [ПОПУНИТИ],
+              основана 2024. године.
             </p>
 
             <h2>2. Резервација термина</h2>
@@ -69,7 +69,7 @@ export default async function TermsPage() {
             <p>
               Резервација је потврђена чим сачуваш форму. Ако си унео имејл,
               стиже потврда са детаљима. Ако није стигла у року од 5 минута,
-              јави се на 065 9003 742 — могуће је да није прошло.
+              јави се на 060 1424576 — могуће је да није прошло.
             </p>
             <h3>2.3 Отказивање и промена</h3>
             <p>
@@ -157,7 +157,7 @@ export default async function TermsPage() {
             <p>
               Сајт се пружа „какав јесте". Чинимо разумне напоре да све ради,
               али не гарантујемо непрекинут рад. Ако је сајт недоступан, термине
-              можеш да закажеш телефоном на 065 9003 742.
+              можеш да закажеш телефоном на 060 1424576.
             </p>
 
             <h2>9. Решавање спорова</h2>
@@ -177,22 +177,22 @@ export default async function TermsPage() {
             <h2>11. Контакт</h2>
             <p>
               За питања, рекламације или било шта правно:{" "}
-              <a href="mailto:berbernicatrisa@gmail.com">berbernicatrisa@gmail.com</a>{" "}
-              или 065 9003 742.
+              <a href="mailto:sekaimiraitest1@gmail.com">sekaimiraitest1@gmail.com</a>{" "}
+              или 060 1424576.
             </p>
           </section>
 
           <section className="legal-section" data-lat>
             <h2>1. Opšti uslovi</h2>
             <p>
-              Korišćenjem sajta Berbernica Triša prihvataš ove uslove. Ako se ne
+              Korišćenjem sajta Barbershop Vuk prihvataš ove uslove. Ako se ne
               slažeš sa bilo kojom tačkom, nemoj koristiti sajt za rezervaciju
               ili naručivanje.
             </p>
             <p>
-              Sajt vodi BERBERNICA TRIŠA, Majora Zorana Radosavljevića 226b,
-              Batajnica, Beograd. PIB 115240647, matični broj 68208955,
-              osnovana 2.9.2025.
+              Sajt vodi BARBERSHOP VUK, Majora Zorana Radosavljevića 138,
+              Batajnica, Beograd. PIB [POPUNITI], matični broj [POPUNITI],
+              osnovana 2024. godine.
             </p>
 
             <h2>2. Rezervacija termina</h2>
@@ -207,7 +207,7 @@ export default async function TermsPage() {
             <p>
               Rezervacija je potvrđena čim sačuvaš formu. Ako si uneo imejl,
               stiže potvrda sa detaljima. Ako nije stigla u roku od 5 minuta,
-              javi se na 065 9003 742 — moguće je da nije prošlo.
+              javi se na 060 1424576 — moguće je da nije prošlo.
             </p>
             <h3>2.3 Otkazivanje i promena</h3>
             <p>
@@ -282,7 +282,7 @@ export default async function TermsPage() {
             <h2>7. Vlasništvo sadržaja sajta</h2>
             <p>
               Tekst, fotografije, logo i dizajn na sajtu su vlasništvo
-              Berbernica Triša. Preuzimanje i ponovna upotreba bez pismene
+              Barbershop Vuk. Preuzimanje i ponovna upotreba bez pismene
               saglasnosti nije dozvoljena.
             </p>
             <p>
@@ -295,7 +295,7 @@ export default async function TermsPage() {
             <p>
               Sajt se pruža „kakav jeste". Činimo razumne napore da sve radi,
               ali ne garantujemo neprekinut rad. Ako je sajt nedostupan, termine
-              možeš da zakažeš telefonom na 065 9003 742.
+              možeš da zakažeš telefonom na 060 1424576.
             </p>
 
             <h2>9. Rešavanje sporova</h2>
@@ -315,8 +315,8 @@ export default async function TermsPage() {
             <h2>11. Kontakt</h2>
             <p>
               Za pitanja, reklamacije ili bilo šta pravno:{" "}
-              <a href="mailto:berbernicatrisa@gmail.com">berbernicatrisa@gmail.com</a>{" "}
-              ili 065 9003 742.
+              <a href="mailto:sekaimiraitest1@gmail.com">sekaimiraitest1@gmail.com</a>{" "}
+              ili 060 1424576.
             </p>
           </section>
 

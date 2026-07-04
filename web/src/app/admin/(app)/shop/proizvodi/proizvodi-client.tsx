@@ -207,7 +207,7 @@ function ProductEditor({ product, categories: initialCategories, onClose }: { pr
           <label className="adm-form-label">NAZIV (LATINICA)</label>
           <input className="adm-input" value={nameLat} onChange={(e) => setNameLat(e.target.value)} placeholder="Pomada Batajnica" />
           <label className="adm-form-label">BRAND</label>
-          <input className="adm-input" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="TRIŠA" />
+          <input className="adm-input" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="VUK" />
           <label className="adm-form-label">OPIS (ĆIRILICA)</label>
           <textarea className="adm-input" rows={2} value={descSr} onChange={(e) => setDescSr(e.target.value)} placeholder="Јак фиксиран, мат завршетак…" />
           <label className="adm-form-label">OPIS (LATINICA)</label>
@@ -277,7 +277,7 @@ function ProductEditor({ product, categories: initialCategories, onClose }: { pr
             <option value="">— bez badge —</option>
             <option value="new">NEW</option>
             <option value="hot">HOT</option>
-            <option value="trisha">TRIŠA</option>
+            <option value="vuk">VUK</option>
           </select>
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--cream)", fontFamily: "'Oswald', sans-serif", fontSize: 13 }}>
@@ -310,5 +310,5 @@ type ProductInput = {
   category?: string;
   stock: number;
   active: boolean;
-  badge?: "new" | "hot" | "trisha" | null;
+  badge?: "new" | "hot" | "vuk" | null;
 };

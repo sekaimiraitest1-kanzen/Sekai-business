@@ -24,9 +24,9 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 
 const sb = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
-const ADMIN_EMAIL = "berbernicatrisa@gmail.com";
-const ADMIN_PIN = "1234";
-const SALON_SLUG = "trisa";
+const ADMIN_EMAIL = "sekaimiraitest1@gmail.com";
+const ADMIN_PIN = "8696";
+const SALON_SLUG = "vuk";
 
 async function main() {
   console.log("→ resolving salon...");

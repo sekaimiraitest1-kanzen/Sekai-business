@@ -57,10 +57,10 @@ export async function GET(req: NextRequest) {
   const lines: string[] = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Berbernica Trisa//iCal Feed//EN",
+    "PRODID:-//Barbershop Vuk//iCal Feed//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    "X-WR-CALNAME:Berbernica Triša · Termini",
+    "X-WR-CALNAME:Barbershop Vuk · Termini",
     "X-WR-TIMEZONE:Europe/Belgrade",
   ];
 
@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
 
     lines.push(
       "BEGIN:VEVENT",
-      `UID:${b.id}@berbernicatrisa.rs`,
+      `UID:${b.id}@barbershop-vuk.rs`,
       `DTSTAMP:${dtStart}`,
       `DTSTART;TZID=Europe/Belgrade:${dtStart}`,
       `DTEND;TZID=Europe/Belgrade:${dtEnd}`,

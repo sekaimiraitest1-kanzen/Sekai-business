@@ -5,7 +5,7 @@ import type { AdminRole, AdminSession } from "./admin-role";
 export type { AdminRole, AdminSession } from "./admin-role";
 export { isOwner, isStaff } from "./admin-role";
 
-const COOKIE_NAME = "trisha_admin";
+const COOKIE_NAME = "vuk_admin";
 const SESSION_TTL_HOURS = 24;
 
 function getSecret(): Uint8Array {

@@ -24,10 +24,10 @@ type ServiceInput = {
   price: number | null;
 };
 
-const FALLBACK_NAME = "Berbernica Triša";
-const FALLBACK_ADDRESS = "Majora Zorana Radosavljevića 226b, Batajnica";
-const FALLBACK_PHONE = "065 9003 742";
-const FALLBACK_EMAIL = "berbernicatrisa@gmail.com";
+const FALLBACK_NAME = "Barbershop Vuk";
+const FALLBACK_ADDRESS = "Majora Zorana Radosavljevića 138, Beograd";
+const FALLBACK_PHONE = "060 1424576";
+const FALLBACK_EMAIL = "sekaimiraitest1@gmail.com";
 
 export function buildLocalBusinessJsonLd({
   salon,
@@ -63,13 +63,13 @@ export function buildLocalBusinessJsonLd({
         {
           "@type": "OpeningHoursSpecification",
           dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-          opens: "09:00",
+          opens: "10:00",
           closes: "20:00",
         },
         {
           "@type": "OpeningHoursSpecification",
           dayOfWeek: "Saturday",
-          opens: "09:00",
+          opens: "10:00",
           closes: "17:00",
         },
       ];
@@ -95,9 +95,9 @@ export function buildLocalBusinessJsonLd({
     "@type": ["LocalBusiness", "HairSalon"],
     "@id": `${siteUrl}/#business`,
     name: salon.name ?? FALLBACK_NAME,
-    alternateName: ["Berbernica Trisha", "Trisha Barbershop", "Берберница Триша"],
+    alternateName: ["Barbershop Vuk", "Vuk Barbershop", "Барбершоп Вук"],
     description:
-      "Tradicionalna muška berbernica u Batajnici — šišanje, brada, brijanje. Online zakazivanje, bez čekanja.",
+      "Muška berbernica u Batajnici — šišanje, brada, brijanje. Online zakazivanje, bez čekanja.",
     url: siteUrl,
     telephone: formatPhoneE164(salon.phone ?? FALLBACK_PHONE),
     email: salon.email ?? FALLBACK_EMAIL,

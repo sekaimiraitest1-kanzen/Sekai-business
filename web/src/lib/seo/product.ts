@@ -46,7 +46,7 @@ export function buildProductJsonLd({
       price: product.price,
       availability,
       itemCondition: "https://schema.org/NewCondition",
-      seller: { "@type": "Organization", name: "Berbernica Triša", "@id": `${siteUrl}/#business` },
+      seller: { "@type": "Organization", name: "Barbershop Vuk", "@id": `${siteUrl}/#business` },
       // Pickup-only — explicit deliveryMethod helps AIO understand fulfilment.
       availableDeliveryMethod: "https://schema.org/InStorePickup",
       areaServed: { "@type": "City", name: "Beograd" },

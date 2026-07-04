@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const ADMIN_COOKIE = "trisha_admin";
+const ADMIN_COOKIE = "vuk_admin";
 
 async function verify(token: string): Promise<boolean> {
   try {

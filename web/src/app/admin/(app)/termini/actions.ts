@@ -307,7 +307,7 @@ export async function createWalkInBooking(input: {
     ]);
     const basePrice = svc?.price ?? 0;
     const finalPrice = surchargeApplied ? Math.round(basePrice * 1.3) : basePrice;
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://berbernica-ruby.vercel.app";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sekai-business.vercel.app";
     const isStaffCreated = isStaff(session);
 
     await Promise.allSettled([

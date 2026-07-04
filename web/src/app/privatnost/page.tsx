@@ -49,12 +49,12 @@ export default async function PrivacyPage() {
             <p>
               Овај сајт води Берберница Триша (у даљем тексту „ми"), мушка
               берберница са седиштем на адреси Мајора Зорана Радосављевића
-              226б, Батајница, Београд. Контакт: 065 9003 742,{" "}
-              <a href="mailto:berbernicatrisa@gmail.com">berbernicatrisa@gmail.com</a>.
+              138, Батајница, Београд. Контакт: 060 1424576,{" "}
+              <a href="mailto:sekaimiraitest1@gmail.com">sekaimiraitest1@gmail.com</a>.
             </p>
             <p>
-              <strong>Подаци пословног субјекта:</strong> BERBERNICA TRIŠA,
-              ПИБ 115240647, матични број 68208955, основана 2.9.2025.
+              <strong>Подаци пословног субјекта:</strong> BARBERSHOP VUK,
+              ПИБ [ПОПУНИТИ], матични број [ПОПУНИТИ], основана 2024. године.
             </p>
 
             <h2>2. Које податке прикупљамо</h2>
@@ -159,7 +159,7 @@ export default async function PrivacyPage() {
             </ul>
             <p>
               Захтев пошаљи на{" "}
-              <a href="mailto:berbernicatrisa@gmail.com">berbernicatrisa@gmail.com</a>{" "}
+              <a href="mailto:sekaimiraitest1@gmail.com">sekaimiraitest1@gmail.com</a>{" "}
               са насловом „ГДПР — приступ подацима" и бројем телефона који је
               уписан у резервацију. Одговарамо у року од 30 дана.
             </p>
@@ -188,22 +188,22 @@ export default async function PrivacyPage() {
             <h2>10. Контакт</h2>
             <p>
               За било које питање око ове политике:{" "}
-              <a href="mailto:berbernicatrisa@gmail.com">berbernicatrisa@gmail.com</a>{" "}
-              или 065 9003 742.
+              <a href="mailto:sekaimiraitest1@gmail.com">sekaimiraitest1@gmail.com</a>{" "}
+              или 060 1424576.
             </p>
           </section>
 
           <section className="legal-section" data-lat>
             <h2>1. Ko smo mi</h2>
             <p>
-              Ovaj sajt vodi Berbernica Triša (u daljem tekstu „mi"), muška
+              Ovaj sajt vodi Barbershop Vuk (u daljem tekstu „mi"), muška
               berbernica sa sedištem na adresi Majora Zorana Radosavljevića
-              226b, Batajnica, Beograd. Kontakt: 065 9003 742,{" "}
-              <a href="mailto:berbernicatrisa@gmail.com">berbernicatrisa@gmail.com</a>.
+              138, Batajnica, Beograd. Kontakt: 060 1424576,{" "}
+              <a href="mailto:sekaimiraitest1@gmail.com">sekaimiraitest1@gmail.com</a>.
             </p>
             <p>
-              <strong>Podaci poslovnog subjekta:</strong> BERBERNICA TRIŠA,
-              PIB 115240647, matični broj 68208955, osnovana 2.9.2025.
+              <strong>Podaci poslovnog subjekta:</strong> BARBERSHOP VUK,
+              PIB [POPUNITI], matični broj [POPUNITI], osnovana 2024. godine.
             </p>
 
             <h2>2. Koje podatke prikupljamo</h2>
@@ -308,7 +308,7 @@ export default async function PrivacyPage() {
             </ul>
             <p>
               Zahtev pošalji na{" "}
-              <a href="mailto:berbernicatrisa@gmail.com">berbernicatrisa@gmail.com</a>{" "}
+              <a href="mailto:sekaimiraitest1@gmail.com">sekaimiraitest1@gmail.com</a>{" "}
               sa naslovom „GDPR — pristup podacima" i brojem telefona koji je
               upisan u rezervaciju. Odgovaramo u roku od 30 dana.
             </p>
@@ -337,8 +337,8 @@ export default async function PrivacyPage() {
             <h2>10. Kontakt</h2>
             <p>
               Za bilo koje pitanje oko ove politike:{" "}
-              <a href="mailto:berbernicatrisa@gmail.com">berbernicatrisa@gmail.com</a>{" "}
-              ili 065 9003 742.
+              <a href="mailto:sekaimiraitest1@gmail.com">sekaimiraitest1@gmail.com</a>{" "}
+              ili 060 1424576.
             </p>
           </section>
 

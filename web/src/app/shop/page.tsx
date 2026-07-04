@@ -30,7 +30,7 @@ export default async function ShopPage() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3050";
   const itemListJsonLd = buildItemListJsonLd({
     siteUrl,
-    name: "Berbernica Triša — Prodavnica",
+    name: "Barbershop Vuk — Prodavnica",
     products: products.map((p) => ({ slug: p.slug, name_lat: p.name_lat, price: p.price, image_url: p.image_url })),
   });
   const breadcrumbJsonLd = buildBreadcrumbJsonLd({

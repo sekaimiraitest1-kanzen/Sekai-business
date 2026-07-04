@@ -10,23 +10,23 @@ const config: Config = {
     extend: {
       colors: {
         mustard: {
-          DEFAULT: "#D4A53A",
-          bright: "#E8B84A",
-          deep: "#B08825",
-          soft: "#F0D58F",
+          DEFAULT: "#9E1B1B",
+          bright: "#C62828",
+          deep: "#6B1414",
+          soft: "#E0A8A0",
         },
         brown: {
-          950: "#1A0F05",
-          900: "#2B1810",
-          700: "#5C3A22",
+          950: "#0A0A0A",
+          900: "#181818",
+          700: "#3A3A3A",
         },
         cream: {
-          DEFAULT: "#F5E9D0",
-          warm: "#EDD9B0",
+          DEFAULT: "#F5F0E8",
+          warm: "#EDE6D8",
         },
-        paper: "#FAF3E3",
+        paper: "#FAF7F0",
         success: "#6B8E4E",
-        danger: "#A63D2A",
+        danger: "#7A1414",
       },
       fontFamily: {
         display: ["var(--font-cormorant)", "Cormorant Garamond", "serif"],

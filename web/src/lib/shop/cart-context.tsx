@@ -21,7 +21,7 @@ type CartCtx = {
   clear: () => void;
 };
 
-const STORAGE_KEY = "trisha_cart_v1";
+const STORAGE_KEY = "vuk_cart_v1";
 
 const Ctx = createContext<CartCtx | null>(null);
 

@@ -208,7 +208,7 @@ export function BookingFlow({
     <>
       <h1 className="sr-only">
         <span data-sr>Заказивање термина — Берберница Триша, Батајница</span>
-        <span data-lat>Zakazivanje termina — Berbernica Triša, Batajnica</span>
+        <span data-lat>Zakazivanje termina — Barbershop Vuk, Batajnica</span>
       </h1>
       <nav className="bk-nav">
         <Link href="/" className="bk-nav-back">
