@@ -1,4 +1,4 @@
-// Berbernica Triša — service worker
+// Barbershop Vuk — service worker
 // Hand-rolled (no Workbox/Serwist dependency) — small surface area, easy to inspect.
 // Strategy:
 //   - Static assets (icons, fonts, legacy)         → cache-first
@@ -6,7 +6,7 @@
 //   - /admin/* and /api/*                          → network-only (never cache auth-bound or mutation traffic)
 //   - Cross-origin (Supabase Storage, Resend, etc) → pass-through, no cache
 
-const VERSION = "trisa-sw-v4";
+const VERSION = "vuk-sw-v1";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
@@ -14,7 +14,6 @@ const RUNTIME_CACHE = `${VERSION}-runtime`;
 const PRECACHE = [
   "/offline",
   "/manifest.json",
-  "/logo.svg",
   "/logo-120.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
@@ -124,14 +123,14 @@ self.addEventListener("push", (event) => {
   try {
     payload = event.data.json();
   } catch (_) {
-    payload = { title: "Berbernica Triša", body: event.data.text() };
+    payload = { title: "Barbershop Vuk", body: event.data.text() };
   }
-  const title = payload.title || "Berbernica Triša";
+  const title = payload.title || "Barbershop Vuk";
   const options = {
     body: payload.body || "",
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    tag: payload.tag || "trisa-default",
+    tag: payload.tag || "vuk-default",
     renotify: true,
     data: { url: payload.url || "/admin/termini" },
     requireInteraction: false,
