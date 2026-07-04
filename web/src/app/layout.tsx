@@ -53,8 +53,8 @@ const jetbrains = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Берберница Триша · Батајница",
-    template: "%s · Берберница Триша",
+    default: "Барбершоп Вук · Батајница",
+    template: "%s · Барбершоп Вук",
   },
   description: "Твоје место за стил, традицију и добру причу. Мушка берберница у Батајници — шишање, брада, бријање. Заказивање онлине.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3050"),
@@ -69,10 +69,10 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Триша",
+    title: "Вук",
     startupImage: [{ url: "/icons/icon-512.png" }],
   },
-  applicationName: "Триша",
+  applicationName: "Вук",
   formatDetection: { telephone: false, email: false, address: false },
   other: {
     "mobile-web-app-capable": "yes",
@@ -84,21 +84,21 @@ export const metadata: Metadata = {
     type: "website",
     locale: "sr_RS",
     url: "/",
-    siteName: "Берберница Триша",
-    title: "Берберница Триша · Батајница",
+    siteName: "Барбершоп Вук",
+    title: "Барбершоп Вук · Батајница",
     description: "Мушка берберница у Батајници. Шишање, брада, бријање. Заказивање онлине, без чекања.",
     images: [
       {
         url: "/logo-source.png",
         width: 600,
         height: 600,
-        alt: "Берберница Триша — Батајница",
+        alt: "Барбершоп Вук — Батајница",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Берберница Триша · Батајница",
+    title: "Барбершоп Вук · Батајница",
     description: "Мушка берберница у Батајници. Шишање, брада, бријање. Заказивање онлине, без чекања.",
     images: ["/logo-source.png"],
   },

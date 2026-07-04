@@ -61,11 +61,11 @@ export default function NotFound() {
       >
         <span data-sr>
           Линк који си пратио је покварен или се страна померила. Иди натраг
-          или закажи термин — увек си добродошао у Тришу.
+          или закажи термин — увек си добродошао код нас.
         </span>
         <span data-lat>
           Link koji si pratio je pokvaren ili se strana pomerila. Idi nazad
-          ili zakaži termin — uvek si dobrodošao u Trišu.
+          ili zakaži termin — uvek si dobrodošao kod nas.
         </span>
       </p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>

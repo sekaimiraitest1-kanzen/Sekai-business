@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Без везе · Берберница Триша",
+  title: "Без везе · Барбершоп Вук",
   description: "Нема интернет везе. Покушај поново када се повежеш.",
 };
 
@@ -104,7 +104,7 @@ export default function OfflinePage() {
           color: "rgba(26, 15, 5, 0.4)",
         }}
       >
-        <span data-sr>Берберница Триша · Батајница</span>
+        <span data-sr>Барбершоп Вук · Батајница</span>
         <span data-lat>Barbershop Vuk · Batajnica</span>
       </p>
     </main>

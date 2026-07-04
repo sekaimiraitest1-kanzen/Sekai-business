@@ -9,12 +9,12 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Продавница",
-  description: "Препарати и алат за негу косе и браде из Берберница Триша — иста цена као у радњи, без сервисних накнада. Лична преузимања у Батајници.",
+  description: "Preparati i alat za negu kose i brade — ista cena kao u radnji, bez servisnih naknada. Lična preuzimanja u Batajnici.",
   alternates: { canonical: "/shop" },
   openGraph: {
     type: "website",
     url: "/shop",
-    title: "Продавница · Берберница Триша",
+    title: "Продавница · Барбершоп Вук",
     description: "Препарати и алат за негу косе и браде. Иста цена као у радњи.",
   },
 };

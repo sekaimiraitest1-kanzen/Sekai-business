@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   // Title template in root layout wraps as "%s · Берберница Триша" — return
   // bare product+brand here to avoid duplicating the brand in the final title.
   const title = `${data.name_lat}${data.brand ? " — " + data.brand : ""}`;
-  const description = data.description_lat?.slice(0, 160) ?? `Kupi ${data.name_lat} u Berbernici Triša.`;
+  const description = data.description_lat?.slice(0, 160) ?? `Kupi ${data.name_lat} u Barbershop Vuk.`;
   return {
     title,
     description,

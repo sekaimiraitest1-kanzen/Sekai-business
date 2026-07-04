@@ -108,8 +108,8 @@ export function ShopShell({ children }: { children: React.ReactNode }) {
               <span data-sr>Хвала!</span><span data-lat>Hvala!</span>
             </h2>
             <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "var(--brown-700)", marginBottom: 16 }}>
-              <span data-sr>Поруџбина је послата. Триша ће вас контактирати ради преузимања.</span>
-              <span data-lat>Porudžbina je poslata. Triša će vas kontaktirati radi preuzimanja.</span>
+              <span data-sr>Поруџбина је послата. Контактираћемо вас ради преузимања.</span>
+              <span data-lat>Porudžbina je poslata. Kontaktiraćemo vas radi preuzimanja.</span>
             </p>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "var(--brown-700)", opacity: 0.5, marginBottom: 16 }}>
               ID: {orderDone.slice(0, 8).toUpperCase()}

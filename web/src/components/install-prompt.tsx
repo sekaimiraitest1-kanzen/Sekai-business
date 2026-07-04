@@ -52,7 +52,7 @@ export function InstallPrompt() {
   }
 
   return (
-    <div className="adm-install-bar" role="dialog" aria-label="Install Triša app">
+    <div className="adm-install-bar" role="dialog" aria-label="Install Vuk app">
       <div className="adm-install-text">
         <div className="adm-install-title" data-sr>ИНСТАЛИРАЈ АПЛИКАЦИЈУ</div>
         <div className="adm-install-title" data-lat>INSTALIRAJ APLIKACIJU</div>

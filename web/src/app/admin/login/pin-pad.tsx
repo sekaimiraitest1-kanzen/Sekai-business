@@ -82,7 +82,7 @@ export function LoginPad() {
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-120.png" alt="Triša" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <img src="/logo-120.png" alt="Vuk" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
       <div
         style={{
@@ -98,8 +98,8 @@ export function LoginPad() {
         ADMIN
       </div>
       <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 900, fontStyle: "italic", color: "var(--cream)", marginBottom: 4 }}>
-        <span data-sr>Здраво, Тришо.</span>
-        <span data-lat>Zdravo, Trišo.</span>
+        <span data-sr>Здраво, Вуче.</span>
+        <span data-lat>Zdravo, Vuče.</span>
       </h1>
       <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "rgba(245,233,208,.35)", textTransform: "uppercase", letterSpacing: ".1em" }}>
         <span data-sr>Унеси PIN да наставиш.</span>

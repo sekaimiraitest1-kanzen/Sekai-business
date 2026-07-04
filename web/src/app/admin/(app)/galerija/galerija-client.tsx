@@ -198,7 +198,7 @@ function ImageEditor({ image, pending, onClose, onSave, onDelete }: {
           <input className="adm-input" value={altSr} onChange={(e) => setAltSr(e.target.value)} placeholder="Шишање — Триша" style={{ marginBottom: 8 }} />
 
           <label className="adm-form-label">ALT (lat.)</label>
-          <input className="adm-input" value={altLat} onChange={(e) => setAltLat(e.target.value)} placeholder="Šišanje — Triša" style={{ marginBottom: 8 }} />
+          <input className="adm-input" value={altLat} onChange={(e) => setAltLat(e.target.value)} placeholder="Šišanje — Vuk" style={{ marginBottom: 8 }} />
 
           <label className="adm-form-label">VELIČINA U GRID-U</label>
           <div className="adm-toggle" style={{ marginBottom: 12 }}>

@@ -435,7 +435,7 @@ export default async function HomePage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/mapa-lokacija.webp"
-                alt="Mapa lokacije Berbernice Triša u Batajnici"
+                alt="Mapa lokacije Barbershop Vuk u Batajnici"
                 className="map-card-img"
                 width={1200}
                 height={675}

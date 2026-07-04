@@ -223,8 +223,8 @@ export function ProductDetail({ product, related }: { product: Product; related:
             <div className="pd-meta-row">
               <span className="pd-meta-label" data-sr>ПРЕУЗИМАЊЕ</span>
               <span className="pd-meta-label" data-lat>PREUZIMANJE</span>
-              <span className="pd-meta-value" data-sr>Лично у Берберници Триша</span>
-              <span className="pd-meta-value" data-lat>Lično u Berbernici Triša</span>
+              <span className="pd-meta-value" data-sr>Лично у Барбершоп Вук</span>
+              <span className="pd-meta-value" data-lat>Lično u Barbershop Vuk</span>
             </div>
             <div className="pd-meta-row">
               <span className="pd-meta-label" data-sr>ДОСТАВА</span>

@@ -9,12 +9,12 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Заказивање термина",
-  description: "Закажи термин у Берберници Триша за 30 секунди — изабери услугу и време, потврди СМС-ом. Без налога, без чекања. Батајница, Београд.",
+  description: "Zakaži termin u Barbershop Vuk za 30 sekundi — izaberi uslugu i vreme, potvrdi SMS-om. Bez naloga, bez čekanja. Batajnica, Beograd.",
   alternates: { canonical: "/zakazivanje" },
   openGraph: {
     type: "website",
     url: "/zakazivanje",
-    title: "Заказивање термина · Берберница Триша",
+    title: "Заказивање термина · Барбершоп Вук",
     description: "Закажи термин за 30 секунди. Изабери услугу, време, потврди.",
   },
 };

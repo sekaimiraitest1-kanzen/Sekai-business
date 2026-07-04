@@ -25,7 +25,7 @@ export default async function HomePage() {
         </p>
 
         <h1 className="font-display italic font-bold text-center text-cream text-5xl md:text-7xl leading-tight max-w-4xl">
-          <span data-sr>{salon?.name ?? "Берберница Триша"}</span>
+          <span data-sr>{salon?.name ?? "Барбершоп Вук"}</span>
           <span data-lat>Barbershop Vuk</span>
         </h1>
 

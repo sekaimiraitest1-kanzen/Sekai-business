@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Политика приватности",
   description:
-    "Како Берберница Триша прикупља, обрађује и чува твоје податке. ГДПР усаглашено.",
+    "Kako Barbershop Vuk prikuplja, obrađuje i čuva tvoje podatke. GDPR usaglašeno.",
   alternates: { canonical: "/privatnost" },
   robots: { index: true, follow: true },
 };
@@ -47,7 +47,7 @@ export default async function PrivacyPage() {
           <section className="legal-section" data-sr>
             <h2>1. Ко смо ми</h2>
             <p>
-              Овај сајт води Берберница Триша (у даљем тексту „ми"), мушка
+              Ovaj sajt vodi Barbershop Vuk (u daljem tekstu „mi"), muška
               берберница са седиштем на адреси Мајора Зорана Радосављевића
               138, Батајница, Београд. Контакт: 060 1424576,{" "}
               <a href="mailto:sekaimiraitest1@gmail.com">sekaimiraitest1@gmail.com</a>.

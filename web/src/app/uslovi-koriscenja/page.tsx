@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Услови коришћења",
   description:
-    "Правила резервације термина, коришћења шопа и понашања на сајту Берберница Триша.",
+    "Pravila rezervacije termina, korišćenja šopa i ponašanja na sajtu Barbershop Vuk.",
   alternates: { canonical: "/uslovi-koriscenja" },
   robots: { index: true, follow: true },
 };
@@ -47,7 +47,7 @@ export default async function TermsPage() {
           <section className="legal-section" data-sr>
             <h2>1. Општи услови</h2>
             <p>
-              Коришћењем сајта Берберница Триша прихваташ ове услове. Ако се не
+              Korišćenjem sajta Barbershop Vuk prihvataš ove uslove. Ako se ne
               слажеш са било којом тачком, немој користити сајт за резервацију
               или наручивање.
             </p>
@@ -144,7 +144,7 @@ export default async function TermsPage() {
             <h2>7. Власништво садржаја сајта</h2>
             <p>
               Текст, фотографије, лого и дизајн на сајту су власништво
-              Берберница Триша. Преузимање и поновна употреба без писмене
+              Barbershop Vuk. Preuzimanje i ponovna upotreba bez pismene
               сагласности није дозвољена.
             </p>
             <p>

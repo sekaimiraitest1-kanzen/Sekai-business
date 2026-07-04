@@ -62,7 +62,7 @@ export default function GlobalError({ error }: { error: Error & { digest?: strin
           Sajt je trenutno nedostupan.
         </h1>
         <p style={{ color: "rgba(245,233,208,.6)", maxWidth: 480, lineHeight: 1.6, marginBottom: 24 }}>
-          Ako se ovo nastavi, pozovi nas direktno. Triša radi kao i obično.
+          Ako se ovo nastavi, pozovi nas direktno.
         </p>
         <a
           href="tel:+381659003742"
