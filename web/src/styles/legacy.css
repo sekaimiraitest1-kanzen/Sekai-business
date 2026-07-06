@@ -1832,3 +1832,226 @@ body:has(.site-banner) .hero-open-tag { top: 120px; }
 @media (max-width: 640px) {
   .site-banner { font-size: 10px; padding: 0 12px; }
 }
+
+/* ── HOMEPAGE V2 — HERO CAROUSEL, GHOST WATERMARK, ICON TILES ──── */
+
+.hero-v2 {
+  position: relative;
+  height: 760px;
+  overflow: hidden;
+  margin-top: 64px;
+}
+.hero-v2-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hero-v2-scrim {
+  position: absolute;
+  inset: 0;
+  /* The source photo (barber tools on light wood) is bright edge-to-edge —
+     unlike the mockup's moodier reference shot — so the text-side of the
+     gradient stays near-opaque much further across than usual to guarantee
+     cream-on-photo legibility, only easing off on the right third. */
+  background: linear-gradient(90deg, rgba(8,8,9,.94) 0%, rgba(8,8,9,.9) 45%, rgba(8,8,9,.72) 62%, rgba(8,8,9,.4) 85%, rgba(8,8,9,.62) 100%);
+  z-index: 2;
+}
+.hero-v2-content {
+  position: relative;
+  z-index: 3;
+  max-width: 1280px;
+  margin: 0 auto;
+  height: 100%;
+  padding: 0 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.hero-v2-inner {
+  max-width: 620px;
+  animation: vukFade .5s ease both;
+}
+@keyframes vukFade {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hero-v2-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(239,233,221,.2);
+  padding: 8px 15px;
+  margin-bottom: 30px;
+  font-size: 11px;
+  letter-spacing: .2em;
+}
+.hero-v2-pill-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--mustard);
+  animation: vukPulse2 1.8s ease-in-out infinite;
+}
+@keyframes vukPulse2 {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .35; transform: scale(.8); }
+}
+.hero-v2-title {
+  margin: 0;
+  font-family: var(--font-anton), 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: 82px;
+  line-height: .92;
+  letter-spacing: .005em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 24px rgba(0,0,0,.55);
+}
+.hero-v2-inner p,
+.hero-v2-phone-num,
+.hero-v2-pill {
+  text-shadow: 0 1px 12px rgba(0,0,0,.5);
+}
+.hero-v2-phone-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 26px 0 40px;
+}
+.hero-v2-phone-icon {
+  display: inline-flex;
+  width: 44px; height: 44px;
+  border: 1px solid rgba(239,233,221,.24);
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hero-v2-phone-num {
+  font-family: var(--font-anton), 'Anton', sans-serif;
+  font-size: 26px;
+  letter-spacing: .04em;
+}
+.hero-v2-arrow-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  width: 52px; height: 52px;
+  background: transparent;
+  border: 1px solid rgba(239,233,221,.24);
+  color: var(--cream);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .2s, color .2s;
+}
+.hero-v2-arrow-btn:hover { border-color: var(--mustard); color: var(--mustard); }
+.hero-v2-arrow-btn.prev { left: 26px; }
+.hero-v2-arrow-btn.next { right: 26px; }
+.hero-v2-rail {
+  position: absolute;
+  left: 0; bottom: 0;
+  z-index: 4;
+  height: 4px;
+  width: 15%;
+  background: var(--mustard);
+}
+.hero-v2-socials {
+  position: absolute;
+  z-index: 4;
+  left: 50%; bottom: 26px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+}
+.hero-v2-socials a { color: #8B857C; transition: color .2s; }
+.hero-v2-socials a:hover { color: var(--mustard); }
+
+/* Ghost watermark word behind a section header */
+.ghost-watermark {
+  position: absolute;
+  left: 0; right: 0;
+  font-family: var(--font-anton), 'Anton', sans-serif;
+  line-height: .8;
+  color: rgba(239,233,221,.035);
+  z-index: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* Reusable kicker: red 34×2 bar + red uppercase label */
+.kicker-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.kicker-bar { width: 34px; height: 2px; background: var(--mustard); }
+.kicker-label { font-size: 12px; font-weight: 600; letter-spacing: .24em; color: var(--mustard); }
+
+/* Skewed red icon tile (services v2) */
+.icon-tile {
+  flex: 0 0 auto;
+  width: 52px; height: 52px;
+  background: var(--mustard);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: skewX(-8deg);
+}
+.icon-tile svg { transform: skewX(8deg); }
+
+/* Team / hours band */
+.band-section { position: relative; }
+.band-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.band-scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(10,10,11,.95) 0%, rgba(10,10,11,.8) 55%, rgba(10,10,11,.9) 100%);
+  z-index: 2;
+}
+.band-content {
+  position: relative; z-index: 3;
+  max-width: 1280px; margin: 0 auto;
+  padding: 96px 40px;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 72px;
+}
+.hours-grid-v2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 44px; }
+.hours-grid-v2 .row {
+  display: flex; justify-content: space-between;
+  padding: 13px 0;
+  border-bottom: 1px solid rgba(239,233,221,.12);
+  font-size: 14px;
+}
+.hours-grid-v2 .day { font-family: var(--font-anton), 'Anton', sans-serif; letter-spacing: .04em; color: var(--cream); }
+
+/* Barber cards */
+.barber-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.barber-card { border: 1px solid rgba(239,233,221,.1); background: var(--brown-900); }
+.barber-photo { position: relative; height: 420px; overflow: hidden; }
+.barber-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.barber-photo-scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(16,16,17,.95) 0%, rgba(16,16,17,0) 45%);
+  z-index: 2;
+}
+.barber-chip {
+  position: absolute; left: 24px; top: 24px; z-index: 3;
+  background: var(--mustard);
+  font-family: var(--font-anton), 'Anton', sans-serif;
+  font-size: 12px; letter-spacing: .08em;
+  padding: 7px 13px;
+}
+.barber-body { padding: 32px; }
+.barber-name { margin: 0; font-family: var(--font-anton), 'Anton', sans-serif; font-size: 30px; letter-spacing: .02em; text-transform: uppercase; color: var(--cream); }
+.barber-role { font-size: 13px; letter-spacing: .14em; color: var(--mustard); margin: 8px 0 16px; }
+.barber-bio { margin: 0 0 26px; font-size: 14px; line-height: 1.65; color: #8B857C; }
+
+@media (max-width: 900px) {
+  .hero-v2 { height: auto; min-height: 560px; padding: 80px 0 48px; }
+  .band-content { grid-template-columns: 1fr; }
+  .barber-grid { grid-template-columns: 1fr; }
+  .hero-v2-title { font-size: 48px; }
+}

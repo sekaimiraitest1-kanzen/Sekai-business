@@ -13,6 +13,15 @@ type Service = {
   price: number;
   duration_min: number;
 };
+type Barber = {
+  id: string;
+  display_name: string | null;
+  photo_url: string | null;
+  role_title_sr: string | null;
+  role_title_lat: string | null;
+  specialty_sr: string | null;
+  specialty_lat: string | null;
+};
 type WorkingHours = Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", { open: string; close: string } | null>;
 
 const DAYS_SR = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
@@ -46,16 +55,21 @@ function generateSlots(open: string, close: string, durationMin: number): string
 
 export function BookingFlow({
   services,
+  barbers,
   salonId,
   salonAddress,
   workingHours,
+  initialBarberId,
 }: {
   services: Service[];
+  barbers: Barber[];
   salonId: string;
   salonAddress: string;
   workingHours: WorkingHours | null;
+  initialBarberId?: string;
 }) {
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+  const [barberId, setBarberId] = useState<string | null>(null);
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
@@ -81,6 +95,16 @@ export function BookingFlow({
     });
   }
 
+  // Deep-link from a homepage "Zakaži kod X" card: preselect the barber and
+  // skip straight to service selection.
+  useEffect(() => {
+    if (initialBarberId && barbers.some((b) => b.id === initialBarberId)) {
+      setBarberId(initialBarberId);
+      setStep(2);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // sync lang from <html data-lang>
   useEffect(() => {
     const sync = () => setLang((document.documentElement.getAttribute("data-lang") as "sr" | "lat") ?? "lat");
@@ -101,12 +125,12 @@ export function BookingFlow({
   // load taken slots when date or service changes; service duration is part
   // of the key so switching from 30-min to 90-min re-fetches with overlap math.
   useEffect(() => {
-    if (!date || !selectedService) {
+    if (!date || !selectedService || !barberId) {
       setTaken([]);
       return;
     }
-    void getTakenSlots(salonId, date, selectedService.duration_min).then(setTaken);
-  }, [date, salonId, selectedService]);
+    void getTakenSlots(salonId, date, selectedService.duration_min, barberId).then(setTaken);
+  }, [date, salonId, selectedService, barberId]);
 
   // Surcharge / loyalty preview: when the customer types their phone in step 4
   // we hit a debounced server lookup. Result drives two mutually-exclusive
@@ -158,12 +182,13 @@ export function BookingFlow({
     return all;
   }, [date, selectedService, workingHours, todayBelgrade, nowHHMM]);
 
-  function go(n: 1 | 2 | 3 | 4 | 5) {
+  function go(n: 1 | 2 | 3 | 4 | 5 | 6) {
     setStep(n);
     if (typeof window !== "undefined") window.scrollTo({ top: 0 });
   }
 
   function reset() {
+    setBarberId(null);
     setServiceId(null);
     setDate(null);
     setTime(null);
@@ -176,11 +201,12 @@ export function BookingFlow({
   }
 
   function handleSubmit() {
-    if (!serviceId || !date || !time) return;
+    if (!barberId || !serviceId || !date || !time) return;
     setSubmitErr(null);
     start(async () => {
       const res = await submitBooking({
         salonId,
+        barberId,
         serviceId,
         date,
         timeSlot: time,
@@ -197,7 +223,7 @@ export function BookingFlow({
           price: svc?.price ?? 0,
           hasEmail: !!email,
         });
-        go(5);
+        go(6);
       } else {
         setSubmitErr(res.error);
       }
@@ -225,8 +251,50 @@ export function BookingFlow({
         {step === 1 && (
           <div className="step-screen active">
             <div className="step-header">
-              <div className="step-eyebrow" data-sr>STEP 1 OF 4</div>
-              <div className="step-eyebrow" data-lat>KORAK 1 OD 4</div>
+              <div className="step-eyebrow" data-sr>STEP 1 OF 5</div>
+              <div className="step-eyebrow" data-lat>KORAK 1 OD 5</div>
+              <h2 className="step-title" data-sr>Choose your barber.</h2>
+              <h2 className="step-title" data-lat>Izaberi majstora.</h2>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {barbers.map((b) => (
+                <div
+                  key={b.id}
+                  className={`service-card ${barberId === b.id ? "selected" : ""}`}
+                  onClick={() => setBarberId(b.id)}
+                  style={{ gridTemplateColumns: "56px 1fr auto" }}
+                >
+                  <div style={{ width: 56, height: 56, background: "var(--brown-900)", overflow: "hidden" }}>
+                    {b.photo_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={b.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    )}
+                  </div>
+                  <div>
+                    <div className="service-card-name">{b.display_name}</div>
+                    <div className="service-card-meta" data-sr>{b.role_title_sr ?? ""}</div>
+                    <div className="service-card-meta" data-lat>{b.role_title_lat ?? ""}</div>
+                  </div>
+                  <div className="service-card-check">✓</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 32 }}>
+              <button className="bk-btn-primary" disabled={!barberId} onClick={() => go(2)}>
+                <span data-sr>CONTINUE →</span>
+                <span data-lat>NASTAVI →</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="step-screen active">
+            <div className="step-header">
+              <div className="step-eyebrow" data-sr>STEP 2 OF 5</div>
+              <div className="step-eyebrow" data-lat>KORAK 2 OD 5</div>
               <h2 className="step-title" data-sr>Choose a service.</h2>
               <h2 className="step-title" data-lat>Izaberi uslugu.</h2>
             </div>
@@ -257,7 +325,7 @@ export function BookingFlow({
             </div>
 
             <div style={{ marginTop: 32 }}>
-              <button ref={continueBtnRef} className="bk-btn-primary" disabled={!serviceId} onClick={() => go(2)}>
+              <button ref={continueBtnRef} className="bk-btn-primary" disabled={!serviceId} onClick={() => go(3)}>
                 <span data-sr>CONTINUE →</span>
                 <span data-lat>NASTAVI →</span>
               </button>
@@ -265,11 +333,11 @@ export function BookingFlow({
           </div>
         )}
 
-        {step === 2 && selectedService && (
+        {step === 3 && selectedService && (
           <div className="step-screen active">
             <div className="step-header">
-              <div className="step-eyebrow" data-sr>STEP 2 OF 4</div>
-              <div className="step-eyebrow" data-lat>KORAK 2 OD 4</div>
+              <div className="step-eyebrow" data-sr>STEP 3 OF 5</div>
+              <div className="step-eyebrow" data-lat>KORAK 3 OD 5</div>
               <h2 className="step-title" data-sr>Choose a date.</h2>
               <h2 className="step-title" data-lat>Izaberi datum.</h2>
             </div>
@@ -292,21 +360,21 @@ export function BookingFlow({
             </div>
 
             <div style={{ display: "flex", gap: 12 }}>
-              <button className="bk-btn-secondary" onClick={() => go(1)} style={{ flex: 1 }}>
+              <button className="bk-btn-secondary" onClick={() => go(2)} style={{ flex: 1 }}>
                 <span data-sr>← BACK</span><span data-lat>← NAZAD</span>
               </button>
-              <button className="bk-btn-primary" disabled={!date} onClick={() => go(3)} style={{ flex: 2 }}>
+              <button className="bk-btn-primary" disabled={!date} onClick={() => go(4)} style={{ flex: 2 }}>
                 <span data-sr>CONTINUE →</span><span data-lat>NASTAVI →</span>
               </button>
             </div>
           </div>
         )}
 
-        {step === 3 && selectedService && date && (
+        {step === 4 && selectedService && date && (
           <div className="step-screen active">
             <div className="step-header">
-              <div className="step-eyebrow" data-sr>STEP 3 OF 4</div>
-              <div className="step-eyebrow" data-lat>KORAK 3 OD 4</div>
+              <div className="step-eyebrow" data-sr>STEP 4 OF 5</div>
+              <div className="step-eyebrow" data-lat>KORAK 4 OD 5</div>
               <h2 className="step-title" data-sr>Choose a time.</h2>
               <h2 className="step-title" data-lat>Izaberi termin.</h2>
             </div>
@@ -336,21 +404,21 @@ export function BookingFlow({
             </div>
 
             <div style={{ marginTop: 24, display: "flex", gap: 12 }}>
-              <button className="bk-btn-secondary" onClick={() => go(2)} style={{ flex: 1 }}>
+              <button className="bk-btn-secondary" onClick={() => go(3)} style={{ flex: 1 }}>
                 <span data-sr>← BACK</span><span data-lat>← NAZAD</span>
               </button>
-              <button className="bk-btn-primary" disabled={!time} onClick={() => go(4)} style={{ flex: 2 }}>
+              <button className="bk-btn-primary" disabled={!time} onClick={() => go(5)} style={{ flex: 2 }}>
                 <span data-sr>CONTINUE →</span><span data-lat>NASTAVI →</span>
               </button>
             </div>
           </div>
         )}
 
-        {step === 4 && selectedService && date && time && (
+        {step === 5 && selectedService && date && time && (
           <div className="step-screen active">
             <div className="step-header">
-              <div className="step-eyebrow" data-sr>STEP 4 OF 4</div>
-              <div className="step-eyebrow" data-lat>KORAK 4 OD 4</div>
+              <div className="step-eyebrow" data-sr>STEP 5 OF 5</div>
+              <div className="step-eyebrow" data-lat>KORAK 5 OD 5</div>
               <h2 className="step-title" data-sr>Your details.</h2>
               <h2 className="step-title" data-lat>Tvoji podaci.</h2>
             </div>
@@ -423,7 +491,7 @@ export function BookingFlow({
             )}
 
             <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-              <button className="bk-btn-secondary" onClick={() => go(3)} style={{ flex: 1 }}>
+              <button className="bk-btn-secondary" onClick={() => go(4)} style={{ flex: 1 }}>
                 <span data-sr>← BACK</span><span data-lat>← NAZAD</span>
               </button>
               <button
@@ -445,7 +513,7 @@ export function BookingFlow({
           </div>
         )}
 
-        {step === 5 && selectedService && date && time && (
+        {step === 6 && selectedService && date && time && (
           <div className="step-screen active">
             <div className="confirm-card">
               <div className="confirm-icon">✓</div>
@@ -456,6 +524,7 @@ export function BookingFlow({
             </div>
 
             <div className="confirm-details">
+              <ConfirmRow labelSr="BARBER" labelLat="MAJSTOR" value={barbers.find((b) => b.id === barberId)?.display_name ?? "—"} />
               <ConfirmRow labelSr="DATE" labelLat="DATUM" value={formatDateLabel(date, lang)} />
               <ConfirmRow labelSr="TIME" labelLat="TERMIN" value={time} />
               <ConfirmRow labelSr="SERVICE" labelLat="USLUGA" value={lang === "lat" ? selectedService.name_lat : selectedService.name_sr} />
@@ -493,7 +562,7 @@ export function BookingFlow({
             setDate(d);
             setTime(null);
             setCalOpen(false);
-            go(3);
+            go(4);
           }}
           lang={lang}
         />
@@ -504,12 +573,13 @@ export function BookingFlow({
 
 // ─── progress bar ───────────────────────────────────
 function ProgressBar({ step }: { step: number }) {
-  const steps: { sr: string; lat: string; idx: 1 | 2 | 3 | 4 | 5 }[] = [
-    { idx: 1, sr: "SERVICE", lat: "USLUGA" },
-    { idx: 2, sr: "DATE", lat: "DATUM" },
-    { idx: 3, sr: "TIME", lat: "TERMIN" },
-    { idx: 4, sr: "DETAILS", lat: "PODACI" },
-    { idx: 5, sr: "CONFIRM", lat: "POTVRDA" },
+  const steps: { sr: string; lat: string; idx: 1 | 2 | 3 | 4 | 5 | 6 }[] = [
+    { idx: 1, sr: "BARBER", lat: "MAJSTOR" },
+    { idx: 2, sr: "SERVICE", lat: "USLUGA" },
+    { idx: 3, sr: "DATE", lat: "DATUM" },
+    { idx: 4, sr: "TIME", lat: "TERMIN" },
+    { idx: 5, sr: "DETAILS", lat: "PODACI" },
+    { idx: 6, sr: "CONFIRM", lat: "POTVRDA" },
   ];
   return (
     <div className="progress-bar">
@@ -517,7 +587,7 @@ function ProgressBar({ step }: { step: number }) {
         const cls = s.idx < step ? "done" : s.idx === step ? "active" : "pending";
         return (
           <div key={s.idx} className="progress-step">
-            <div className={`step-dot ${cls}`}>{s.idx < step ? "✓" : s.idx === 5 ? "✓" : s.idx}</div>
+            <div className={`step-dot ${cls}`}>{s.idx < step ? "✓" : s.idx === 6 ? "✓" : s.idx}</div>
             <div className={`step-label ${cls === "active" ? "active" : ""}`} data-sr>{s.sr}</div>
             <div className={`step-label ${cls === "active" ? "active" : ""}`} data-lat>{s.lat}</div>
           </div>

@@ -59,8 +59,8 @@ export function SiteFooter({
               <a href="/#galerija" data-lat>Galerija</a>
             </li>
             <li>
-              <a href="/#utisci" data-sr>Reviews</a>
-              <a href="/#utisci" data-lat>Utisci</a>
+              <Link href="/blog" data-sr>Blog</Link>
+              <Link href="/blog" data-lat>Blog</Link>
             </li>
             <li>
               <Link href="/zakazivanje" data-sr>Book now</Link>

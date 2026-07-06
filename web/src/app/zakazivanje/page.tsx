@@ -19,10 +19,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ZakazivanjePage() {
+export default async function ZakazivanjePage({ searchParams }: { searchParams: { barber?: string } }) {
   const supabase = createClient();
 
-  const [salonRes, servicesRes] = await Promise.all([
+  const [salonRes, servicesRes, barbersRes] = await Promise.all([
     supabase
       .from("salons")
       .select("id, name, address, working_hours")
@@ -33,9 +33,14 @@ export default async function ZakazivanjePage() {
       .select("id, name_sr, name_lat, price, duration_min, description_sr, description_lat")
       .eq("active", true)
       .order("sort_order", { ascending: true }),
+    supabase
+      .from("public_barbers")
+      .select("id, display_name, photo_url, role_title_sr, role_title_lat, specialty_sr, specialty_lat")
+      .order("public_sort_order", { ascending: true }),
   ]);
 
   const services = servicesRes.data ?? [];
+  const barbers = barbersRes.data ?? [];
   const salon = salonRes.data;
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3050";
@@ -63,9 +68,11 @@ export default async function ZakazivanjePage() {
       <JsonLd data={breadcrumbJsonLd} />
       <BookingFlow
         services={services}
+        barbers={barbers}
         salonId={salon?.id ?? ""}
         salonAddress={salon?.address ?? ""}
         workingHours={salon?.working_hours ?? null}
+        initialBarberId={searchParams.barber}
       />
     </>
   );

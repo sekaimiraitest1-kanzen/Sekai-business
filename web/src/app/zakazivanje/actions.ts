@@ -11,6 +11,7 @@ import { sendPushToSalon } from "@/lib/push/server";
 
 const bookingSchema = z.object({
   salonId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID format"),
+  barberId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID format"),
   serviceId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID format"),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   timeSlot: z.string().regex(/^\d{2}:\d{2}$/),
@@ -106,6 +107,7 @@ export async function submitBooking(input: BookingInput) {
       .select("id, time_slot, services!inner(duration_min)")
       .eq("salon_id", data.salonId)
       .eq("date", data.date)
+      .eq("barber_id", data.barberId)
       .in("status", ["pending", "confirmed"]),
     sb
       .from("blocked_slots")
@@ -150,6 +152,7 @@ export async function submitBooking(input: BookingInput) {
       salon_id: data.salonId,
       customer_id: customerId,
       service_id: data.serviceId,
+      barber_id: data.barberId,
       date: data.date,
       time_slot: data.timeSlot,
       status: "confirmed",
@@ -301,16 +304,20 @@ export async function getTakenSlots(
   salonId: string,
   date: string,
   durationMin: number,
+  barberId?: string,
 ): Promise<string[]> {
   if (!salonId || !date || durationMin <= 0) return [];
   const sb = createAdminClient();
+  let bookingsQuery = sb
+    .from("bookings")
+    .select("time_slot, services!inner(duration_min)")
+    .eq("salon_id", salonId)
+    .eq("date", date)
+    .in("status", ["pending", "confirmed"]);
+  if (barberId) bookingsQuery = bookingsQuery.eq("barber_id", barberId);
+
   const [bookingsRes, blocksRes] = await Promise.all([
-    sb
-      .from("bookings")
-      .select("time_slot, services!inner(duration_min)")
-      .eq("salon_id", salonId)
-      .eq("date", date)
-      .in("status", ["pending", "confirmed"]),
+    bookingsQuery,
     sb
       .from("blocked_slots")
       .select("time_slot")

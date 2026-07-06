@@ -23,6 +23,8 @@ const TABS_STAFF = [
 
 const MORE_OWNER = [
   { href: "/admin/galerija", icon: "🖼", label_sr: "ГАЛЕРИЈА", label_lat: "GALERIJA" },
+  { href: "/admin/berberi", icon: "💈", label_sr: "БЕРБЕРИ", label_lat: "BERBERI" },
+  { href: "/admin/blog", icon: "📰", label_sr: "БЛОГ", label_lat: "BLOG" },
   { href: "/admin/sajt", icon: "📝", label_sr: "САЈТ", label_lat: "SAJT" },
   { href: "/admin/blokirano", icon: "🚫", label_sr: "БЛОКИРАНО", label_lat: "BLOKIRANO" },
   { href: "/admin/statistike", icon: "📊", label_sr: "СТАТИСТИКА", label_lat: "STATISTIKA" },
@@ -44,6 +46,8 @@ export function AdminShell({ session, children }: { session: AdminSession; child
     "/admin/shop": { sr: "SHOP", lat: "SHOP" },
     "/admin/musterije": { sr: "МУШТЕРИЈЕ", lat: "MUŠTERIJE" },
     "/admin/galerija": { sr: "ГАЛЕРИЈА", lat: "GALERIJA" },
+    "/admin/berberi": { sr: "БЕРБЕРИ", lat: "BERBERI" },
+    "/admin/blog": { sr: "БЛОГ", lat: "BLOG" },
     "/admin/sajt": { sr: "САЈТ САДРЖАЈ", lat: "SAJT SADRŽAJ" },
     "/admin/blokirano": { sr: "БЛОКИРАНО", lat: "BLOKIRANO" },
     "/admin/statistike": { sr: "СТАТИСТИКА", lat: "STATISTIKA" },

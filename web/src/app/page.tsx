@@ -3,23 +3,28 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteBanner } from "@/components/site-banner";
 import { JsonLd } from "@/components/json-ld";
 import { createClient } from "@/lib/supabase/server";
-import { computeOpenStatus } from "@/lib/working-hours";
 import { buildLocalBusinessJsonLd } from "@/lib/seo/local-business";
-import { formatPhoneE164 } from "@/lib/phone";
 import { parseSocialLinks, visibleLinks } from "@/lib/social-links";
+import { HeroCarousel } from "./hero-carousel";
+
+type WorkingHoursMap = Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", { open: string; close: string } | null>;
 
 export default async function HomePage() {
   const supabase = createClient();
 
-  // Read salon + services + gallery + site_content in parallel
-  const [salonRes, servicesRes, galleryRes, contentRes] = await Promise.all([
+  // Read salon + services + gallery + site_content + barbers + blog in parallel
+  const [salonRes, servicesRes, galleryRes, contentRes, barbersRes, blogRes] = await Promise.all([
     supabase.from("salons").select("name, address, phone, email, working_hours, social_links").eq("slug", process.env.NEXT_PUBLIC_DEFAULT_SALON_SLUG ?? "trisa").single(),
     supabase.from("services").select("name_sr, name_lat, price, duration_min, featured, description_sr, description_lat, meta_sr, meta_lat").eq("active", true).order("sort_order", { ascending: true }),
     supabase.from("gallery_images").select("id, url, alt_sr, alt_lat, sort_order, size").order("sort_order", { ascending: true }),
     supabase.from("site_content").select("key, value_sr, value_lat"),
+    supabase.from("public_barbers").select("id, display_name, photo_url, bio_sr, bio_lat, specialty_sr, specialty_lat, role_title_sr, role_title_lat").order("public_sort_order", { ascending: true }),
+    supabase.from("blog_posts").select("slug, title_sr, title_lat, cover_image_url, published_at").eq("published", true).order("published_at", { ascending: false }).limit(3),
   ]);
 
   const salon = salonRes.data;
+  const barbers = barbersRes.data ?? [];
+  const blogPosts = blogRes.data ?? [];
   // Featured / VIP services always render LAST so the gold-accent block
   // anchors the bottom of the list. Admin can add new regular services in
   // any sort_order — they'll never push the VIP block out of place.
@@ -41,27 +46,8 @@ export default async function HomePage() {
     lat: content.get(key)?.lat || fallbackLat,
   });
 
-  // 9 site-content slots — fallbacks restore the original page text so a
-  // DB outage / unseeded fresh deploy still renders the salon's voice. DB
-  // values (admin /admin/sajt) take precedence whenever present.
-  const heroEyebrow  = getC("hero_eyebrow",  "STYLE · TRADITION · STORY", "STIL · TRADICIJA · PRIČA");
-  const heroTitle    = getC("hero_title",    "We will keep you an|impeccable look", "Mesto gde se rez|pretvara u priču");
-  const heroSubtitle = getC("hero_subtitle", "Barbershop Vuk — a men's barbershop in Batajnica. Haircuts, beard, good stories. No rush, no fuss. Just what you need.", "Barbershop Vuk — muška berbernica u Batajnici. Šišanje, brada, dobra priča. Bez žurbe, bez kompleksa. Samo ono što treba.");
-  const aboutTitle   = getC("about_title",   "Professional barbershop|for men only.", "Tvoj izgled,|naša pravila.");
-  const aboutStory   = getC("about_story",   "Forget waiting in line and flipping through old magazines. Opened in 2024, we combined honest craft in the barber chair with technology that respects your time. No philosophizing here: the focus is on a sharp fade, precise beard work, and healthy-looking hair.", "Zaboravi na čekanje u redovima i listanje starih novina. Osnovani 2024. godine, spojili smo zanatski pristup berberskoj stolici sa tehnologijom koja poštuje tvoje vreme. Kod nas nema filozofiranja: fokus je na brutalnom Fade-u, hirurški preciznoj bradi i zdravom izgledu kose.");
-  const review1      = getC("review_1",      "Best haircut in Batajnica. Always on time, never rushed, and I leave happy. Price is fair, atmosphere is great.", "Najbolje šišanje u Batajnici. Uvek stignu na vreme, nikad ne žurim, i izlazim srećan. Cena ok, atmosfera super.");
-  const review2      = getC("review_2",      "I've been coming since opening day. Never disappointed. They know exactly how I like it. My son comes here too.", "Dolazim od prvog dana otvaranja. Nikad me nisu razočarali. Znaju kako šišam. I sin mi ide ovde.");
-  const review3      = getC("review_3",      "Nice, warm barbershop. No pretension, no \"stylist\" attitude. Just good craft and a good story.", "Lepa, topla berbernica. Bez naduvavanja, bez „stilista\". Samo dobar zanat i prava priča.");
+  const aboutStory = getC("about_story", "Forget waiting in line and flipping through old magazines. Opened in 2024, we combined honest craft in the barber chair with technology that respects your time. No philosophizing here: the focus is on a sharp fade, precise beard work, and healthy-looking hair.", "Zaboravi na čekanje u redovima i listanje starih novina. Osnovani 2024. godine, spojili smo zanatski pristup berberskoj stolici sa tehnologijom koja poštuje tvoje vreme. Kod nas nema filozofiranja: fokus je na brutalnom Fade-u, hirurški preciznoj bradi i zdravom izgledu kose.");
 
-  // Hero / about titles use a "|" line-break marker — first segment renders normally, second as <em>.
-  const splitTitle = (s: string): [string, string] => {
-    const i = s.indexOf("|");
-    return i < 0 ? [s, ""] : [s.slice(0, i), s.slice(i + 1)];
-  };
-  const [heroTitleA_sr,  heroTitleB_sr]  = splitTitle(heroTitle.sr);
-  const [heroTitleA_lat, heroTitleB_lat] = splitTitle(heroTitle.lat);
-  const [aboutTitleA_sr,  aboutTitleB_sr]  = splitTitle(aboutTitle.sr);
-  const [aboutTitleA_lat, aboutTitleB_lat] = splitTitle(aboutTitle.lat);
   // Use DB gallery if seeded; otherwise fall back to the legacy hardcoded list so
   // the section never goes empty (BUG-6 fix). DB values come from /admin/galerija.
   // CSS classes g1..g6 define the asymmetric grid spans (g1 is 2×2 large, g2/g3/g6 span 2 cols, g4/g5 span 1).
@@ -75,12 +61,6 @@ export default async function HomePage() {
         altLat: row.alt_lat ?? "",
       }))
     : GALLERY.map((g) => ({ cls: g.cls, src: g.src, altSr: g.alt, altLat: g.alt }));
-  // working_hours are stored in salon-local time (Belgrade). On Vercel the
-  // process is UTC, so convert before computing today's open status — otherwise
-  // a 21:00 Belgrade visit would read as 19:00/20:00 UTC and the badge could
-  // claim "ОТВОРЕНО · ДО 20H" past closing.
-  const belgradeNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Belgrade" }));
-  const openStatus = computeOpenStatus(salon?.working_hours, belgradeNow);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3050";
   const socialLinks = parseSocialLinks((salon as unknown as { social_links?: unknown })?.social_links);
@@ -105,6 +85,8 @@ export default async function HomePage() {
     sameAs: sameAsUrls,
   });
 
+  const workingHours = (salon?.working_hours ?? null) as WorkingHoursMap | null;
+
   return (
     <>
       <JsonLd data={localBusinessJsonLd} />
@@ -114,171 +96,209 @@ export default async function HomePage() {
       <main id="main-content">
 
       {/* ── HERO ────────────────────────────────────────── */}
-      <section className="hero" id="hero">
-        <div className={`hero-open-tag${openStatus.isOpen ? "" : " closed"}`}>
-          <div className="hero-open-dot"></div>
-          <span data-sr>{openStatus.textSr}</span>
-          <span data-lat>{openStatus.textLat}</span>
+      <header id="pocetna" className="hero-v2">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="hero-v2-bg" src="/hero-vuk.webp" alt="Barbershop Vuk" />
+        <div className="hero-v2-scrim" />
+
+        <HeroCarousel
+          address={salon?.address ?? "Majora Zorana Radosavljevića 138, Beograd 11273"}
+          phone={salon?.phone ?? "060 1424576"}
+        />
+
+        <div className="hero-v2-rail" />
+        <div className="hero-v2-socials">
+          {socialLinks.instagram.enabled && socialLinks.instagram.url.trim() !== "" && (
+            <a href={socialLinks.instagram.url} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></svg>
+            </a>
+          )}
+          {socialLinks.facebook.enabled && socialLinks.facebook.url.trim() !== "" && (
+            <a href={socialLinks.facebook.url} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
+            </a>
+          )}
         </div>
-        <div className="hero-grid">
-          <div className="hero-text">
-            <h1 className="hero-title">
-              <span data-sr>
-                {heroTitleA_sr}
-                {heroTitleB_sr && <><br /><em>{heroTitleB_sr}</em></>}
-              </span>
-              <span data-lat>
-                {heroTitleA_lat}
-                {heroTitleB_lat && <><br /><em>{heroTitleB_lat}</em></>}
-              </span>
-            </h1>
-
-            <p className="hero-sub">
-              <span data-sr>{heroSubtitle.sr}</span>
-              <span data-lat>{heroSubtitle.lat}</span>
-            </p>
-
-            <div className="hero-contact">
-              <div className="hero-contact-item">
-                <span aria-hidden="true">📍</span> {salon?.address ?? "Majora Zorana Radosavljevića 138, Beograd 11273"}
-              </div>
-              <div className="hero-contact-item">
-                <span aria-hidden="true">📞</span>{" "}
-                <a href={`tel:${formatPhoneE164(salon?.phone ?? "060 1424576")}`}>{salon?.phone ?? "060 1424576"}</a>
-              </div>
-            </div>
-
-            <div className="hero-cta-row">
-              <a href="/zakazivanje" className="btn-primary" style={{ fontSize: "15px", padding: "14px 32px" }}>
-                <span data-sr>BOOK NOW</span>
-                <span data-lat>ZAKAŽI TERMIN</span> →
-              </a>
-              <a href="#usluge" className="btn-ghost">
-                <span data-sr>SERVICES & PRICES</span>
-                <span data-lat>CENE I USLUGE</span>
-              </a>
-            </div>
-          </div>
-
-          <div className="hero-photo">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/hero-vuk.webp" alt="Barbershop Vuk" />
-          </div>
-        </div>
-      </section>
+      </header>
 
       {/* ── O NAMA ──────────────────────────────────────── */}
-      <section className="section onama" id="onama">
-        <div className="onama-grid">
-          <div className="onama-text">
-            <div className="section-label" data-reveal="left">
-              <span data-sr>§ 02 · ABOUT</span>
-              <span data-lat>§ 02 · O NAMA</span>
-            </div>
-            <h2 className="section-title" data-reveal="up-lg">
-              <span data-sr>
-                {aboutTitleA_sr}
-                {aboutTitleB_sr && <><br />{aboutTitleB_sr}</>}
-              </span>
-              <span data-lat>
-                {aboutTitleA_lat}
-                {aboutTitleB_lat && <><br />{aboutTitleB_lat}</>}
-              </span>
+      <section id="onama" className="section onama" style={{ position: "relative" }}>
+        <div className="ghost-watermark" style={{ top: 64, fontSize: 170 }}>BARBERVUK</div>
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80 }}>
+          <div>
+            <div className="kicker-row"><span className="kicker-bar" /><span className="kicker-label" data-sr>ABOUT</span><span className="kicker-label" data-lat>O NAMA</span></div>
+            <h2 className="section-title" style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
+              <span data-sr>Professional barbershop<br />for men only.</span>
+              <span data-lat>Profesionalna<br />berbernica<br />samo za muškarce</span>
             </h2>
-            <p data-reveal="up">
+          </div>
+          <div>
+            <p style={{ margin: "0 0 40px", fontSize: 16, lineHeight: 1.75, color: "var(--brown-700)" }}>
               <span data-sr>{aboutStory.sr}</span>
               <span data-lat>{aboutStory.lat}</span>
             </p>
-            <p data-reveal="up">
-              <span data-sr>
-                We book exclusively through the app — reserve in 10 seconds, show up, get your treatment, and get on with your day. While you're here, pick up top-shelf products or serious tools to keep your style going at home.
-              </span>
-              <span data-lat>
-                Radimo isključivo preko aplikacije — bukiraš za 10 sekundi, pojaviš se, dobiješ tretman i nastavljaš dalje. Dok si tu, pokupi najbolje preparate ili ozbiljan alat da održavaš stil i kod kuće.
-              </span>
-            </p>
-            <p className="loyalty-line" data-reveal="up">
-              <span data-sr>Every 6th haircut is on the house. Book now, don't wait.</span>
-              <span data-lat>Šesto šišanje časti kuća. Zakaži, ne čekaj.</span>
-            </p>
-            <a href="#usluge" className="btn-primary" data-reveal="up" style={{ marginTop: 8 }}>
-              <span data-sr>LEARN MORE</span>
-              <span data-lat>SAZNAJ VIŠE</span>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 36, marginBottom: 42 }}>
+              <div>
+                <div style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 30, letterSpacing: ".02em" }}>OD 2019.</div>
+                <div style={{ height: 1, background: "rgba(26,24,21,.14)", margin: "14px 0" }} />
+                <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#8B857C" }}>
+                  <span data-sr>Years of loyal customers and word-of-mouth referrals.</span>
+                  <span data-lat>Godinama gradimo stalne mušterije i preporuke od usta do usta.</span>
+                </p>
+              </div>
+              <div>
+                <div style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 30, letterSpacing: ".02em" }}>
+                  1000+ <span style={{ color: "var(--mustard)" }}>KLIJENATA</span>
+                </div>
+                <div style={{ height: 1, background: "rgba(26,24,21,.14)", margin: "14px 0" }} />
+                <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#8B857C" }}>
+                  <span data-sr>Average 4.9 rating from over 120 reviews.</span>
+                  <span data-lat>Prosečna ocena 4.9 na osnovu preko 120 recenzija.</span>
+                </p>
+              </div>
+            </div>
+            <a href="#usluge" className="btn-primary">
+              <span data-sr>LEARN MORE</span><span data-lat>DETALJNIJE</span> →
             </a>
-          </div>
-
-          <div className="stats-grid" data-reveal-stagger="fast">
-            <div className="stat-card" data-reveal="up">
-              <div className="stat-val">2024</div>
-              <div className="stat-label">
-                <span data-sr>SINCE</span>
-                <span data-lat>OSNOVANI</span>
-              </div>
-            </div>
-            <div className="stat-card" data-reveal="up">
-              <div className="stat-val">{services.length || 9}+</div>
-              <div className="stat-label">
-                <span data-sr>SERVICES</span>
-                <span data-lat>USLUGA U PONUDI</span>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
       {/* ── USLUGE ──────────────────────────────────────── */}
-      <section className="section usluge" id="usluge">
-        <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
-          <div className="section-label" data-reveal="left">
-            <span data-sr>§ 03 · SERVICES</span>
-            <span data-lat>§ 03 · USLUGE</span>
-          </div>
-          <h2 className="section-title" data-reveal="up-lg">
-            <span data-sr>What we provide.</span>
-            <span data-lat>Šta radimo.</span>
+      <section id="usluge" className="section usluge" style={{ position: "relative" }}>
+        <div className="ghost-watermark" style={{ top: 0, fontSize: 150 }} data-sr>SERVICES</div>
+        <div className="ghost-watermark" style={{ top: 0, fontSize: 150 }} data-lat>USLUGE</div>
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 1280, margin: "0 auto" }}>
+          <div className="kicker-row"><span className="kicker-bar" /><span className="kicker-label" data-sr>SERVICES</span><span className="kicker-label" data-lat>USLUGE</span></div>
+          <h2 className="section-title" style={{ color: "var(--cream)", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
+            <span data-sr>What we offer</span><span data-lat>Šta nudimo</span>
           </h2>
-          <p className="usluge-note" data-sr data-reveal="fade">
-            PAID BY CASH OR CARD · NO SURCHARGES · NO "SERVICE FEES"
-          </p>
-          <p className="usluge-note" data-lat data-reveal="fade">
-            PLAĆA SE GOTOVINOM ILI KARTICOM · BEZ DOPLATA · BEZ "SERVISNIH NAKNADA"
+          <p style={{ margin: "0 0 60px", maxWidth: 520, fontSize: 15, lineHeight: 1.65, color: "#8B857C" }}>
+            <span data-sr>Haircuts, beard, and shaving — everything for a tidy look. Cash or card, no surcharges.</span>
+            <span data-lat>Šišanje, brada i brijanje — sve što treba za uredan izgled. Plaćanje gotovinom ili karticom, bez doplata.</span>
           </p>
 
-          <div className="services-grid" data-reveal-stagger>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "52px 56px" }}>
             {(services.length > 0 ? services : DEFAULT_SERVICES_GRID).map((s, i) => {
               const nameSr = "name_sr" in s ? s.name_sr : s.nameSr;
               const nameLat = "name_lat" in s ? s.name_lat : s.nameLat;
               const descSr = "description_sr" in s ? s.description_sr : undefined;
               const descLat = "description_lat" in s ? s.description_lat : undefined;
               return (
-                <div key={i} className="svc-tile" data-reveal="up">
-                  <div className="svc-tile-icon" aria-hidden="true">{serviceIcon(nameLat)}</div>
-                  <div className="svc-tile-name">
-                    <span data-sr>{nameSr}</span>
-                    <span data-lat>{nameLat}</span>
-                  </div>
-                  {(descSr || descLat) && (
-                    <div className="svc-tile-desc">
-                      <span data-sr>{descSr ?? ""}</span>
-                      <span data-lat>{descLat ?? ""}</span>
-                    </div>
-                  )}
-                  <div className="svc-tile-price">
-                    <span data-sr>FROM </span>
-                    <span data-lat>OD </span>
-                    {s.price} RSD
+                <div key={i} style={{ display: "flex", gap: 20 }}>
+                  <span className="icon-tile">{serviceIconSvg(nameLat)}</span>
+                  <div>
+                    <h3 style={{ margin: "0 0 10px", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 20, letterSpacing: ".02em", textTransform: "uppercase" }}>
+                      <span data-sr>{nameSr}</span><span data-lat>{nameLat}</span>
+                    </h3>
+                    {(descSr || descLat) && (
+                      <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.6, color: "#8B857C" }}>
+                        <span data-sr>{descSr ?? ""}</span><span data-lat>{descLat ?? ""}</span>
+                      </p>
+                    )}
+                    <span style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 13, letterSpacing: ".06em", color: "var(--mustard)" }}>
+                      <span data-sr>FROM </span><span data-lat>OD </span>{s.price} RSD
+                    </span>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          <div className="services-footer" data-reveal="up">
-            <a href="/zakazivanje" className="btn-primary">
-              <span data-sr>BOOK NOW →</span>
-              <span data-lat>ZAKAŽI TERMIN →</span>
-            </a>
+          <div style={{ marginTop: 40, display: "flex", justifyContent: "flex-end" }}>
+            <a href="/zakazivanje" className="btn-primary"><span data-sr>BOOK NOW →</span><span data-lat>ZAKAŽI TERMIN →</span></a>
           </div>
+        </div>
+      </section>
+
+      {/* ── TIM / RADNO VREME ───────────────────────────── */}
+      <section className="band-section">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="band-bg" src="/legacy/uploads/IMG_0025.jpeg" alt="" />
+        <div className="band-scrim" />
+        <div className="band-content">
+          <div>
+            <div className="kicker-row"><span className="kicker-bar" /><span className="kicker-label" data-sr>OUR TEAM</span><span className="kicker-label" data-lat>NAŠ TIM</span></div>
+            <h2 style={{ margin: "0 0 22px", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, fontSize: 46, lineHeight: 1, textTransform: "uppercase", color: "var(--cream)" }}>
+              <span data-sr>A team of pros<br />is waiting for you</span>
+              <span data-lat>Tim profesionalaca<br />te čeka</span>
+            </h2>
+            <p style={{ margin: "0 0 32px", maxWidth: 420, fontSize: 15, lineHeight: 1.7, color: "#c9c3b8" }}>
+              <span data-sr>No waiting in line. Book a time, show up, and let us handle the rest.</span>
+              <span data-lat>Bez čekanja u redovima. Zakaži termin, dođi i prepusti se — mi ćemo se pobrinuti za ostalo.</span>
+            </p>
+            <a href="#berberi" className="btn-primary"><span data-sr>BOOK NOW →</span><span data-lat>ZAKAŽI TERMIN →</span></a>
+          </div>
+          <div>
+            <div className="kicker-row"><span className="kicker-bar" /><span className="kicker-label" data-sr>OPENING HOURS</span><span className="kicker-label" data-lat>RADNO VREME</span></div>
+            <div className="hours-grid-v2">
+              {(["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const).map((key) => {
+                const labels: Record<string, { sr: string; lat: string }> = {
+                  mon: { sr: "MON", lat: "PON" }, tue: { sr: "TUE", lat: "UTO" }, wed: { sr: "WED", lat: "SRE" },
+                  thu: { sr: "THU", lat: "ČET" }, fri: { sr: "FRI", lat: "PET" }, sat: { sr: "SAT", lat: "SUB" }, sun: { sr: "SUN", lat: "NED" },
+                };
+                const wh = workingHours?.[key];
+                return (
+                  <div key={key} className="row">
+                    <span className="day" style={{ color: key === "sun" ? "var(--mustard)" : undefined }}>
+                      <span data-sr>{labels[key].sr}</span><span data-lat>{labels[key].lat}</span>
+                    </span>
+                    {wh ? (
+                      <span style={{ color: "#c9c3b8" }}>{wh.open.slice(0, 5)} — {wh.close.slice(0, 5)}</span>
+                    ) : (
+                      <span style={{ color: "#6f6a62" }}><span data-sr>CLOSED</span><span data-lat>ZATVORENO</span></span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── BERBERI ─────────────────────────────────────── */}
+      <section id="berberi" className="section">
+        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+          <div className="kicker-row"><span className="kicker-bar" /><span className="kicker-label" data-sr>OUR BARBERS</span><span className="kicker-label" data-lat>MAJSTORI</span></div>
+          <h2 className="section-title" style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
+            <span data-sr>Pick your barber</span><span data-lat>Izaberi svog berberina</span>
+          </h2>
+          <p style={{ margin: "0 0 56px", maxWidth: 520, fontSize: 15, lineHeight: 1.65, color: "#8B857C" }}>
+            <span data-sr>Two master barbers work at Vuk&apos;s. Book directly with the one you want — each appointment goes on his own schedule.</span>
+            <span data-lat>Kod Vuka rade dvojica majstora. Zakaži direktno kod onog kod koga želiš — svaki termin ide na njegov raspored.</span>
+          </p>
+
+          {barbers.length > 0 && (
+            <div className="barber-grid">
+              {barbers.map((b) => (
+                <div key={b.id} className="barber-card">
+                  <div className="barber-photo">
+                    {b.photo_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={b.photo_url} alt={b.display_name ?? ""} />
+                    )}
+                    <div className="barber-photo-scrim" />
+                    {(b.specialty_sr || b.specialty_lat) && (
+                      <span className="barber-chip">
+                        <span data-sr>{b.specialty_sr}</span><span data-lat>{b.specialty_lat}</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="barber-body">
+                    <h3 className="barber-name">{b.display_name}</h3>
+                    <div className="barber-role"><span data-sr>{b.role_title_sr}</span><span data-lat>{b.role_title_lat}</span></div>
+                    {(b.bio_sr || b.bio_lat) && (
+                      <p className="barber-bio"><span data-sr>{b.bio_sr}</span><span data-lat>{b.bio_lat}</span></p>
+                    )}
+                    <a href={`/zakazivanje?barber=${b.id}`} className="btn-primary" style={{ width: "100%", justifyContent: "center" }}>
+                      <span data-sr>Book with {b.display_name} →</span>
+                      <span data-lat>Zakaži kod {b.display_name} →</span>
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -286,11 +306,11 @@ export default async function HomePage() {
       <section className="galerija" id="galerija">
         <div className="galerija-header">
           <div>
-            <div className="section-label" style={{ color: "var(--mustard)" }} data-reveal="left">
+            <div className="section-label" style={{ color: "var(--mustard)" }}>
               <span data-sr>§ 04 · GALLERY</span>
               <span data-lat>§ 04 · GALERIJA</span>
             </div>
-            <h2 className="section-title" style={{ color: "var(--cream)", marginBottom: 0 }} data-reveal="up-lg">
+            <h2 className="section-title" style={{ color: "var(--cream)", marginBottom: 0 }}>
               <span data-sr>Our work.</span>
               <span data-lat>Naš rad.</span>
             </h2>
@@ -301,7 +321,7 @@ export default async function HomePage() {
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: "var(--font-space-grotesk), 'Space Grotesk', sans-serif",
                 fontSize: "12px",
                 letterSpacing: ".1em",
                 color: "rgba(212,165,58,.5)",
@@ -315,9 +335,9 @@ export default async function HomePage() {
           )}
         </div>
 
-        <div className="gallery-grid" data-reveal-stagger>
+        <div className="gallery-grid">
           {gallery.map((g, i) => (
-            <div key={i} className={`gallery-item ${g.cls}`} data-reveal="scale">
+            <div key={i} className={`gallery-item ${g.cls}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={g.src}
@@ -331,122 +351,47 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── UTISCI ──────────────────────────────────────── */}
-      <section className="section utisci" id="utisci">
-        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div className="section-label" data-reveal="left">
-            <span data-sr>§ 05 · REVIEWS</span>
-            <span data-lat>§ 05 · UTISCI</span>
-          </div>
-          <h2 className="section-title" data-reveal="up-lg">
-            <span data-sr>What our customers say.</span>
-            <span data-lat>Šta kažu mušterije.</span>
-          </h2>
-
-          <div className="reviews-grid" data-reveal-stagger="slow">
-            {REVIEWS.map((r, i) => {
-              const dbText = [review1, review2, review3][i];
-              // getC() always returns either DB value or hardcoded fallback,
-              // so we always have text to render (no skip).
-              return (
-                <div key={i} className="review-card" data-reveal="up">
-                  <div className="review-quote-mark">&quot;</div>
-                  <div className="review-stars">★★★★★</div>
-                  <p className="review-text" data-sr>{dbText.sr}</p>
-                  <p className="review-text" data-lat>{dbText.lat}</p>
-                  <div className="review-meta">
-                    <div className="review-avatar" data-sr>{r.initialsSr}</div>
-                    <div className="review-avatar" data-lat>{r.initialsLat}</div>
-                    <div>
-                      <div className="review-author" data-sr>{r.authorSr}</div>
-                      <div className="review-author" data-lat>{r.authorLat}</div>
-                      <div className="review-source" data-sr>{r.sourceSr}</div>
-                      <div className="review-source" data-lat>{r.sourceLat}</div>
-                    </div>
+      {/* ── BLOG ────────────────────────────────────────── */}
+      {blogPosts.length > 0 && (
+        <section id="blog" className="section" style={{ position: "relative" }}>
+          <div className="ghost-watermark" style={{ top: -30, fontSize: 150 }} data-sr>TIPS</div>
+          <div className="ghost-watermark" style={{ top: -30, fontSize: 150 }} data-lat>SAVETI</div>
+          <div style={{ position: "relative", zIndex: 1, maxWidth: 1280, margin: "0 auto" }}>
+            <div className="kicker-row"><span className="kicker-bar" /><span className="kicker-label" data-sr>BLOG</span><span className="kicker-label" data-lat>BLOG</span></div>
+            <h2 className="section-title" style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
+              <span data-sr>Our blog</span><span data-lat>Naš blog</span>
+            </h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28, marginTop: 48 }}>
+              {blogPosts.map((p) => (
+                <a key={p.slug} href={`/blog/${p.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+                  <div style={{ position: "relative", height: 260, overflow: "hidden" }}>
+                    {p.cover_image_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={p.cover_image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    )}
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── LOKACIJA ────────────────────────────────────── */}
-      <section className="section lokacija" id="lokacija">
-        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div className="section-label" data-reveal="left">
-            <span data-sr>§ 06 · LOCATION</span>
-            <span data-lat>§ 06 · LOKACIJA</span>
-          </div>
-          <h2 className="section-title" data-reveal="up-lg">
-            <span data-sr>Find us.</span>
-            <span data-lat>Gde smo.</span>
-          </h2>
-
-          <div className="lokacija-grid" data-reveal-stagger="slow">
-            <a
-              data-reveal="scale"
-              className="map-card"
-              href={`https://maps.google.com/?q=${encodeURIComponent(salon?.address ?? "Majora Zorana Radosavljevića 138, Beograd")}`}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={`Otvori ${salon?.address ?? "Majora Zorana Radosavljevića 138, Beograd"} u Google Maps`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/mapa-lokacija.webp"
-                alt="Mapa lokacije Barbershop Vuk u Batajnici"
-                className="map-card-img"
-                width={1200}
-                height={675}
-                loading="lazy"
-              />
-              <div className="map-card-overlay" aria-hidden="true" />
-              <div className="map-card-address">
-                <span>📍</span>
-                <span>{salon?.address ?? "Majora Zorana Radosavljevića 138, Beograd"}</span>
-              </div>
-              <span className="map-card-cta">
-                <span data-sr>OPEN IN GOOGLE MAPS</span>
-                <span data-lat>OTVORI U GOOGLE MAPS</span>
-                <span className="map-card-cta-arrow" aria-hidden="true">→</span>
-              </span>
-            </a>
-
-            <div data-reveal="up">
-              <HoursCard workingHours={salon?.working_hours} />
-
-              <div className="contact-info">
-                <div className="contact-row">
-                  <span>📞</span>
-                  <a
-                    href={`tel:${formatPhoneE164(salon?.phone ?? "060 1424576")}`}
-                    style={{ color: "inherit", textDecoration: "none" }}
-                  >
-                    {salon?.phone ?? "060 1424576"}
-                  </a>
-                </div>
-                <div className="contact-row">
-                  <span>✉</span>
-                  <span>{salon?.email ?? "sekaimiraitest1@gmail.com"}</span>
-                </div>
-                <div className="contact-row">
-                  <span>📍</span>
-                  <span>{salon?.address ?? "Majora Zorana Radosavljevića 138, Beograd"}</span>
-                </div>
-              </div>
+                  <h3 style={{ margin: "22px 0 10px", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 19, lineHeight: 1.2, textTransform: "uppercase" }}>
+                    <span data-sr>{p.title_sr}</span><span data-lat>{p.title_lat}</span>
+                  </h3>
+                  {p.published_at && (
+                    <span style={{ fontSize: 12, letterSpacing: ".08em", color: "var(--mustard)" }}>
+                      {new Date(p.published_at).toLocaleDateString("sr-RS", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}
+                    </span>
+                  )}
+                </a>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── CTA BAND ────────────────────────────────────── */}
-      <section className="cta-band" data-reveal-stagger="slow">
-        <p className="cta-band-eyebrow" data-reveal="fade">
+      <section className="cta-band">
+        <p className="cta-band-eyebrow">
           <span data-sr>NO RUSH · NO WAITING</span>
           <span data-lat>BEZ ŽURBE · BEZ ČEKANJA</span>
         </p>
-        <h2 className="cta-band-title" data-reveal="up-lg">
+        <h2 className="cta-band-title">
           <span data-sr>
             Book online.
             <br />
@@ -458,12 +403,12 @@ export default async function HomePage() {
             Dođi kad želiš.
           </span>
         </h2>
-        <a href="/zakazivanje" className="btn-dark" data-reveal="up">
+        <a href="/zakazivanje" className="btn-dark">
           <span data-sr>BOOK NOW →</span>
           <span data-lat>ZAKAŽI TERMIN →</span>
         </a>
-        <p className="cta-band-note" data-sr data-reveal="fade">Book in under 30 seconds. No account needed.</p>
-        <p className="cta-band-note" data-lat data-reveal="fade">Rezervacija za manje od 30 sekundi. Bez naloga.</p>
+        <p className="cta-band-note" data-sr>Book in under 30 seconds. No account needed.</p>
+        <p className="cta-band-note" data-lat>Rezervacija za manje od 30 sekundi. Bez naloga.</p>
       </section>
 
       </main>
@@ -472,71 +417,6 @@ export default async function HomePage() {
     </>
   );
 }
-
-// ──────────────────────────────────────────────────────────
-// Hours card — picks today and highlights the row
-// ──────────────────────────────────────────────────────────
-type WorkingHours = Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", { open: string; close: string } | null>;
-
-function HoursCard({ workingHours }: { workingHours?: WorkingHours | null }) {
-  const days: { key: keyof WorkingHours; sr: string; lat: string }[] = [
-    { key: "mon", sr: "Monday", lat: "Ponedeljak" },
-    { key: "tue", sr: "Tuesday", lat: "Utorak" },
-    { key: "wed", sr: "Wednesday", lat: "Sreda" },
-    { key: "thu", sr: "Thursday", lat: "Četvrtak" },
-    { key: "fri", sr: "Friday", lat: "Petak" },
-    { key: "sat", sr: "Saturday", lat: "Subota" },
-    { key: "sun", sr: "Sunday", lat: "Nedelja" },
-  ];
-
-  const todayIndex = (new Date().getDay() + 6) % 7; // Mon=0..Sun=6
-
-  return (
-    <div className="hours-card">
-      <div className="hours-title" data-sr>OPENING HOURS</div>
-      <div className="hours-title" data-lat>RADNO VREME</div>
-      {days.map((d, i) => {
-        const wh = workingHours?.[d.key];
-        const isToday = i === todayIndex;
-        return (
-          <div key={d.key} className={`hours-row ${isToday ? "today" : ""}`}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span className="hours-day" data-sr>{d.sr}</span>
-              <span className="hours-day" data-lat>{d.lat}</span>
-              {isToday && (
-                <>
-                  <span className="today-badge" data-sr>TODAY</span>
-                  <span className="today-badge" data-lat>DANAS</span>
-                </>
-              )}
-            </div>
-            {wh ? (
-              <span className="hours-time">
-                {wh.open} — {wh.close}
-              </span>
-            ) : (
-              <>
-                <span className="hours-closed" data-sr>CLOSED</span>
-                <span className="hours-closed" data-lat>ZATVORENO</span>
-              </>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ──────────────────────────────────────────────────────────
-// Reviewer metadata for the testimonials section. Only initials, author name,
-// and source label live in code — the actual review text is editable via
-// /admin/sajt → review_1 / review_2 / review_3 (site_content table).
-// ──────────────────────────────────────────────────────────
-const REVIEWS = [
-  { initialsSr: "MK", initialsLat: "MK", authorSr: "Marko K.", authorLat: "Marko K.", sourceSr: "Google · 2 wk. ago", sourceLat: "Google · 2 ned." },
-  { initialsSr: "NJ", initialsLat: "NJ", authorSr: "Nikola J.", authorLat: "Nikola J.", sourceSr: "Google · 1 mo. ago", sourceLat: "Google · 1 mes." },
-  { initialsSr: "SP", initialsLat: "SP", authorSr: "Stefan P.", authorLat: "Stefan P.", sourceSr: "Google · 3 wk. ago", sourceLat: "Google · 3 ned." },
-];
 
 // Used as the empty-DB fallback for /#usluge (matches Barbershop Vuk's
 // service catalog). Once admin /admin/usluge has rows, this list is bypassed.
@@ -552,13 +432,24 @@ const DEFAULT_SERVICES_GRID = [
   { nameSr: "Clipper cut + beard", nameLat: "Mašinica klasično + brada", price: 1700 },
 ];
 
-// Heuristic icon per service, keyed off the Latin name (ASCII, safe to match on).
-function serviceIcon(nameLat: string): string {
+// Line-SVG icons per service, keyed off the Latin name (ASCII, safe to match on).
+// Matches the new design's skewed-tile icon treatment (no emoji).
+function serviceIconSvg(nameLat: string): JSX.Element {
   const n = nameLat.toLowerCase();
-  if (n.includes("+ brada") || n.includes("+ beard")) return "💈";
-  if (n.includes("brijanje") || n.includes("shave")) return "🪒";
-  if (n.includes("brada") || n.includes("beard")) return "🧔";
-  return "✂️";
+  const stroke = { stroke: "#EFE9DD", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, fill: "none" };
+  if (n.includes("brijanje") || n.includes("shave")) {
+    return <svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M4 4l7 7" /><rect x="10" y="10" width="10" height="4" rx="1" transform="rotate(45 15 12)" /><path d="M14 14l-7 7" /></svg>;
+  }
+  if (n.includes("brada") || n.includes("beard")) {
+    return <svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M3 8c3 0 4 2 9 2s6-2 9-2" /><path d="M3 8c0 5 3 9 9 9s9-4 9-9" /></svg>;
+  }
+  if (n.includes("fade")) {
+    return <svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M4 20c2-6 4-9 8-9s6 2 8 5" /><path d="M12 11V4" /><path d="M9 6l3-3 3 3" /></svg>;
+  }
+  if (n.includes("duge") || n.includes("long")) {
+    return <svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M4 21c0-4 3-7 8-7s8 3 8 7" /><path d="M8 10a4 4 0 0 0 8 0V6a4 4 0 0 0-8 0z" /></svg>;
+  }
+  return <svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><line x1="20" y1="4" x2="8.12" y2="15.88" /><line x1="14.47" y1="14.48" x2="20" y2="20" /><line x1="8.12" y1="8.12" x2="12" y2="12" /></svg>;
 }
 
 // Used as the empty-DB fallback for /#galerija. Source files live in
