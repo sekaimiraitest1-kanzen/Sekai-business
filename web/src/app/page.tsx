@@ -434,21 +434,10 @@ const DEFAULT_SERVICES_GRID = [
 
 // Line-SVG icons per service, keyed off the Latin name (ASCII, safe to match on).
 // Matches the new design's skewed-tile icon treatment (no emoji).
-function serviceIconSvg(nameLat: string): JSX.Element {
-  const n = nameLat.toLowerCase();
+// Same scissors icon for every service tile — one consistent mark rather
+// than a different heuristic-matched glyph per service name.
+function serviceIconSvg(_nameLat: string): JSX.Element {
   const stroke = { stroke: "#EFE9DD", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, fill: "none" };
-  if (n.includes("brijanje") || n.includes("shave")) {
-    return <svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M4 4l7 7" /><rect x="10" y="10" width="10" height="4" rx="1" transform="rotate(45 15 12)" /><path d="M14 14l-7 7" /></svg>;
-  }
-  if (n.includes("brada") || n.includes("beard")) {
-    return <svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M3 8c3 0 4 2 9 2s6-2 9-2" /><path d="M3 8c0 5 3 9 9 9s9-4 9-9" /></svg>;
-  }
-  if (n.includes("fade")) {
-    return <svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M4 20c2-6 4-9 8-9s6 2 8 5" /><path d="M12 11V4" /><path d="M9 6l3-3 3 3" /></svg>;
-  }
-  if (n.includes("duge") || n.includes("long")) {
-    return <svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M4 21c0-4 3-7 8-7s8 3 8 7" /><path d="M8 10a4 4 0 0 0 8 0V6a4 4 0 0 0-8 0z" /></svg>;
-  }
   return <svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><line x1="20" y1="4" x2="8.12" y2="15.88" /><line x1="14.47" y1="14.48" x2="20" y2="20" /><line x1="8.12" y1="8.12" x2="12" y2="12" /></svg>;
 }
 
