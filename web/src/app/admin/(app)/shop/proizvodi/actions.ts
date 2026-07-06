@@ -31,11 +31,14 @@ export async function upsertProduct(input: ProductInput) {
     // external integration that still reads them gets a sensible value. The
     // public site reads name_sr / name_lat directly from the bilingual columns.
     name: input.name_lat,
-    name_sr: input.name_sr,
+    // English name/description are no longer required in the admin form —
+    // if left blank, fall back to the Latin value so the public site never
+    // shows empty text when a visitor switches to English.
+    name_sr: input.name_sr || input.name_lat,
     name_lat: input.name_lat,
     brand: input.brand ?? null,
     description: input.description_lat ?? null,
-    description_sr: input.description_sr ?? null,
+    description_sr: input.description_sr || input.description_lat || null,
     description_lat: input.description_lat ?? null,
     price: input.price,
     category: input.category ?? null,

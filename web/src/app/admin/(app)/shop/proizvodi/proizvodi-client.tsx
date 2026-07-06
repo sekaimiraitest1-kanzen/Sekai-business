@@ -285,7 +285,7 @@ function ProductEditor({ product, categories: initialCategories, onClose }: { pr
             AKTIVAN (vidljiv u shop-u)
           </label>
 
-          <button className="adm-btn adm-btn-block" disabled={pending || !nameSr || !nameLat || !price} onClick={save}>SAČUVAJ</button>
+          <button className="adm-btn adm-btn-block" disabled={pending || !nameLat || !price} onClick={save}>SAČUVAJ</button>
           {product && (
             <button className="adm-btn adm-btn-danger adm-btn-block" disabled={pending} onClick={() => {
               if (confirm(`Obrisi "${product.name_lat}"?`)) start(async () => { await deleteProduct(product.id); onClose(); });

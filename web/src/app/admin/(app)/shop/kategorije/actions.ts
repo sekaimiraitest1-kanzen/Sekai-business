@@ -16,7 +16,10 @@ export async function upsertCategory(input: {
   const row = {
     salon_id: session.salonId,
     slug: input.slug,
-    name_sr: input.name_sr,
+    // English name is no longer required in the admin form — if left
+    // blank, fall back to the Latin name so the public site never shows
+    // an empty category label when a visitor switches to English.
+    name_sr: input.name_sr || input.name_lat,
     name_lat: input.name_lat,
     active: input.active,
   };

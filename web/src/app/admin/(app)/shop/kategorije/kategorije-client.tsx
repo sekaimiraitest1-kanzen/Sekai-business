@@ -70,7 +70,7 @@ function CategoryEditor({ category, onClose }: { category: Category | null; onCl
           <label style={{ display: "flex", gap: 8, alignItems: "center", color: "var(--cream)" }}>
             <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /> AKTIVNA
           </label>
-          <button className="adm-btn adm-btn-block" disabled={pending || !sr || !lat || !slug} onClick={() => start(async () => { await upsertCategory({ id: category?.id, slug, name_sr: sr, name_lat: lat, active }); onClose(); })}>SAČUVAJ</button>
+          <button className="adm-btn adm-btn-block" disabled={pending || !lat || !slug} onClick={() => start(async () => { await upsertCategory({ id: category?.id, slug, name_sr: sr, name_lat: lat, active }); onClose(); })}>SAČUVAJ</button>
           {category && <button className="adm-btn adm-btn-danger adm-btn-block" disabled={pending} onClick={() => { if (confirm(`Obrisi ${category.name_lat}?`)) start(async () => { await deleteCategory(category.id); onClose(); }); }}>OBRIŠI</button>}
           <button className="adm-btn adm-btn-secondary adm-btn-block" onClick={onClose}>OTKAŽI</button>
         </div>
