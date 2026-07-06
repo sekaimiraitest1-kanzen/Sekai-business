@@ -2072,3 +2072,50 @@ body:has(.site-banner) .hero-open-tag { top: 120px; }
   .barber-grid { grid-template-columns: 1fr; }
   .hero-v2-title { font-size: 48px; }
 }
+
+/* ── PREMIUM BUTTON FEEL ──────────────────────────────────────────
+   Every primary/ghost/dark button and the hero arrows get the same
+   tactile response: a soft lift + shadow on hover, and a quick,
+   slightly-overshooting press on click — the "feels expensive" cue
+   most template buttons skip. Respects prefers-reduced-motion. */
+.btn-primary,
+.btn-ghost,
+.btn-dark,
+.hero-v2-arrow-btn,
+.barber-photo ~ .barber-body .btn-primary {
+  transition: background .2s, border-color .2s, color .2s,
+    transform .18s cubic-bezier(.34, 1.2, .64, 1),
+    box-shadow .25s cubic-bezier(.2, .8, .2, 1);
+}
+.btn-primary:hover,
+.btn-dark:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -10px rgba(0, 0, 0, .5);
+}
+.btn-ghost:hover {
+  transform: translateY(-2px);
+}
+.hero-v2-arrow-btn:hover {
+  transform: translateY(-2px);
+}
+.btn-primary:active,
+.btn-ghost:active,
+.btn-dark:active {
+  transform: translateY(0) scale(.95);
+  transition-duration: .09s;
+}
+.hero-v2-arrow-btn:active {
+  transform: translateY(0) scale(.88);
+  transition-duration: .09s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary, .btn-ghost, .btn-dark, .hero-v2-arrow-btn {
+    transition: background .2s, border-color .2s, color .2s;
+  }
+  .btn-primary:hover, .btn-dark:hover, .btn-ghost:hover, .hero-v2-arrow-btn:hover,
+  .btn-primary:active, .btn-ghost:active, .btn-dark:active, .hero-v2-arrow-btn:active {
+    transform: none;
+    box-shadow: none;
+  }
+}

@@ -126,19 +126,19 @@ export default async function HomePage() {
         <div className="ghost-watermark" style={{ top: 64, fontSize: 170 }}>BARBERVUK</div>
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80 }}>
           <div>
-            <div className="kicker-row"><span className="kicker-bar" /><span className="kicker-label" data-sr>ABOUT</span><span className="kicker-label" data-lat>O NAMA</span></div>
-            <h2 className="section-title" style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
+            <div className="kicker-row" data-reveal="left"><span className="kicker-bar" /><span className="kicker-label" data-sr>ABOUT</span><span className="kicker-label" data-lat>O NAMA</span></div>
+            <h2 className="section-title" data-reveal="up-lg" style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
               <span data-sr>Professional barbershop<br />for men only.</span>
               <span data-lat>Profesionalna<br />berbernica<br />samo za muškarce</span>
             </h2>
           </div>
           <div>
-            <p style={{ margin: "0 0 40px", fontSize: 16, lineHeight: 1.75, color: "var(--brown-700)" }}>
+            <p data-reveal="up" style={{ margin: "0 0 40px", fontSize: 16, lineHeight: 1.75, color: "var(--brown-700)" }}>
               <span data-sr>{aboutStory.sr}</span>
               <span data-lat>{aboutStory.lat}</span>
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 36, marginBottom: 42 }}>
-              <div>
+            <div data-reveal-stagger="fast" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 36, marginBottom: 42 }}>
+              <div data-reveal="up">
                 <div style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 30, letterSpacing: ".02em" }}>OD 2019.</div>
                 <div style={{ height: 1, background: "rgba(26,24,21,.14)", margin: "14px 0" }} />
                 <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#8B857C" }}>
@@ -146,7 +146,7 @@ export default async function HomePage() {
                   <span data-lat>Godinama gradimo stalne mušterije i preporuke od usta do usta.</span>
                 </p>
               </div>
-              <div>
+              <div data-reveal="up">
                 <div style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 30, letterSpacing: ".02em" }}>
                   1000+ <span style={{ color: "var(--mustard)" }}>KLIJENATA</span>
                 </div>
@@ -157,7 +157,7 @@ export default async function HomePage() {
                 </p>
               </div>
             </div>
-            <a href="#usluge" className="btn-primary">
+            <a href="#usluge" className="btn-primary" data-reveal="up">
               <span data-sr>LEARN MORE</span><span data-lat>DETALJNIJE</span> →
             </a>
           </div>
@@ -169,23 +169,23 @@ export default async function HomePage() {
         <div className="ghost-watermark" style={{ top: 0, fontSize: 150 }} data-sr>SERVICES</div>
         <div className="ghost-watermark" style={{ top: 0, fontSize: 150 }} data-lat>USLUGE</div>
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1280, margin: "0 auto" }}>
-          <div className="kicker-row"><span className="kicker-bar" /><span className="kicker-label" data-sr>SERVICES</span><span className="kicker-label" data-lat>USLUGE</span></div>
-          <h2 className="section-title" style={{ color: "var(--cream)", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
+          <div className="kicker-row" data-reveal="left"><span className="kicker-bar" /><span className="kicker-label" data-sr>SERVICES</span><span className="kicker-label" data-lat>USLUGE</span></div>
+          <h2 className="section-title" data-reveal="up-lg" style={{ color: "var(--cream)", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
             <span data-sr>What we offer</span><span data-lat>Šta nudimo</span>
           </h2>
-          <p style={{ margin: "0 0 60px", maxWidth: 520, fontSize: 15, lineHeight: 1.65, color: "#8B857C" }}>
+          <p data-reveal="fade" style={{ margin: "0 0 60px", maxWidth: 520, fontSize: 15, lineHeight: 1.65, color: "#8B857C" }}>
             <span data-sr>Haircuts, beard, and shaving — everything for a tidy look. Cash or card, no surcharges.</span>
             <span data-lat>Šišanje, brada i brijanje — sve što treba za uredan izgled. Plaćanje gotovinom ili karticom, bez doplata.</span>
           </p>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "52px 56px" }}>
+          <div data-reveal-stagger style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "52px 56px" }}>
             {(services.length > 0 ? services : DEFAULT_SERVICES_GRID).map((s, i) => {
               const nameSr = "name_sr" in s ? s.name_sr : s.nameSr;
               const nameLat = "name_lat" in s ? s.name_lat : s.nameLat;
               const descSr = "description_sr" in s ? s.description_sr : undefined;
               const descLat = "description_lat" in s ? s.description_lat : undefined;
               return (
-                <div key={i} style={{ display: "flex", gap: 20 }}>
+                <div key={i} data-reveal="up" style={{ display: "flex", gap: 20 }}>
                   <span className="icon-tile">{serviceIconSvg(nameLat)}</span>
                   <div>
                     <h3 style={{ margin: "0 0 10px", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 20, letterSpacing: ".02em", textTransform: "uppercase", color: "var(--cream)" }}>
@@ -205,7 +205,7 @@ export default async function HomePage() {
             })}
           </div>
 
-          <div style={{ marginTop: 40, display: "flex", justifyContent: "flex-end" }}>
+          <div data-reveal="up" style={{ marginTop: 40, display: "flex", justifyContent: "flex-end" }}>
             <a href="/zakazivanje" className="btn-primary"><span data-sr>BOOK NOW →</span><span data-lat>ZAKAŽI TERMIN →</span></a>
           </div>
         </div>
@@ -218,20 +218,20 @@ export default async function HomePage() {
         <div className="band-scrim" />
         <div className="band-content">
           <div>
-            <div className="kicker-row"><span className="kicker-bar" /><span className="kicker-label" data-sr>OUR TEAM</span><span className="kicker-label" data-lat>NAŠ TIM</span></div>
-            <h2 style={{ margin: "0 0 22px", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, fontSize: 46, lineHeight: 1, textTransform: "uppercase", color: "var(--cream)" }}>
+            <div className="kicker-row" data-reveal="left"><span className="kicker-bar" /><span className="kicker-label" data-sr>OUR TEAM</span><span className="kicker-label" data-lat>NAŠ TIM</span></div>
+            <h2 data-reveal="up-lg" style={{ margin: "0 0 22px", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, fontSize: 46, lineHeight: 1, textTransform: "uppercase", color: "var(--cream)" }}>
               <span data-sr>A team of pros<br />is waiting for you</span>
               <span data-lat>Tim profesionalaca<br />te čeka</span>
             </h2>
-            <p style={{ margin: "0 0 32px", maxWidth: 420, fontSize: 15, lineHeight: 1.7, color: "#c9c3b8" }}>
+            <p data-reveal="up" style={{ margin: "0 0 32px", maxWidth: 420, fontSize: 15, lineHeight: 1.7, color: "#c9c3b8" }}>
               <span data-sr>No waiting in line. Book a time, show up, and let us handle the rest.</span>
               <span data-lat>Bez čekanja u redovima. Zakaži termin, dođi i prepusti se — mi ćemo se pobrinuti za ostalo.</span>
             </p>
-            <a href="#berberi" className="btn-primary"><span data-sr>BOOK NOW →</span><span data-lat>ZAKAŽI TERMIN →</span></a>
+            <a href="#berberi" className="btn-primary" data-reveal="up"><span data-sr>BOOK NOW →</span><span data-lat>ZAKAŽI TERMIN →</span></a>
           </div>
           <div>
-            <div className="kicker-row"><span className="kicker-bar" /><span className="kicker-label" data-sr>OPENING HOURS</span><span className="kicker-label" data-lat>RADNO VREME</span></div>
-            <div className="hours-grid-v2">
+            <div className="kicker-row" data-reveal="left"><span className="kicker-bar" /><span className="kicker-label" data-sr>OPENING HOURS</span><span className="kicker-label" data-lat>RADNO VREME</span></div>
+            <div className="hours-grid-v2" data-reveal="scale">
               {(["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const).map((key) => {
                 const labels: Record<string, { sr: string; lat: string }> = {
                   mon: { sr: "MON", lat: "PON" }, tue: { sr: "TUE", lat: "UTO" }, wed: { sr: "WED", lat: "SRE" },
@@ -259,19 +259,19 @@ export default async function HomePage() {
       {/* ── BERBERI ─────────────────────────────────────── */}
       <section id="berberi" className="section">
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <div className="kicker-row"><span className="kicker-bar" /><span className="kicker-label" data-sr>OUR BARBERS</span><span className="kicker-label" data-lat>MAJSTORI</span></div>
-          <h2 className="section-title" style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
+          <div className="kicker-row" data-reveal="left"><span className="kicker-bar" /><span className="kicker-label" data-sr>OUR BARBERS</span><span className="kicker-label" data-lat>MAJSTORI</span></div>
+          <h2 className="section-title" data-reveal="up-lg" style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
             <span data-sr>Pick your barber</span><span data-lat>Izaberi svog majstora</span>
           </h2>
-          <p style={{ margin: "0 0 56px", maxWidth: 520, fontSize: 15, lineHeight: 1.65, color: "#8B857C" }}>
+          <p data-reveal="fade" style={{ margin: "0 0 56px", maxWidth: 520, fontSize: 15, lineHeight: 1.65, color: "#8B857C" }}>
             <span data-sr>Two master barbers work at Vuk&apos;s. Book directly with the one you want — each appointment goes on his own schedule.</span>
             <span data-lat>Kod Vuka rade dvojica majstora. Zakaži direktno kod onog kod koga želiš — svaki termin ide na njegov raspored.</span>
           </p>
 
           {barbers.length > 0 && (
-            <div className="barber-grid">
+            <div className="barber-grid" data-reveal-stagger>
               {barbers.map((b) => (
-                <div key={b.id} className="barber-card">
+                <div key={b.id} className="barber-card" data-reveal="up">
                   <div className="barber-photo">
                     {b.photo_url && (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -306,11 +306,11 @@ export default async function HomePage() {
       <section className="galerija" id="galerija">
         <div className="galerija-header">
           <div>
-            <div className="section-label" style={{ color: "var(--mustard)" }}>
+            <div className="section-label" data-reveal="left" style={{ color: "var(--mustard)" }}>
               <span data-sr>§ 04 · GALLERY</span>
               <span data-lat>§ 04 · GALERIJA</span>
             </div>
-            <h2 className="section-title" style={{ color: "var(--cream)", marginBottom: 0 }}>
+            <h2 className="section-title" data-reveal="up-lg" style={{ color: "var(--cream)", marginBottom: 0 }}>
               <span data-sr>Our work.</span>
               <span data-lat>Naš rad.</span>
             </h2>
@@ -335,9 +335,9 @@ export default async function HomePage() {
           )}
         </div>
 
-        <div className="gallery-grid">
+        <div className="gallery-grid" data-reveal-stagger>
           {gallery.map((g, i) => (
-            <div key={i} className={`gallery-item ${g.cls}`}>
+            <div key={i} className={`gallery-item ${g.cls}`} data-reveal="scale">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={g.src}
@@ -357,13 +357,13 @@ export default async function HomePage() {
           <div className="ghost-watermark" style={{ top: -30, fontSize: 150 }} data-sr>TIPS</div>
           <div className="ghost-watermark" style={{ top: -30, fontSize: 150 }} data-lat>SAVETI</div>
           <div style={{ position: "relative", zIndex: 1, maxWidth: 1280, margin: "0 auto" }}>
-            <div className="kicker-row"><span className="kicker-bar" /><span className="kicker-label" data-sr>BLOG</span><span className="kicker-label" data-lat>BLOG</span></div>
-            <h2 className="section-title" style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
+            <div className="kicker-row" data-reveal="left"><span className="kicker-bar" /><span className="kicker-label" data-sr>BLOG</span><span className="kicker-label" data-lat>BLOG</span></div>
+            <h2 className="section-title" data-reveal="up-lg" style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
               <span data-sr>Our blog</span><span data-lat>Naš blog</span>
             </h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28, marginTop: 48 }}>
+            <div data-reveal-stagger style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28, marginTop: 48 }}>
               {blogPosts.map((p) => (
-                <a key={p.slug} href={`/blog/${p.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+                <a key={p.slug} href={`/blog/${p.slug}`} data-reveal="up" style={{ textDecoration: "none", color: "inherit" }}>
                   <div style={{ position: "relative", height: 260, overflow: "hidden" }}>
                     {p.cover_image_url && (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -386,12 +386,12 @@ export default async function HomePage() {
       )}
 
       {/* ── CTA BAND ────────────────────────────────────── */}
-      <section className="cta-band">
-        <p className="cta-band-eyebrow">
+      <section className="cta-band" data-reveal-stagger="slow">
+        <p className="cta-band-eyebrow" data-reveal="fade">
           <span data-sr>NO RUSH · NO WAITING</span>
           <span data-lat>BEZ ŽURBE · BEZ ČEKANJA</span>
         </p>
-        <h2 className="cta-band-title">
+        <h2 className="cta-band-title" data-reveal="up-lg">
           <span data-sr>
             Book online.
             <br />
@@ -403,12 +403,12 @@ export default async function HomePage() {
             Dođi kad želiš.
           </span>
         </h2>
-        <a href="/zakazivanje" className="btn-dark">
+        <a href="/zakazivanje" className="btn-dark" data-reveal="up">
           <span data-sr>BOOK NOW →</span>
           <span data-lat>ZAKAŽI TERMIN →</span>
         </a>
-        <p className="cta-band-note" data-sr>Book in under 30 seconds. No account needed.</p>
-        <p className="cta-band-note" data-lat>Rezervacija za manje od 30 sekundi. Bez naloga.</p>
+        <p className="cta-band-note" data-sr data-reveal="fade">Book in under 30 seconds. No account needed.</p>
+        <p className="cta-band-note" data-lat data-reveal="fade">Rezervacija za manje od 30 sekundi. Bez naloga.</p>
       </section>
 
       </main>
