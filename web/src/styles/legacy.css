@@ -1940,8 +1940,12 @@ body:has(.site-banner) .hero-open-tag { top: 120px; }
 }
 .hero-v2-arrow-btn {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  /* Not vertically centered on the whole hero on purpose — the headline
+     wraps to 2 or 3 lines depending on which slide/language is active, so
+     a true center point sometimes lands mid-word. Anchored from the
+     bottom, tuned to clear the CTA row even for the tallest (3-line)
+     slide, while staying above the rail/social icons for the shortest. */
+  bottom: 58px;
   z-index: 4;
   width: 52px; height: 52px;
   background: transparent;
