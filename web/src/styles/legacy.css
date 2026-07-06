@@ -1847,15 +1847,18 @@ body:has(.site-banner) .hero-open-tag { top: 120px; }
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Mild darken so the photo doesn't compete with the text — the real
+     legibility fix is the color on .hero-v2-content above; this is just
+     polish now that text actually renders in cream, not near-black. */
+  filter: brightness(0.75) contrast(1.03);
 }
 .hero-v2-scrim {
   position: absolute;
   inset: 0;
   /* The source photo (barber tools on light wood) is bright edge-to-edge —
      unlike the mockup's moodier reference shot — so the text-side of the
-     gradient stays near-opaque much further across than usual to guarantee
-     cream-on-photo legibility, only easing off on the right third. */
-  background: linear-gradient(90deg, rgba(8,8,9,.94) 0%, rgba(8,8,9,.9) 45%, rgba(8,8,9,.72) 62%, rgba(8,8,9,.4) 85%, rgba(8,8,9,.62) 100%);
+     gradient stays fairly dark further across than usual before easing off. */
+  background: linear-gradient(90deg, rgba(8,8,9,.92) 0%, rgba(8,8,9,.86) 45%, rgba(8,8,9,.62) 65%, rgba(8,8,9,.32) 85%, rgba(8,8,9,.55) 100%);
   z-index: 2;
 }
 .hero-v2-content {
@@ -1868,6 +1871,10 @@ body:has(.site-banner) .hero-open-tag { top: 120px; }
   display: flex;
   flex-direction: column;
   justify-content: center;
+  /* Root cause of the illegible hero text: nothing under here ever set its
+     own color, so it inherited body's near-black default instead of cream.
+     Setting it once here cascades to the pill, title, address, and phone. */
+  color: var(--cream);
 }
 .hero-v2-inner {
   max-width: 620px;
