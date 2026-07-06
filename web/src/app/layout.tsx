@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { Cormorant_Garamond, Playfair_Display, Oswald, Inter, JetBrains_Mono } from "next/font/google";
+import { Anton, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import "@/styles/legacy.css";
 import "@/styles/legacy-booking.css";
@@ -14,40 +14,17 @@ import { PlausibleScript } from "@/components/plausible";
 import { SkipToContent } from "@/components/skip-to-content";
 import { ScrollRevealRunner } from "@/components/scroll-reveal";
 
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin", "cyrillic"],
-  weight: ["600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-cormorant",
+const anton = Anton({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-anton",
   display: "swap",
 });
 
-const playfair = Playfair_Display({
-  subsets: ["latin", "cyrillic"],
-  weight: ["700", "900"],
-  style: ["normal", "italic"],
-  variable: "--font-playfair",
-  display: "swap",
-});
-
-const oswald = Oswald({
-  subsets: ["latin", "cyrillic"],
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-oswald",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "500", "600"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "500"],
-  variable: "--font-jetbrains",
+  variable: "--font-space-grotesk",
   display: "swap",
 });
 
@@ -131,7 +108,7 @@ export default function RootLayout({
     <html
       lang={lang === "sr" ? "en" : "sr-Latn"}
       data-lang={lang}
-      className={`${cormorant.variable} ${playfair.variable} ${oswald.variable} ${inter.variable} ${jetbrains.variable}`}
+      className={`${anton.variable} ${spaceGrotesk.variable}`}
     >
       <body>
         <SkipToContent />

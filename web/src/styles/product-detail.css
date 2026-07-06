@@ -11,7 +11,7 @@
 }
 
 .pd-breadcrumbs {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -63,7 +63,7 @@
   );
 }
 .pd-placeholder-brand {
-  font-family: 'Oswald', sans-serif;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   font-size: 56px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -71,7 +71,7 @@
   text-transform: uppercase;
 }
 .pd-placeholder-meta {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   font-size: 10px;
   letter-spacing: 0.14em;
   color: rgba(245, 233, 208, 0.18);
@@ -85,7 +85,7 @@
   gap: 0;
 }
 .pd-brand {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -93,17 +93,16 @@
   margin-bottom: 12px;
 }
 .pd-name {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-anton), 'Anton', sans-serif;
   font-size: clamp(28px, 4vw, 44px);
-  font-weight: 900;
-  font-style: italic;
+  font-weight: 400;
+  font-style: normal;
   line-height: 1.1;
   letter-spacing: -0.02em;
   color: var(--brown-950);
-  margin-bottom: 20px;
-}
+  margin-bottom: 20px; text-transform: uppercase;}
 .pd-stock {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -114,7 +113,7 @@
 .pd-stock-out   { color: var(--danger); font-weight: 700; }
 
 .pd-desc {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   font-size: 15px;
   line-height: 1.75;
   color: var(--brown-700);
@@ -132,22 +131,21 @@
   border-top: 1px solid rgba(92, 58, 34, 0.12);
 }
 .pd-price {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-anton), 'Anton', sans-serif;
   font-size: 56px;
-  font-weight: 900;
-  font-style: italic;
+  font-weight: 400;
+  font-style: normal;
   color: var(--mustard);
-  line-height: 1;
-}
+  line-height: 1; text-transform: uppercase;}
 .pd-price span {
   font-size: 18px;
   font-style: normal;
   color: rgba(212, 165, 58, 0.55);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   margin-left: 6px;
 }
 .pd-unit-price {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   font-size: 11px;
   color: var(--brown-700);
   opacity: 0.6;
@@ -162,7 +160,7 @@
   margin-bottom: 16px;
 }
 .pd-qty-label {
-  font-family: 'Oswald', sans-serif;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -179,7 +177,7 @@
   height: 48px;
   background: transparent;
   border: none;
-  font-family: 'Oswald', sans-serif;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   font-size: 22px;
   color: var(--brown-950);
   cursor: pointer;
@@ -202,14 +200,13 @@
   border-left: 1px solid rgba(92, 58, 34, 0.15);
   border-right: 1px solid rgba(92, 58, 34, 0.15);
   text-align: center;
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-anton), 'Anton', sans-serif;
   font-size: 22px;
-  font-weight: 900;
-  font-style: italic;
+  font-weight: 400;
+  font-style: normal;
   color: var(--brown-950);
   outline: none;
-  -moz-appearance: textfield;
-}
+  -moz-appearance: textfield; text-transform: uppercase;}
 .pd-qty-input::-webkit-outer-spin-button,
 .pd-qty-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -226,7 +223,7 @@
   background: var(--mustard);
   color: var(--brown-950);
   border: none;
-  font-family: 'Oswald', sans-serif;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -269,7 +266,7 @@
   font-size: 13px;
 }
 .pd-meta-label {
-  font-family: 'Oswald', sans-serif;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -278,7 +275,7 @@
   opacity: 0.7;
 }
 .pd-meta-value {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   color: var(--brown-950);
   line-height: 1.5;
 }

@@ -40,10 +40,11 @@
   -webkit-user-drag: none;
 }
 .cart-fly-ghost-letter {
-  font-family: "Playfair Display", serif;
+  font-family: var(--font-anton), "Anton", sans-serif;
   font-size: 28px;
-  font-style: italic;
-  font-weight: 900;
+  font-style: normal;
+  font-weight: 400;
+  text-transform: uppercase;
   color: var(--mustard);
   line-height: 1;
 }
@@ -112,7 +113,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif;
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
@@ -242,10 +243,11 @@
   flex: 1;
 }
 .cart-fly-toast-name {
-  font-family: "Playfair Display", serif;
+  font-family: var(--font-anton), "Anton", sans-serif;
   font-size: 15px;
-  font-style: italic;
-  font-weight: 700;
+  font-style: normal;
+  font-weight: 400;
+  text-transform: uppercase;
   color: var(--cream);
   line-height: 1.2;
   white-space: nowrap;
@@ -253,7 +255,7 @@
   text-overflow: ellipsis;
 }
 .cart-fly-toast-meta {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif;
   font-size: 10.5px;
   letter-spacing: 0.06em;
   color: rgba(245, 233, 208, 0.62);
@@ -263,7 +265,7 @@
   font-weight: 700;
 }
 .cart-fly-toast-cta {
-  font-family: "Oswald", sans-serif;
+  font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.1em;
