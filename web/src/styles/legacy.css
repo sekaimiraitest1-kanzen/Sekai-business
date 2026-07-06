@@ -954,7 +954,7 @@ body {
   letter-spacing: -0.02em;
   color: var(--brown-950);
   margin-bottom: 32px;
-  line-height: 1;
+  line-height: 1.15;
 }
 
 .btn-dark {
