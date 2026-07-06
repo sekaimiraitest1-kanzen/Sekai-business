@@ -46,7 +46,7 @@ export default async function HomePage() {
     lat: content.get(key)?.lat || fallbackLat,
   });
 
-  const aboutStory = getC("about_story", "Forget waiting in line and flipping through old magazines. Opened in 2024, we combined honest craft in the barber chair with technology that respects your time. No philosophizing here: the focus is on a sharp fade, precise beard work, and healthy-looking hair.", "Zaboravi na čekanje u redovima i listanje starih novina. Osnovani 2024. godine, spojili smo zanatski pristup berberskoj stolici sa tehnologijom koja poštuje tvoje vreme. Kod nas nema filozofiranja: fokus je na brutalnom Fade-u, hirurški preciznoj bradi i zdravom izgledu kose.");
+  const aboutStory = getC("about_story", "Forget waiting in line and flipping through old magazines. Opened in 2024, we combined honest craft in the barber chair with technology that respects your time. No philosophizing here: the focus is on a sharp fade, precise beard work, and healthy-looking hair.", "Tvoje vreme je previše vredno da bi ga trošio na čekanje u salonu. Od 2024. godine spajamo vrhunsku tradiciju stare škole i pametna digitalna rešenja za zakazivanje. Bez suvišnog filozofiranja i komplikovanja – garantujemo ti hirurški precizne konture, brutalan fade i savršeno zdravu kosu.");
 
   // Use DB gallery if seeded; otherwise fall back to the legacy hardcoded list so
   // the section never goes empty (BUG-6 fix). DB values come from /admin/galerija.
