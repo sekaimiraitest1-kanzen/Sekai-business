@@ -196,7 +196,7 @@ export default async function HomePage() {
                         <span data-sr>{descSr ?? ""}</span><span data-lat>{descLat ?? ""}</span>
                       </p>
                     )}
-                    <span style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 13, letterSpacing: ".06em", color: "var(--mustard)" }}>
+                    <span style={{ display: "inline-block", marginTop: 6, fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 20, letterSpacing: ".02em", color: "var(--mustard)" }}>
                       <span data-sr>FROM </span><span data-lat>OD </span>{s.price} RSD
                     </span>
                   </div>
