@@ -188,7 +188,7 @@ export default async function HomePage() {
                 <div key={i} style={{ display: "flex", gap: 20 }}>
                   <span className="icon-tile">{serviceIconSvg(nameLat)}</span>
                   <div>
-                    <h3 style={{ margin: "0 0 10px", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 20, letterSpacing: ".02em", textTransform: "uppercase" }}>
+                    <h3 style={{ margin: "0 0 10px", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 20, letterSpacing: ".02em", textTransform: "uppercase", color: "var(--cream)" }}>
                       <span data-sr>{nameSr}</span><span data-lat>{nameLat}</span>
                     </h3>
                     {(descSr || descLat) && (
@@ -261,7 +261,7 @@ export default async function HomePage() {
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <div className="kicker-row"><span className="kicker-bar" /><span className="kicker-label" data-sr>OUR BARBERS</span><span className="kicker-label" data-lat>MAJSTORI</span></div>
           <h2 className="section-title" style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
-            <span data-sr>Pick your barber</span><span data-lat>Izaberi svog berberina</span>
+            <span data-sr>Pick your barber</span><span data-lat>Izaberi svog majstora</span>
           </h2>
           <p style={{ margin: "0 0 56px", maxWidth: 520, fontSize: 15, lineHeight: 1.65, color: "#8B857C" }}>
             <span data-sr>Two master barbers work at Vuk&apos;s. Book directly with the one you want — each appointment goes on his own schedule.</span>
