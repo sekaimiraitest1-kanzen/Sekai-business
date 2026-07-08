@@ -1919,7 +1919,7 @@ body:has(.site-banner) .hero-open-tag { top: 120px; }
    letter lands on, not just the first. */
 .hero-v2-title span[data-sr],
 .hero-v2-title span[data-lat] {
-  background-image: linear-gradient(to bottom, var(--mustard) 0%, var(--mustard) 15%, var(--cream) 15%, var(--cream) 100%);
+  background-image: linear-gradient(to bottom, var(--mustard) 0%, var(--mustard) 18%, var(--cream) 18%, var(--cream) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
