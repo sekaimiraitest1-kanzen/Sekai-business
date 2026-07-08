@@ -449,7 +449,7 @@ export function StatistikeClient(props: {
                     <div style={{ fontSize: 12, color: "rgba(245,233,208,.5)", marginTop: 3 }}>{c.phone ?? "—"}</div>
                   </div>
                   <div style={{ fontSize: 11, color: "rgba(245,233,208,.4)", textAlign: "right" }}>
-                    {c.created_at ? new Date(c.created_at).toLocaleDateString("sr-RS", { day: "numeric", month: "short" }) : ""}
+                    {c.created_at ? new Date(c.created_at).toLocaleDateString("sr-Latn-RS", { day: "numeric", month: "short" }) : ""}
                     {c.utm_source && <div style={{ color: "rgba(245,233,208,.3)" }}>{c.utm_source}</div>}
                   </div>
                 </div>

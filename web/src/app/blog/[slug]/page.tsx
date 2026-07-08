@@ -74,7 +74,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           </h1>
           {post.published_at && (
             <span style={{ fontSize: 12, letterSpacing: ".08em", color: "var(--mustard)", display: "block", marginBottom: 32 }}>
-              {new Date(post.published_at).toLocaleDateString("sr-RS", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}
+              {new Date(post.published_at).toLocaleDateString("sr-Latn-RS", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}
             </span>
           )}
           <div style={{ fontSize: 16, lineHeight: 1.75, color: "rgba(239,233,221,.85)" }} data-sr>

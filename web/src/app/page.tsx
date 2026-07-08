@@ -368,12 +368,12 @@ export default async function HomePage() {
 
       {/* ── BLOG ────────────────────────────────────────── */}
       {blogPosts.length > 0 && (
-        <section id="blog" className="section" style={{ position: "relative" }}>
+        <section id="blog" className="section" style={{ position: "relative", background: "var(--brown-950)" }}>
           <div className="ghost-watermark" style={{ top: -30, fontSize: 150 }} data-sr>TIPS</div>
           <div className="ghost-watermark" style={{ top: -30, fontSize: 150 }} data-lat>SAVETI</div>
           <div style={{ position: "relative", zIndex: 1, maxWidth: 1280, margin: "0 auto" }}>
             <div className="kicker-row" data-reveal="left"><span className="kicker-bar" /><span className="kicker-label" data-sr>BLOG</span><span className="kicker-label" data-lat>BLOG</span></div>
-            <h2 className="section-title" data-reveal="up-lg" style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
+            <h2 className="section-title" data-reveal="up-lg" style={{ color: "var(--cream)", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontWeight: 400, textTransform: "uppercase", fontSize: 52, lineHeight: 1 }}>
               <span data-sr>Our blog</span><span data-lat>Naš blog</span>
             </h2>
             <div data-reveal-stagger style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28, marginTop: 48 }}>
@@ -385,12 +385,12 @@ export default async function HomePage() {
                       <img src={p.cover_image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     )}
                   </div>
-                  <h3 style={{ margin: "22px 0 10px", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 19, lineHeight: 1.2, textTransform: "uppercase" }}>
+                  <h3 style={{ margin: "22px 0 10px", fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 19, lineHeight: 1.2, textTransform: "uppercase", color: "var(--cream)" }}>
                     <span data-sr>{p.title_sr}</span><span data-lat>{p.title_lat}</span>
                   </h3>
                   {p.published_at && (
                     <span style={{ fontSize: 12, letterSpacing: ".08em", color: "var(--mustard)" }}>
-                      {new Date(p.published_at).toLocaleDateString("sr-RS", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}
+                      {new Date(p.published_at).toLocaleDateString("sr-Latn-RS", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}
                     </span>
                   )}
                 </a>

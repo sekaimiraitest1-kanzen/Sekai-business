@@ -72,7 +72,7 @@ export function PorudzbineClient({ orders }: { orders: Order[] }) {
                 {o.customers?.name ?? "—"}
               </div>
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(245,233,208,.4)" }}>
-                {o.customers?.phone} · {new Date(o.created_at).toLocaleDateString("sr-RS")} · {(o.items ?? []).length} stavk.
+                {o.customers?.phone} · {new Date(o.created_at).toLocaleDateString("sr-Latn-RS")} · {(o.items ?? []).length} stavk.
               </div>
             </div>
             <div style={{ textAlign: "right" }}>

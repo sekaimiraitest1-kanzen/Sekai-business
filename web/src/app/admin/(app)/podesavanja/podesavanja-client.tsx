@@ -661,7 +661,7 @@ function StaffManagement({
           {archived.map((a) => {
             const fullName = [a.first_name, a.last_name].filter(Boolean).join(" ") || a.display_name || "—";
             const customerCount = customerCountByStaff[a.id] ?? 0;
-            const deletedDate = a.deleted_at ? new Date(a.deleted_at).toLocaleDateString("sr-RS") : "—";
+            const deletedDate = a.deleted_at ? new Date(a.deleted_at).toLocaleDateString("sr-Latn-RS") : "—";
             const isPlaceholderEmail = (a.email ?? "").includes("@") && (a.email ?? "").endsWith(".local");
             return (
               <div key={a.id} className="adm-row" style={{ flexDirection: "column", alignItems: "stretch", paddingTop: 10, paddingBottom: 10, gap: 4, opacity: 0.65 }}>

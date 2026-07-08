@@ -45,13 +45,13 @@ export default async function BlogIndexPage() {
                     <img src={p.cover_image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   )}
                 </div>
-                <h3 style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 19, textTransform: "uppercase", margin: "22px 0 10px" }}>
+                <h3 style={{ fontFamily: "var(--font-anton), 'Anton', sans-serif", fontSize: 19, textTransform: "uppercase", margin: "22px 0 10px", color: "var(--cream)" }}>
                   <span data-sr>{p.title_sr}</span>
                   <span data-lat>{p.title_lat}</span>
                 </h3>
                 {p.published_at && (
                   <span style={{ fontSize: 12, letterSpacing: ".08em", color: "var(--mustard)" }}>
-                    {new Date(p.published_at).toLocaleDateString("sr-RS", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}
+                    {new Date(p.published_at).toLocaleDateString("sr-Latn-RS", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}
                   </span>
                 )}
               </Link>
