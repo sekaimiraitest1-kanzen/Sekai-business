@@ -71,10 +71,7 @@ export function LoginPad() {
       </div>
       <div
         style={{
-          width: 72,
-          height: 72,
-          borderRadius: "50%",
-          overflow: "hidden",
+          height: 56,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -82,7 +79,7 @@ export function LoginPad() {
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-120.png" alt="Vuk" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <img src="/logo-vuk-wordmark.png" alt="Vuk" style={{ height: "100%", width: "auto", objectFit: "contain" }} />
       </div>
       <div
         style={{

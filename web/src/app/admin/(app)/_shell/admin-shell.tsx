@@ -67,7 +67,7 @@ export function AdminShell({ session, children }: { session: AdminSession; child
       <header className="adm-app-bar">
         <div className="adm-app-bar-logo">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-120.png" alt="Vuk" />
+          <img src="/logo-vuk-wordmark.png" alt="Vuk" />
         </div>
         <div className="adm-app-bar-title">
           <span data-sr>{title.sr}</span>
