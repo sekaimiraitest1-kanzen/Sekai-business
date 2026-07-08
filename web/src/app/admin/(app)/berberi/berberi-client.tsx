@@ -103,11 +103,8 @@ function BarberEditor({
   onSave: (patch: Partial<BarberProfile>) => void;
   onUpload: (file: File) => void;
 }) {
-  const [roleTitleSr, setRoleTitleSr] = useState(barber.role_title_sr ?? "");
   const [roleTitleLat, setRoleTitleLat] = useState(barber.role_title_lat ?? "");
-  const [specialtySr, setSpecialtySr] = useState(barber.specialty_sr ?? "");
   const [specialtyLat, setSpecialtyLat] = useState(barber.specialty_lat ?? "");
-  const [bioSr, setBioSr] = useState(barber.bio_sr ?? "");
   const [bioLat, setBioLat] = useState(barber.bio_lat ?? "");
   const [showOnSite, setShowOnSite] = useState(barber.show_on_site);
 
@@ -125,19 +122,13 @@ function BarberEditor({
           </div>
           <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }} style={{ marginBottom: 16 }} />
 
-          <label className="adm-form-label">TITULA (ćir.)</label>
-          <input className="adm-input" value={roleTitleSr} onChange={(e) => setRoleTitleSr(e.target.value)} placeholder="OWNER · MASTER BARBER" style={{ marginBottom: 8 }} />
-          <label className="adm-form-label">TITULA (lat.)</label>
+          <label className="adm-form-label">TITULA</label>
           <input className="adm-input" value={roleTitleLat} onChange={(e) => setRoleTitleLat(e.target.value)} placeholder="VLASNIK · MASTER BARBER" style={{ marginBottom: 8 }} />
 
-          <label className="adm-form-label">SPECIJALNOST — chip (ćir.)</label>
-          <input className="adm-input" value={specialtySr} onChange={(e) => setSpecialtySr(e.target.value)} placeholder="FADE · BEARD" style={{ marginBottom: 8 }} />
-          <label className="adm-form-label">SPECIJALNOST — chip (lat.)</label>
+          <label className="adm-form-label">SPECIJALNOST — chip</label>
           <input className="adm-input" value={specialtyLat} onChange={(e) => setSpecialtyLat(e.target.value)} placeholder="FADE · BRADA" style={{ marginBottom: 8 }} />
 
-          <label className="adm-form-label">BIO (ćir.)</label>
-          <textarea className="adm-input" value={bioSr} onChange={(e) => setBioSr(e.target.value)} rows={3} style={{ marginBottom: 8 }} />
-          <label className="adm-form-label">BIO (lat.)</label>
+          <label className="adm-form-label">BIO</label>
           <textarea className="adm-input" value={bioLat} onChange={(e) => setBioLat(e.target.value)} rows={3} style={{ marginBottom: 12 }} />
 
           <label style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, cursor: "pointer" }}>
@@ -150,12 +141,13 @@ function BarberEditor({
             className="adm-btn adm-btn-block"
             disabled={pending}
             onClick={() => {
+              // English toggle mirrors the Latin text — no separate translation field.
               onSave({
-                role_title_sr: roleTitleSr,
+                role_title_sr: roleTitleLat,
                 role_title_lat: roleTitleLat,
-                specialty_sr: specialtySr,
+                specialty_sr: specialtyLat,
                 specialty_lat: specialtyLat,
-                bio_sr: bioSr,
+                bio_sr: bioLat,
                 bio_lat: bioLat,
                 show_on_site: showOnSite,
               });

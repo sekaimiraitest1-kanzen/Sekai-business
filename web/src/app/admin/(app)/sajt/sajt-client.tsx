@@ -87,7 +87,6 @@ function defaultWH(): WH {
 }
 
 function ContentEditor({ keyName, labelSr, labelLat, initial }: { keyName: string; labelSr: string; labelLat: string; initial: ContentRow | null }) {
-  const [sr, setSr] = useState(initial?.value_sr ?? "");
   const [lat, setLat] = useState(initial?.value_lat ?? "");
   const [pending, start] = useTransition();
   const [saved, setSaved] = useState(false);
@@ -96,7 +95,9 @@ function ContentEditor({ keyName, labelSr, labelLat, initial }: { keyName: strin
 
   function save() {
     start(async () => {
-      await upsertContent(keyName, sr, lat);
+      // English toggle mirrors the Latin text — there's no separate
+      // translation field in the admin anymore, just one plain text box.
+      await upsertContent(keyName, lat, lat);
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
     });
@@ -108,13 +109,6 @@ function ContentEditor({ keyName, labelSr, labelLat, initial }: { keyName: strin
         <span data-sr>{labelSr}</span>
         <span data-lat>{labelLat}</span>
       </div>
-      <label className="adm-form-label">SR (ćir.)</label>
-      {isLong ? (
-        <textarea className="adm-input" rows={4} value={sr} onChange={(e) => setSr(e.target.value)} />
-      ) : (
-        <input className="adm-input" value={sr} onChange={(e) => setSr(e.target.value)} />
-      )}
-      <label className="adm-form-label">LAT</label>
       {isLong ? (
         <textarea className="adm-input" rows={4} value={lat} onChange={(e) => setLat(e.target.value)} />
       ) : (

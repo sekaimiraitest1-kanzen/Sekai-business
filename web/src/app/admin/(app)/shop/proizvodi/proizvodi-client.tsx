@@ -95,37 +95,33 @@ function ProductEditor({ product, categories: initialCategories, onClose }: { pr
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [newCatOpen, setNewCatOpen] = useState(false);
   const [newCatNameLat, setNewCatNameLat] = useState("");
-  const [newCatNameSr, setNewCatNameSr] = useState("");
   const [newCatErr, setNewCatErr] = useState<string | null>(null);
   const [creatingCat, startCatCreate] = useTransition();
 
   function createCategoryInline() {
     setNewCatErr(null);
     const nameLat = newCatNameLat.trim();
-    const nameSr = newCatNameSr.trim() || nameLat;
     if (nameLat.length < 2) { setNewCatErr("Ime mora imati bar 2 znaka."); return; }
     const slug = slugify(nameLat);
     if (!slug) { setNewCatErr("Neispravan naziv."); return; }
     if (categories.some((c) => c.slug === slug)) { setNewCatErr("Kategorija sa tim slug-om već postoji."); return; }
     startCatCreate(async () => {
-      const res = await upsertCategory({ slug, name_sr: nameSr, name_lat: nameLat, active: true });
+      // English toggle mirrors the Latin name — no separate translation field.
+      const res = await upsertCategory({ slug, name_sr: nameLat, name_lat: nameLat, active: true });
       if (!res.ok) {
         setNewCatErr(res.error === "SLUG_TAKEN" ? "Kategorija sa tim slug-om već postoji." : "Greška pri snimanju.");
         return;
       }
-      const newCat: Category = { slug, name_sr: nameSr, name_lat: nameLat };
+      const newCat: Category = { slug, name_sr: nameLat, name_lat: nameLat };
       setCategories((prev) => [...prev, newCat]);
       setCategory(slug);
       setNewCatNameLat("");
-      setNewCatNameSr("");
       setNewCatOpen(false);
     });
   }
 
-  const [nameSr, setNameSr] = useState(product?.name_sr ?? "");
   const [nameLat, setNameLat] = useState(product?.name_lat ?? "");
   const [brand, setBrand] = useState(product?.brand ?? "");
-  const [descSr, setDescSr] = useState(product?.description_sr ?? "");
   const [descLat, setDescLat] = useState(product?.description_lat ?? "");
   const [price, setPrice] = useState(product?.price.toString() ?? "");
   const [stock, setStock] = useState(product?.stock.toString() ?? "0");
@@ -170,10 +166,11 @@ function ProductEditor({ product, categories: initialCategories, onClose }: { pr
       await upsertProduct({
         id: product?.id,
         slug,
-        name_sr: nameSr.trim(),
+        // English toggle mirrors the Latin text — no separate translation field.
+        name_sr: nameLat.trim(),
         name_lat: nameLat.trim(),
         brand: brand.trim() || undefined,
-        description_sr: descSr.trim() || undefined,
+        description_sr: descLat.trim() || undefined,
         description_lat: descLat.trim() || undefined,
         price: parseInt(price) || 0,
         category: category || undefined,
@@ -202,15 +199,11 @@ function ProductEditor({ product, categories: initialCategories, onClose }: { pr
             {uploading ? "UPLOADING…" : product?.id ? "📷 IZMENI SLIKU" : "💡 SAČUVAJ PRVO"}
           </button>
 
-          <label className="adm-form-label">NAZIV (ĆIRILICA)</label>
-          <input className="adm-input" value={nameSr} onChange={(e) => setNameSr(e.target.value)} placeholder="Помада Батајница" />
-          <label className="adm-form-label">NAZIV (LATINICA)</label>
+          <label className="adm-form-label">NAZIV</label>
           <input className="adm-input" value={nameLat} onChange={(e) => setNameLat(e.target.value)} placeholder="Pomada Batajnica" />
           <label className="adm-form-label">BRAND</label>
           <input className="adm-input" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="VUK" />
-          <label className="adm-form-label">OPIS (ĆIRILICA)</label>
-          <textarea className="adm-input" rows={2} value={descSr} onChange={(e) => setDescSr(e.target.value)} placeholder="Јак фиксиран, мат завршетак…" />
-          <label className="adm-form-label">OPIS (LATINICA)</label>
+          <label className="adm-form-label">OPIS</label>
           <textarea className="adm-input" rows={2} value={descLat} onChange={(e) => setDescLat(e.target.value)} placeholder="Strong hold, matte finish…" />
 
           <div style={{ display: "flex", gap: 8 }}>
@@ -248,17 +241,9 @@ function ProductEditor({ product, categories: initialCategories, onClose }: { pr
               </div>
               <input
                 className="adm-input"
-                placeholder="Naziv (latinica, npr. Brijanje)"
+                placeholder="Naziv, npr. Brijanje"
                 value={newCatNameLat}
                 onChange={(e) => setNewCatNameLat(e.target.value)}
-                disabled={creatingCat}
-                maxLength={40}
-              />
-              <input
-                className="adm-input"
-                placeholder="Naziv (ćirilica, opciono — kopira latinicu ako prazno)"
-                value={newCatNameSr}
-                onChange={(e) => setNewCatNameSr(e.target.value)}
                 disabled={creatingCat}
                 maxLength={40}
               />

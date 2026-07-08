@@ -95,11 +95,8 @@ function PostEditor({ post, pending, onClose, onSave, onDelete, onUpload }: {
   onDelete?: () => void;
   onUpload?: (file: File) => void;
 }) {
-  const [titleSr, setTitleSr] = useState(post.title_sr);
   const [titleLat, setTitleLat] = useState(post.title_lat);
-  const [excerptSr, setExcerptSr] = useState(post.excerpt_sr ?? "");
   const [excerptLat, setExcerptLat] = useState(post.excerpt_lat ?? "");
-  const [bodySr, setBodySr] = useState(post.body_sr);
   const [bodyLat, setBodyLat] = useState(post.body_lat);
   const [published, setPublished] = useState(post.published);
 
@@ -121,19 +118,13 @@ function PostEditor({ post, pending, onClose, onSave, onDelete, onUpload }: {
             </>
           )}
 
-          <label className="adm-form-label">NASLOV (ćir.)</label>
-          <input className="adm-input" value={titleSr} onChange={(e) => setTitleSr(e.target.value)} style={{ marginBottom: 8 }} />
-          <label className="adm-form-label">NASLOV (lat.)</label>
+          <label className="adm-form-label">NASLOV</label>
           <input className="adm-input" value={titleLat} onChange={(e) => setTitleLat(e.target.value)} style={{ marginBottom: 8 }} />
 
-          <label className="adm-form-label">KRATAK OPIS (ćir.)</label>
-          <input className="adm-input" value={excerptSr} onChange={(e) => setExcerptSr(e.target.value)} style={{ marginBottom: 8 }} />
-          <label className="adm-form-label">KRATAK OPIS (lat.)</label>
+          <label className="adm-form-label">KRATAK OPIS</label>
           <input className="adm-input" value={excerptLat} onChange={(e) => setExcerptLat(e.target.value)} style={{ marginBottom: 8 }} />
 
-          <label className="adm-form-label">TEKST (ćir.) — prazan red = nov pasus</label>
-          <textarea className="adm-input" value={bodySr} onChange={(e) => setBodySr(e.target.value)} rows={8} style={{ marginBottom: 8 }} />
-          <label className="adm-form-label">TEKST (lat.) — prazan red = nov pasus</label>
+          <label className="adm-form-label">TEKST — prazan red = nov pasus</label>
           <textarea className="adm-input" value={bodyLat} onChange={(e) => setBodyLat(e.target.value)} rows={8} style={{ marginBottom: 12 }} />
 
           <label style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, cursor: "pointer" }}>
@@ -145,7 +136,7 @@ function PostEditor({ post, pending, onClose, onSave, onDelete, onUpload }: {
           <button
             className="adm-btn adm-btn-block"
             disabled={pending || !titleLat.trim()}
-            onClick={() => onSave({ id: post.id || undefined, title_sr: titleSr, title_lat: titleLat, excerpt_sr: excerptSr, excerpt_lat: excerptLat, body_sr: bodySr, body_lat: bodyLat, published })}
+            onClick={() => onSave({ id: post.id || undefined, title_sr: titleLat, title_lat: titleLat, excerpt_sr: excerptLat, excerpt_lat: excerptLat, body_sr: bodyLat, body_lat: bodyLat, published })}
           >
             <span data-sr>САЧУВАЈ</span><span data-lat>SAČUVAJ</span>
           </button>

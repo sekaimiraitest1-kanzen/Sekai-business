@@ -277,9 +277,7 @@ function Announcements({ list }: { list: Ann[] }) {
 }
 
 function AnnouncementEditor({ ann, onClose }: { ann: Ann | null; onClose: () => void }) {
-  const [titleSr, setTitleSr] = useState(ann?.title_sr ?? "");
   const [titleLat, setTitleLat] = useState(ann?.title_lat ?? "");
-  const [bodySr, setBodySr] = useState(ann?.body_sr ?? "");
   const [bodyLat, setBodyLat] = useState(ann?.body_lat ?? "");
   const [active, setActive] = useState(ann?.active ?? true);
   // M12: time-window inputs. Schema is timestamptz; <input type="datetime-local"> emits
@@ -287,8 +285,7 @@ function AnnouncementEditor({ ann, onClose }: { ann: Ann | null; onClose: () => 
   const [startsAt, setStartsAt] = useState(ann?.starts_at ? toLocalInput(ann.starts_at) : "");
   const [endsAt, setEndsAt] = useState(ann?.ends_at ? toLocalInput(ann.ends_at) : "");
   const [pending, start] = useTransition();
-  // L7: require BOTH SR and LAT body so banner doesn't show empty in one mode.
-  const canSave = !!bodySr.trim() && !!bodyLat.trim();
+  const canSave = !!bodyLat.trim();
   return (
     <div className="adm-sheet-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="adm-sheet" style={{ maxHeight: "90vh", overflowY: "auto" }}>
@@ -298,13 +295,9 @@ function AnnouncementEditor({ ann, onClose }: { ann: Ann | null; onClose: () => 
           <span data-lat>{ann ? "IZMENI" : "NOVI"} BANNER</span>
         </div>
         <div style={{ padding: "0 20px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-          <label className="adm-form-label">NASLOV (ćir.)</label>
-          <input className="adm-input" value={titleSr} onChange={(e) => setTitleSr(e.target.value)} />
-          <label className="adm-form-label">NASLOV (lat.)</label>
+          <label className="adm-form-label">NASLOV</label>
           <input className="adm-input" value={titleLat} onChange={(e) => setTitleLat(e.target.value)} />
-          <label className="adm-form-label">PORUKA (ćir.)</label>
-          <textarea className="adm-input" rows={2} value={bodySr} onChange={(e) => setBodySr(e.target.value)} placeholder="Затворено 5—7. маја због реновирања" />
-          <label className="adm-form-label">PORUKA (lat.)</label>
+          <label className="adm-form-label">PORUKA</label>
           <textarea className="adm-input" rows={2} value={bodyLat} onChange={(e) => setBodyLat(e.target.value)} placeholder="Zatvoreno 5—7. maja zbog renoviranja" />
           <div style={{ display: "flex", gap: 8 }}>
             <div style={{ flex: 1 }}>
@@ -325,16 +318,16 @@ function AnnouncementEditor({ ann, onClose }: { ann: Ann | null; onClose: () => 
           </label>
           {!canSave && (
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "rgba(245,233,208,.5)" }}>
-              <span data-sr>Попуни поруку у обе скрипте.</span>
-              <span data-lat>Popuni poruku u obe skripte.</span>
+              <span data-sr>Попуни поруку.</span>
+              <span data-lat>Popuni poruku.</span>
             </div>
           )}
           <button className="adm-btn adm-btn-block" disabled={pending || !canSave} onClick={() => start(async () => {
             await upsertAnnouncement({
               id: ann?.id,
-              title_sr: titleSr,
+              title_sr: titleLat,
               title_lat: titleLat,
-              body_sr: bodySr,
+              body_sr: bodyLat,
               body_lat: bodyLat,
               active,
               starts_at: startsAt ? new Date(startsAt).toISOString() : null,

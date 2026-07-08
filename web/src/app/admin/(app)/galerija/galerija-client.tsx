@@ -178,7 +178,6 @@ function ImageEditor({ image, pending, onClose, onSave, onDelete }: {
   onSave: (patch: { alt_sr: string; alt_lat: string; size: "normal" | "large" }) => void;
   onDelete: () => void;
 }) {
-  const [altSr, setAltSr] = useState(image.alt_sr ?? "");
   const [altLat, setAltLat] = useState(image.alt_lat ?? "");
   const [size, setSize] = useState<"normal" | "large">((image.size as "normal" | "large") ?? "normal");
 
@@ -194,10 +193,7 @@ function ImageEditor({ image, pending, onClose, onSave, onDelete }: {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={image.url} alt="" style={{ width: "100%", maxHeight: 240, objectFit: "cover", marginBottom: 12, background: "var(--brown-900)" }} />
 
-          <label className="adm-form-label">ALT (ćir.)</label>
-          <input className="adm-input" value={altSr} onChange={(e) => setAltSr(e.target.value)} placeholder="Шишање — Триша" style={{ marginBottom: 8 }} />
-
-          <label className="adm-form-label">ALT (lat.)</label>
+          <label className="adm-form-label">ALT TEKST</label>
           <input className="adm-input" value={altLat} onChange={(e) => setAltLat(e.target.value)} placeholder="Šišanje — Vuk" style={{ marginBottom: 8 }} />
 
           <label className="adm-form-label">VELIČINA U GRID-U</label>
@@ -206,7 +202,7 @@ function ImageEditor({ image, pending, onClose, onSave, onDelete }: {
             <button className={`adm-toggle-opt ${size === "large" ? "active" : ""}`} onClick={() => setSize("large")} type="button">LARGE (2×2)</button>
           </div>
 
-          <button className="adm-btn adm-btn-block" disabled={pending} onClick={() => onSave({ alt_sr: altSr, alt_lat: altLat, size })}>
+          <button className="adm-btn adm-btn-block" disabled={pending} onClick={() => onSave({ alt_sr: altLat, alt_lat: altLat, size })}>
             <span data-sr>САЧУВАЈ</span><span data-lat>SAČUVAJ</span>
           </button>
           <button className="adm-btn adm-btn-secondary adm-btn-block" style={{ marginTop: 8 }} onClick={onClose}>
