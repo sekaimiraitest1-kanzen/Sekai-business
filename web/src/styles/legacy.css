@@ -1934,28 +1934,6 @@ body:has(.site-banner) .hero-open-tag { top: 120px; }
   font-size: 26px;
   letter-spacing: .04em;
 }
-.hero-v2-arrow-btn {
-  position: absolute;
-  /* Not vertically centered on the whole hero on purpose — the headline
-     wraps to 2 or 3 lines depending on which slide/language is active, so
-     a true center point sometimes lands mid-word. Anchored from the
-     bottom, tuned to clear the CTA row even for the tallest (3-line)
-     slide, while staying above the rail/social icons for the shortest. */
-  bottom: 58px;
-  z-index: 4;
-  width: 52px; height: 52px;
-  background: transparent;
-  border: 1px solid rgba(239,233,221,.24);
-  color: var(--cream);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: border-color .2s, color .2s;
-}
-.hero-v2-arrow-btn:hover { border-color: var(--mustard); color: var(--mustard); }
-.hero-v2-arrow-btn.prev { left: 26px; }
-.hero-v2-arrow-btn.next { right: 26px; }
 .hero-v2-rail {
   position: absolute;
   left: 0; bottom: 0;
@@ -2077,7 +2055,6 @@ body:has(.site-banner) .hero-open-tag { top: 120px; }
 .btn-primary,
 .btn-ghost,
 .btn-dark,
-.hero-v2-arrow-btn,
 .barber-photo ~ .barber-body .btn-primary {
   transition: background .2s, border-color .2s, color .2s,
     transform .18s cubic-bezier(.34, 1.2, .64, 1),
@@ -2091,26 +2068,19 @@ body:has(.site-banner) .hero-open-tag { top: 120px; }
 .btn-ghost:hover {
   transform: translateY(-2px);
 }
-.hero-v2-arrow-btn:hover {
-  transform: translateY(-2px);
-}
 .btn-primary:active,
 .btn-ghost:active,
 .btn-dark:active {
   transform: translateY(0) scale(.95);
   transition-duration: .09s;
 }
-.hero-v2-arrow-btn:active {
-  transform: translateY(0) scale(.88);
-  transition-duration: .09s;
-}
 
 @media (prefers-reduced-motion: reduce) {
-  .btn-primary, .btn-ghost, .btn-dark, .hero-v2-arrow-btn {
+  .btn-primary, .btn-ghost, .btn-dark {
     transition: background .2s, border-color .2s, color .2s;
   }
-  .btn-primary:hover, .btn-dark:hover, .btn-ghost:hover, .hero-v2-arrow-btn:hover,
-  .btn-primary:active, .btn-ghost:active, .btn-dark:active, .hero-v2-arrow-btn:active {
+  .btn-primary:hover, .btn-dark:hover, .btn-ghost:hover,
+  .btn-primary:active, .btn-ghost:active, .btn-dark:active {
     transform: none;
     box-shadow: none;
   }

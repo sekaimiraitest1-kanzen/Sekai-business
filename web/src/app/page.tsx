@@ -5,7 +5,7 @@ import { JsonLd } from "@/components/json-ld";
 import { createClient } from "@/lib/supabase/server";
 import { buildLocalBusinessJsonLd } from "@/lib/seo/local-business";
 import { parseSocialLinks, visibleLinks } from "@/lib/social-links";
-import { HeroCarousel } from "./hero-carousel";
+import { HeroContent } from "./hero-content";
 
 type WorkingHoursMap = Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", { open: string; close: string } | null>;
 
@@ -47,6 +47,18 @@ export default async function HomePage() {
   });
 
   const aboutStory = getC("about_story", "Forget waiting in line and flipping through old magazines. Opened in 2024, we combined honest craft in the barber chair with technology that respects your time. No philosophizing here: the focus is on a sharp fade, precise beard work, and healthy-looking hair.", "Tvoje vreme je previše vredno da bi ga trošio na čekanje u salonu. Od 2024. godine spajamo vrhunsku tradiciju stare škole i pametna digitalna rešenja za zakazivanje. Bez suvišnog filozofiranja i komplikovanja – garantujemo ti hirurški precizne konture, brutalan fade i savršeno zdravu kosu.");
+
+  // Hero text is fully admin-editable via /admin/sajt (site_content: hero_eyebrow,
+  // hero_title, hero_subtitle) — no more hardcoded rotating slides. hero_title
+  // uses a "|" marker for an optional manual line break, same convention as
+  // about_title/aboutTitle elsewhere on this page.
+  const heroEyebrow = getC("hero_eyebrow", "MEN'S BARBERSHOP · BATAJNICA, BELGRADE", "MUŠKA BERBERNICA · BATAJNICA, BEOGRAD");
+  const heroTitle = getC("hero_title", "Where a haircut|turns into a story", "Mesto gde se rez|pretvara u priču");
+  const heroSubtitle = getC("hero_subtitle", "Barbershop Vuk — a men's barbershop in Batajnica. Haircuts, beard, good stories. No rush, no fuss. Just what you need.", "Barbershop Vuk — muška berbernica u Batajnici. Šišanje, brada, dobra priča. Bez žurbe, bez kompleksa. Samo ono što treba.");
+  const splitTitle = (s: string): [string, string] => {
+    const i = s.indexOf("|");
+    return i < 0 ? [s, ""] : [s.slice(0, i), s.slice(i + 1)];
+  };
 
   // Use DB gallery if seeded; otherwise fall back to the legacy hardcoded list so
   // the section never goes empty (BUG-6 fix). DB values come from /admin/galerija.
@@ -101,9 +113,12 @@ export default async function HomePage() {
         <img className="hero-v2-bg" src="/hero-vuk.webp" alt="Barbershop Vuk" />
         <div className="hero-v2-scrim" />
 
-        <HeroCarousel
+        <HeroContent
           address={salon?.address ?? "Majora Zorana Radosavljevića 138, Beograd 11273"}
           phone={salon?.phone ?? "060 1424576"}
+          eyebrow={heroEyebrow}
+          title={{ sr: splitTitle(heroTitle.sr), lat: splitTitle(heroTitle.lat) }}
+          subtitle={heroSubtitle}
         />
 
         <div className="hero-v2-rail" />
