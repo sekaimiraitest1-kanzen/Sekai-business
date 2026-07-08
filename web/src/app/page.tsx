@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { buildLocalBusinessJsonLd } from "@/lib/seo/local-business";
 import { parseSocialLinks, visibleLinks } from "@/lib/social-links";
 import { HeroContent } from "./hero-content";
+import { CONTENT_DEFAULTS } from "@/lib/site-content-defaults";
 
 type WorkingHoursMap = Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", { open: string; close: string } | null>;
 
@@ -46,15 +47,15 @@ export default async function HomePage() {
     lat: content.get(key)?.lat || fallbackLat,
   });
 
-  const aboutStory = getC("about_story", "Forget waiting in line and flipping through old magazines. Opened in 2024, we combined honest craft in the barber chair with technology that respects your time. No philosophizing here: the focus is on a sharp fade, precise beard work, and healthy-looking hair.", "Tvoje vreme je previše vredno da bi ga trošio na čekanje u salonu. Od 2024. godine spajamo vrhunsku tradiciju stare škole i pametna digitalna rešenja za zakazivanje. Bez suvišnog filozofiranja i komplikovanja – garantujemo ti hirurški precizne konture, brutalan fade i savršeno zdravu kosu.");
+  const aboutStory = getC("about_story", CONTENT_DEFAULTS.about_story.sr, CONTENT_DEFAULTS.about_story.lat);
 
   // Hero text is fully admin-editable via /admin/sajt (site_content: hero_eyebrow,
   // hero_title, hero_subtitle) — no more hardcoded rotating slides. hero_title
   // uses a "|" marker for an optional manual line break, same convention as
   // about_title/aboutTitle elsewhere on this page.
-  const heroEyebrow = getC("hero_eyebrow", "MEN'S BARBERSHOP · BATAJNICA, BELGRADE", "MUŠKA BERBERNICA · BATAJNICA, BEOGRAD");
-  const heroTitle = getC("hero_title", "Where a haircut|turns into a story", "Mesto gde se rez|pretvara u priču");
-  const heroSubtitle = getC("hero_subtitle", "Barbershop Vuk — a men's barbershop in Batajnica. Haircuts, beard, good stories. No rush, no fuss. Just what you need.", "Barbershop Vuk — muška berbernica u Batajnici. Šišanje, brada, dobra priča. Bez žurbe, bez kompleksa. Samo ono što treba.");
+  const heroEyebrow = getC("hero_eyebrow", CONTENT_DEFAULTS.hero_eyebrow.sr, CONTENT_DEFAULTS.hero_eyebrow.lat);
+  const heroTitle = getC("hero_title", CONTENT_DEFAULTS.hero_title.sr, CONTENT_DEFAULTS.hero_title.lat);
+  const heroSubtitle = getC("hero_subtitle", CONTENT_DEFAULTS.hero_subtitle.sr, CONTENT_DEFAULTS.hero_subtitle.lat);
   const splitTitle = (s: string): [string, string] => {
     const i = s.indexOf("|");
     return i < 0 ? [s, ""] : [s.slice(0, i), s.slice(i + 1)];
