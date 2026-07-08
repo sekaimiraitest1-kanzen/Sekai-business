@@ -7,11 +7,9 @@ export function SiteNav() {
       <Link href="/" className="nav-logo" aria-label="Barbershop Vuk — početna">
         <div className="nav-logo-mark">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-120.png" alt="" width={120} height={120} />
+          <img src="/logo-vuk-wordmark.png" alt="Barbershop Vuk" />
         </div>
         <div className="nav-logo-text">
-          <span data-sr>Barbershop Vuk</span>
-          <span data-lat>Barbershop Vuk</span>
           <span data-sr>Batajnica · EST 2024</span>
           <span data-lat>Batajnica · EST 2024</span>
         </div>

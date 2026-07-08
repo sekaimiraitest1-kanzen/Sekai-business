@@ -59,11 +59,9 @@ export function ShopShell({ children }: { children: React.ReactNode }) {
         <Link href="/" className="sh-nav-logo">
           <div className="sh-nav-logo-mark">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-120.png" alt="Barbershop Vuk" width={120} height={120} />
+            <img src="/logo-vuk-wordmark.png" alt="Barbershop Vuk" />
           </div>
           <div className="sh-nav-logo-text">
-            <span data-sr>Barbershop Vuk</span>
-            <span data-lat>Barbershop Vuk</span>
             <span>EST 2024</span>
           </div>
         </Link>

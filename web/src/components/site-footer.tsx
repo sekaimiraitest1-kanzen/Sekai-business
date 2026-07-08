@@ -30,11 +30,9 @@ export function SiteFooter({
           <Link href="/" className="nav-logo" style={{ textDecoration: "none" }}>
             <div className="nav-logo-mark">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-120.png" alt="Barbershop Vuk" width={120} height={120} />
+              <img src="/logo-vuk-wordmark.png" alt="Barbershop Vuk" />
             </div>
             <div className="nav-logo-text">
-              <span data-sr>Barbershop Vuk</span>
-              <span data-lat>Barbershop Vuk</span>
               <span>Batajnica · EST 2024</span>
             </div>
           </Link>
