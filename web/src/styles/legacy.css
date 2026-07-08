@@ -1910,6 +1910,23 @@ body:has(.site-banner) .hero-open-tag { top: 120px; }
   text-transform: uppercase;
   text-shadow: 0 2px 24px rgba(0,0,0,.55);
 }
+/* Colors just the caron (the little "ˇ" mark on Č/Ć/Š/Ž) red, matching the
+   logo's accent — everything below the accent zone stays cream. The caron
+   sits above cap-height, in the narrow band the tight line-height reserves
+   between lines; a hard-stop gradient clipped to the text paints only that
+   sliver red. box-decoration-break:clone re-applies the 0–100% gradient to
+   EACH wrapped line independently, so it works whichever line an accented
+   letter lands on, not just the first. */
+.hero-v2-title span[data-sr],
+.hero-v2-title span[data-lat] {
+  background-image: linear-gradient(to bottom, var(--mustard) 0%, var(--mustard) 15%, var(--cream) 15%, var(--cream) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
 .hero-v2-inner p,
 .hero-v2-phone-num,
 .hero-v2-pill {
